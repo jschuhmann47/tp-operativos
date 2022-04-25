@@ -53,3 +53,7 @@ dkms.conf
 /.metadata/
 
 RemoteSystemsTempFiles/
+.project
+.settings
+.cproject
+Debug/
