@@ -10,16 +10,10 @@
 
 #include "parser.h"
 #include "../../shared/include/sockets.h"
+#include "../../shared/include/protocolo.h"
 
 
-typedef enum {
-	NO_OP, IO,COPY,READ,WRITE,EXIT
-}OPCODE;
 
-struct Instruccion {
-	char* codigo_instruccion;
-	uint32_t parametros[2];
-};
 
 
 #endif

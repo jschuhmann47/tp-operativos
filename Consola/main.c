@@ -27,7 +27,7 @@ int main(){
 	//log_create(char* file, char *process_name, bool is_active_console, t_log_level level)
 	consola_logger = log_create("consola.log","CONSOLA",1,LOG_LEVEL_DEBUG);
 
-	struct Instruccion lista_inst;
+
 	Lista* lista;
 	Node* actual;
 	actual = NULL;
@@ -118,43 +118,6 @@ void Imprimir (Lista * lista){
       actual = actual->sig;
   }
 }
-
-
- int crear_socket(char* ip_kernel,char* puerto_kernel){
- 	struct addrinfo hints;
- 	struct addrinfo *server_info;
-
- 	memset(&hints, 0, sizeof(hints));
- 	hints.ai_family = AF_UNSPEC;
- 	hints.ai_socktype = SOCK_STREAM;
- 	//hints.ai_flags = AI_PASSIVE;
-
- 	getaddrinfo(ip_kernel, puerto_kernel, &hints, &server_info);
-
-
- 	int consola_fd = socket(server_info->ai_family, server_info->ai_socktype,server_info->ai_protocol);
- 	if(connect(consola_fd, server_info->ai_addr, server_info->ai_addrlen)==-1){
- 		log_info(consola_logger,"Error al conectar el socket");
- 		return -1;
- 	}
- 	freeaddrinfo(server_info);
- 	return consola_fd;
- }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
