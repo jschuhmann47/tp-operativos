@@ -16,7 +16,8 @@ int main(int argc, char** argv){
 
 	int server_fd = iniciar_servidor(kernel_logger,"Kernel",ip_kernel,puerto_kernel);
 	log_info(kernel_logger, "Servidor Kernel inicializado");
-	int cliente_fd = esperar_cliente(kernel_logger,"Kernel",server_fd);
+
+	int cliente_fd = esperar_cliente(kernel_logger,"Kernel",server_fd); //esto adentro de un while, dps vemos, xq tiene que ser todo el tiempo
 
 	//cosas
 

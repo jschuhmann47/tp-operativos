@@ -1,33 +1,15 @@
-
 #include "include/main.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct Nodo{
-	char *Codigo;
-	int  Parametro1;
-	int  Parametro2;
-	struct Nodo *sig;
-} Node;
 
-typedef struct ListaIdentificar {
-	Node *inicio;
-	Node *fin;
-	int tamanio;
-}Lista;
-
-int Inicializar(Lista*);
-int Agregar(Lista*, Node*, struct Instruccion);
-void Imprimir(Lista*);
-
-t_log* consola_logger;
 
 int main(){
 	//log_create(char* file, char *process_name, bool is_active_console, t_log_level level)
 	consola_logger = log_create("consola.log","CONSOLA",1,LOG_LEVEL_DEBUG);
 
-
+	char **instruccionLeida;
 	Lista* lista;
 	Node* actual;
 	actual = NULL;
@@ -41,8 +23,8 @@ int main(){
 
 	FILE* archivo = fopen("proceso1.txt","r");
 	while(!feof(archivo) ){
-		struct Instruccion InstruccionLeida = parser(archivo);
-		resultAgregar = Agregar(lista, lista->fin, InstruccionLeida);	
+		instruccionLeida = parser(archivo);
+		resultAgregar = Agregar(lista, lista->fin, instruccionLeida);	
 	}
 
 	Imprimir(lista);
@@ -117,6 +99,17 @@ void Imprimir (Lista * lista){
       //printf ("%d\n", actual.Parametro2);
       actual = actual->sig;
   }
+}
+
+int string_to_int(char* string){
+    int result = 0;
+    int len = strlen(string);
+
+	for(int i=0; i<len; i++){
+		result = result * 10 + ( string[i] - '0' );
+	}
+
+	return result;
 }
 
 

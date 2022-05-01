@@ -12,8 +12,24 @@
 #include "../../shared/include/sockets.h"
 #include "../../shared/include/protocolo.h"
 
+typedef struct Nodo{
+	char *Codigo;
+	int  Parametro1;
+	int  Parametro2;
+	struct Nodo *sig;
+} Node;
 
+typedef struct ListaIdentificar {
+	Node *inicio;
+	Node *fin;
+	int tamanio;
+}Lista;
 
+int Inicializar(Lista*);
+int Agregar(Lista*, Node*, struct Instruccion);
+void Imprimir(Lista*);
+
+t_log* consola_logger;
 
 
 #endif

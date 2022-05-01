@@ -78,5 +78,7 @@ static void deserializar_write(void* stream, uint32_t* param1,uint32_t* param2) 
     memcpy(param2, stream+sizeof(uint32_t), sizeof(uint32_t));
 }
 
+//deserializar exit no hace falta, xq lee el cod op "exit" y termina
+
 
 
