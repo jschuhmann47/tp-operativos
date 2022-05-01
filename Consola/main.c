@@ -55,13 +55,13 @@ int main(){
 	char* ip_kernel=config_get_string_value(consola_config, "IP_KERNEL");
 	char* puerto_kernel=config_get_string_value(consola_config, "PUERTO_KERNEL");
 
-	int consola_fd=crear_socket(ip_kernel,puerto_kernel);
+	int consola_fd=crear_conexion_a_server(consola_logger,"Kernel",ip_kernel,puerto_kernel);
 
-	uint32_t handshake = 20;
-	uint32_t result;
+	//uint32_t handshake = 1;
+	//uint32_t result;
 
-	send(consola_fd, &handshake, sizeof(uint32_t), 0);
-	recv(consola_fd, &result, sizeof(uint32_t), MSG_WAITALL);
+	//send(consola_fd, &handshake, sizeof(uint32_t), 0);
+	//recv(consola_fd, &result, sizeof(uint32_t), MSG_WAITALL);
 
 	return 0;
 
