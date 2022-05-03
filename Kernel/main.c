@@ -19,8 +19,9 @@ int main(int argc, char** argv){
 
 	int cliente_fd = esperar_cliente(kernel_logger,"Kernel",server_fd); //esto adentro de un while, dps vemos, xq tiene que ser todo el tiempo
 
-	//cosas
 
+
+	//cosas
 
 
 }

@@ -9,6 +9,7 @@ char** parser(FILE* archivo){
 	fgets(buffer,32,&archivo); //deja de leer en EOF o \n. este 32 es max caracteres,
 
 	return string_n_split(buffer,2," "); //tengo entendido que en caso de no haber parametros devuelve NULL
+	//["WRITE","4","30"]
 }
 
 //

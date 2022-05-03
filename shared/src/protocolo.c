@@ -10,48 +10,48 @@ EXIT: 0 parámetros
 
 
 static void* serializar_exit(){
-	void* stream = malloc(sizeof(cod_op));
+	void* stream = malloc(sizeof(op_code));
 
-	cod_op codigo = EXIT;
-	memcpy(stream, &codigo, sizeof(cod_op));
+	op_code codigo = EXIT;
+	memcpy(stream, &codigo, sizeof(op_code));
 	return stream;
 }
 
 static void* serializar_no_op(uint32_t param){
-	void* stream = malloc(sizeof(cod_op) + sizeof(uint32_t));
+	void* stream = malloc(sizeof(op_code) + sizeof(uint32_t));
 
-	cod_op codigo = NO_OP;
-	memcpy(stream, &codigo, sizeof(cod_op));
-	memcpy(stream+sizeof(cod_op), &param, sizeof(uint32_t));
+	op_code codigo = NO_OP;
+	memcpy(stream, &codigo, sizeof(op_code));
+	memcpy(stream+sizeof(op_code), &param, sizeof(uint32_t));
 	return stream;
 }
 
 static void* serializar_io(uint32_t param){
-	void* stream = malloc(sizeof(cod_op) + sizeof(uint32_t));
+	void* stream = malloc(sizeof(op_code) + sizeof(uint32_t));
 
-	cod_op codigo = IO;
-	memcpy(stream, &codigo, sizeof(cod_op));
-	memcpy(stream+sizeof(cod_op), &param, sizeof(uint32_t));
+	op_code codigo = IO;
+	memcpy(stream, &codigo, sizeof(op_code));
+	memcpy(stream+sizeof(op_code), &param, sizeof(uint32_t));
 	return stream;
 }
 
 
 static void* serializar_read(uint32_t param1){
-	void* stream = malloc(sizeof(cod_op) + sizeof(uint32_t));
+	void* stream = malloc(sizeof(op_code) + sizeof(uint32_t));
 
-	cod_op codigo = READ;
-	memcpy(stream, &codigo, sizeof(cod_op));
-	memcpy(stream+sizeof(cod_op), &param1, sizeof(uint32_t));
+	op_code codigo = READ;
+	memcpy(stream, &codigo, sizeof(op_code));
+	memcpy(stream+sizeof(op_code), &param1, sizeof(uint32_t));
 	return stream;
 }
 
 static void* serializar_write(uint32_t param1,uint32_t param2){
-	void* stream = malloc(sizeof(cod_op) + sizeof(uint32_t) * 2);
+	void* stream = malloc(sizeof(op_code) + sizeof(uint32_t) * 2);
 
-	cod_op codigo = WRITE;
-	memcpy(stream, &codigo, sizeof(cod_op));
-	memcpy(stream+sizeof(cod_op), &param1, sizeof(uint32_t));
-	memcpy(stream+sizeof(cod_op)+sizeof(uint32_t), &param2, sizeof(uint32_t));
+	op_code codigo = WRITE;
+	memcpy(stream, &codigo, sizeof(op_code));
+	memcpy(stream+sizeof(op_code), &param1, sizeof(uint32_t));
+	memcpy(stream+sizeof(op_code)+sizeof(uint32_t), &param2, sizeof(uint32_t));
 	return stream;
 }
 

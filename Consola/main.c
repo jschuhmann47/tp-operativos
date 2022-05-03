@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../shared/include/protocolo.h"
+#include <commons/collections/list.h>
 
 
 
-int main(){
+int main(int argc, char**argv){
 	//log_create(char* file, char *process_name, bool is_active_console, t_log_level level)
 	consola_logger = log_create("consola.log","CONSOLA",1,LOG_LEVEL_DEBUG);
 
@@ -21,17 +23,26 @@ int main(){
 	if (resultIniciar == -1)
 		 exit(EXIT_FAILURE);
 
-	FILE* archivo = fopen("proceso1.txt","r");
+	t_list *listaInstrucciones = list_create();
+
+	FILE* archivo = fopen(argv[1],"r"); //argv del archivo
+
+	t_paquete instruccionAEncolar;
 	while(!feof(archivo) ){
 		instruccionLeida = parser(archivo);
-		resultAgregar = Agregar(lista, lista->fin, instruccionLeida);	
+		op_code codigoOp= devolverCodigoOperacion(instruccionLeida[0]);
+
+		//pasarla a: op_code / size params / char params //todo
+		resultAgregar = Agregar(lista, lista->fin, instruccionLeida);
+		list_add(listaInstrucciones,instruccionLeida);
 	}
 
 	Imprimir(lista);
 	fclose(archivo);
 	
-
-	//Luego, leerá su archivo de configuración, se conectará al Kernel y le enviará toda la información del proceso (lista de instrucciones, tamaño).
+	int tamanioListaInstrucciones = list_size(listaInstrucciones);
+	//ir "concatenandolas" en una direccion de memoria
+	//todo
 
 	t_config* consola_config=config_create("consola.config");
 	char* ip_kernel=config_get_string_value(consola_config, "IP_KERNEL");
@@ -39,11 +50,16 @@ int main(){
 
 	int consola_fd=crear_conexion_a_server(consola_logger,"Kernel",ip_kernel,puerto_kernel);
 
-	//uint32_t handshake = 1;
-	//uint32_t result;
+	uint32_t result;
 
-	//send(consola_fd, &handshake, sizeof(uint32_t), 0);
-	//recv(consola_fd, &result, sizeof(uint32_t), MSG_WAITALL);
+	if(send(consola_fd, &dirMemoria, sizeof(uint32_t), 0)==-1){
+		return EXIT_FAILURE;
+	}
+	if(recv(consola_fd, &result, sizeof(uint32_t), MSG_WAITALL)==-1){
+		return EXIT_FAILURE;
+	}else{
+		return EXIT_SUCCESS;
+	}
 
 	return 0;
 
@@ -101,8 +117,8 @@ void Imprimir (Lista * lista){
   }
 }
 
-int string_to_int(char* string){
-    int result = 0;
+uint32_t string_to_uint(char* string){
+	uint32_t result = 0;
     int len = strlen(string);
 
 	for(int i=0; i<len; i++){
@@ -112,6 +128,26 @@ int string_to_int(char* string){
 	return result;
 }
 
+op_code devolverCodigoOperacion(char* palabra){
+	if(strcmp(palabra,"EXIT")==0){
+		return EXIT;
+	}
+	if(strcmp(palabra,"NO_OP")==0){
+		return NO_OP;
+	}
+	if(strcmp(palabra,"I/O")==0){
+		return IO;
+	}
+	if(strcmp(palabra,"READ")==0){
+		return READ;
+	}
+	if(strcmp(palabra,"WRITE")==0){
+		return WRITE;
+	}
+	if(strcmp(palabra,"COPY")==0){
+		return COPY;
+	}
+}
 
 
 
