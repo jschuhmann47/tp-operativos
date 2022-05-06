@@ -28,21 +28,24 @@ int main(int argc, char**argv){
 	FILE* archivo = fopen(argv[1],"r"); //argv del archivo
 
 	t_paquete instruccionAEncolar;
-	while(!feof(archivo) ){
-		instruccionLeida = parser(archivo);
-		op_code codigoOp= devolverCodigoOperacion(instruccionLeida[0]);
 
+
+	while(!feof(archivo) ){
+		char** lectura = parser(archivo);
+		op_code codigoOp= devolverCodigoOperacion(lectura[0]);
 		//pasarla a: op_code / size params / char params //todo
-		resultAgregar = Agregar(lista, lista->fin, instruccionLeida);
-		list_add(listaInstrucciones,instruccionLeida);
+		void* instSerializada=serializar_instruccion(codigoOp,lectura); //si no tiene 2 ??
+		resultAgregar = Agregar(lista, lista->fin, instSerializada);//A
+		list_add(listaInstrucciones,instSerializada); //B
 	}
 
+
+	uint32_t cantInstrucciones=list_size(listaInstrucciones);
 	Imprimir(lista);
 	fclose(archivo);
 	
-	int tamanioListaInstrucciones = list_size(listaInstrucciones);
-	//ir "concatenandolas" en una direccion de memoria
-	//todo
+	int sizeAMandar=0;
+	void * paquete_a_mandar = preparar_paquete(cantInstrucciones,listaInstrucciones,&sizeAMandar); //todo
 
 	t_config* consola_config=config_create("consola.config");
 	char* ip_kernel=config_get_string_value(consola_config, "IP_KERNEL");
@@ -50,9 +53,10 @@ int main(int argc, char**argv){
 
 	int consola_fd=crear_conexion_a_server(consola_logger,"Kernel",ip_kernel,puerto_kernel);
 
+	uint32_t handshake=1;
 	uint32_t result;
-
-	if(send(consola_fd, &dirMemoria, sizeof(uint32_t), 0)==-1){
+	//handshake
+	if(send(consola_fd, &handshake, sizeof(uint32_t), 0)==-1){
 		return EXIT_FAILURE;
 	}
 	if(recv(consola_fd, &result, sizeof(uint32_t), MSG_WAITALL)==-1){
@@ -60,6 +64,20 @@ int main(int argc, char**argv){
 	}else{
 		return EXIT_SUCCESS;
 	}
+
+	//mensaje en si
+	 //todo
+	//loggear todo esto con lo de handshake ok, instrucciones mandadas, etc
+
+	if(send(consola_fd, &paquete_a_mandar, sizeAMandar, 0)==-1){ //uno de cant_inst y el
+			return EXIT_FAILURE;
+	}
+	if(recv(consola_fd, &result, sizeAMandar, MSG_WAITALL)==-1){
+		return EXIT_FAILURE;
+	}else{
+		return EXIT_SUCCESS;
+	}
+
 
 	return 0;
 
@@ -129,6 +147,7 @@ uint32_t string_to_uint(char* string){
 }
 
 op_code devolverCodigoOperacion(char* palabra){
+
 	if(strcmp(palabra,"EXIT")==0){
 		return EXIT;
 	}
@@ -147,7 +166,35 @@ op_code devolverCodigoOperacion(char* palabra){
 	if(strcmp(palabra,"COPY")==0){
 		return COPY;
 	}
+	return EXIT_FAILURE;
 }
 
 
+void* serializar_instruccion(op_code opCode,char** leida){
+	switch(opCode){
+		case(NO_OP):
+				return serializar_no_op(string_to_uint(leida[1]));
+				break;
+		case(EXIT):
+				return serializar_exit();
+				break;
+		case(IO):
+				return serializar_io(string_to_uint(leida[1]));
+				break;
+		case(READ):
+				return serializar_read(string_to_uint(leida[1]));
+				break;
+		case(WRITE):
+				return serializar_write(string_to_uint(leida[1]),string_to_uint(leida[2]));
+				break;
+		case(COPY):
+				return serializar_write(string_to_uint(leida[1]),string_to_uint(leida[2]));
+				break;
+	}
+	return NULL;
+}
 
+
+void *preparar_paquete(list_size(listaInstrucciones),t_list *listaInstrucciones,int *sizeAMandar){
+	//concatenar todo, liberar dps de concatenar, y actualizar sizeAMandar
+}

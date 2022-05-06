@@ -8,8 +8,14 @@ typedef enum {
 
 typedef struct
 {
+	int size; //tamaño de los parametros
+	void* stream; //los parametros en si
+} t_buffer;
+
+typedef struct
+{
 	op_code codigo_operacion;
-	void* parametros; //2*sizeof(uint32_t)
+	t_buffer* buffer;
 } t_paquete;
 
 static void* serializar_exit();
