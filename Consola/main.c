@@ -28,14 +28,14 @@ int main(int argc, char**argv){
 	FILE* archivo = fopen(argv[1],"r"); //argv del archivo
 
 	t_paquete instruccionAEncolar;
-
+	void* aEnviar=malloc(sizeof(uint32_t));
 
 	while(!feof(archivo) ){
 		char** lectura = parser(archivo);
 		op_code codigoOp= devolverCodigoOperacion(lectura[0]);
 		//pasarla a: op_code / size params / char params //todo
-		void* instSerializada=serializar_instruccion(codigoOp,lectura); //si no tiene 2 ??
-		resultAgregar = Agregar(lista, lista->fin, instSerializada);//A
+		void* instSerializada=serializar_instruccion(codigoOp,lectura);
+		//resultAgregar = Agregar(lista, lista->fin, instSerializada);//A
 		list_add(listaInstrucciones,instSerializada); //B
 	}
 
@@ -46,6 +46,7 @@ int main(int argc, char**argv){
 	
 	int sizeAMandar=0;
 	void * paquete_a_mandar = preparar_paquete(cantInstrucciones,listaInstrucciones,&sizeAMandar); //todo
+	list_destroy_and_destroy_elements(listaInstrucciones,free); //preguntar como pasar free x parametro
 
 	t_config* consola_config=config_create("consola.config");
 	char* ip_kernel=config_get_string_value(consola_config, "IP_KERNEL");
@@ -57,44 +58,45 @@ int main(int argc, char**argv){
 	uint32_t result;
 	//handshake
 	if(send(consola_fd, &handshake, sizeof(uint32_t), 0)==-1){
+		log_info(consola_logger, "Fallo envio de handshake");
 		return EXIT_FAILURE;
 	}
 	if(recv(consola_fd, &result, sizeof(uint32_t), MSG_WAITALL)==-1){
+		log_info(consola_logger, "Fallo recibo de handshake");
 		return EXIT_FAILURE;
 	}else{
-		return EXIT_SUCCESS;
+		log_info(consola_logger, "Handshake con exito!");
 	}
 
-	//mensaje en si
-	 //todo
-	//loggear todo esto con lo de handshake ok, instrucciones mandadas, etc
+	//envio posta
+	log_info(consola_logger, "Enviando instrucciones...");
 
 	if(send(consola_fd, &paquete_a_mandar, sizeAMandar, 0)==-1){ //uno de cant_inst y el
-			return EXIT_FAILURE;
+		log_info(consola_logger, "Error al enviar las instrucciones");
+		return EXIT_FAILURE;
 	}
-	if(recv(consola_fd, &result, sizeAMandar, MSG_WAITALL)==-1){
+	if(recv(consola_fd, &result, sizeAMandar, MSG_WAITALL)==-1){ //al ok le manda un 1 o no se dps vemos
+		log_info(consola_logger, "Error al recibir fin de proceso del Kernel");
 		return EXIT_FAILURE;
 	}else{
+		log_info(consola_logger, "Programa finalizado con exito!");
 		return EXIT_SUCCESS;
 	}
-
-
 	return 0;
 
 }
 
 int Inicializar (Lista *lista){
 
-if ((lista = (Lista *) malloc (sizeof (Lista))) == NULL)
-		return -1;
-  lista->inicio = NULL;
-  lista->fin = NULL;
-  lista->tamanio = 0;
-  return 0;
+	if ((lista = (Lista *) malloc (sizeof (Lista))) == NULL)
+			return -1;
+	lista->inicio = NULL;
+	lista->fin = NULL;
+	lista->tamanio = 0;
+	return 0;
 }
 
-int Agregar(Lista* lista, Node* actual, struct Instruccion dato)
-{
+int Agregar(Lista* lista, Node* actual, struct Instruccion dato){
 	Node *nuevo_nodo;
 	nuevo_nodo = (Node *) malloc(sizeof(Node));
 	
@@ -195,6 +197,15 @@ void* serializar_instruccion(op_code opCode,char** leida){
 }
 
 
-void *preparar_paquete(list_size(listaInstrucciones),t_list *listaInstrucciones,int *sizeAMandar){
+void *preparar_paquete(uint32_t cantInstrucciones,t_list *listaInstrucciones,int *sizeAMandar){
 	//concatenar todo, liberar dps de concatenar, y actualizar sizeAMandar
+	void* stream = malloc(sizeof(uint32_t));
+	uint32_t desplazamiento = 0;
+	for (int i = 0;i<cantInstrucciones;i++){
+		uint32_t instruccionActual = list_get(listaInstrucciones,i);
+		memcpy(stream,instruccionActual,sizeof(instruccionActual)+desplazamiento);
+		desplazamiento+=sizeof(instruccionActual);
+	}
+	sizeAMandar=sizeof(stream);
+	return stream;
 }

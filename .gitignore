@@ -57,3 +57,6 @@ RemoteSystemsTempFiles/
 .settings
 .cproject
 Debug/
+.vscode
+
+dudas.md

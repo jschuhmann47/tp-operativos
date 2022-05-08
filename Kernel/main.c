@@ -1,7 +1,8 @@
-#include "../shared/include/sockets.h"
-#include "include/main.h"
-#include <commons/config.h>
 
+#include "include/main.h"
+
+
+//p_thread
 
 t_log* kernel_logger;
 
@@ -17,11 +18,18 @@ int main(int argc, char** argv){
 	int server_fd = iniciar_servidor(kernel_logger,"Kernel",ip_kernel,puerto_kernel);
 	log_info(kernel_logger, "Servidor Kernel inicializado");
 
-	int cliente_fd = esperar_cliente(kernel_logger,"Kernel",server_fd); //esto adentro de un while, dps vemos, xq tiene que ser todo el tiempo
+	while(server_escuchar(kernel_logger,"Kernel",server_fd)); //esto es infinito, no tiene que cortarse
+	
+	//crear un hilo para atender la coenxion
+	//hilo main siempre escucha y el resto atiende
 
 
-
+	return 0;
 	//cosas
 
 
 }
+
+
+
+
