@@ -92,3 +92,34 @@ int crear_conexion_a_server(t_log* logger, const char* server_name, char* ip, ch
 void liberar_conexion(int socket_cliente) {
 	close(socket_cliente);
 }
+
+void realizar_handshake(int socket_server,t_log* logger){
+	uint32_t handshake = 1;
+    uint32_t result;
+    if(send(socket_server, &handshake, sizeof(uint32_t), 0)==-1){
+    	log_info(logger, "Fallo envio de handshake");
+    	return EXIT_FAILURE;
+    }
+    if(recv(socket_server, &result, sizeof(uint32_t), MSG_WAITALL)==-1){
+    	log_info(logger, "Fallo recibo de handshake");
+    	return EXIT_FAILURE;
+    }else{
+    	log_info(logger, "Handshake con exito!");
+    }
+}
+
+void recibir_handshake(int socket_cliente,t_log* logger){
+	uint32_t handshake;
+	uint32_t resultOk = 0;
+	uint32_t resultError = -1;
+
+	recv(socket_cliente, &handshake, sizeof(uint32_t), MSG_WAITALL);
+	if(handshake == 1){
+		send(socket_cliente, &resultOk, sizeof(uint32_t), NULL);
+		log_info(logger, "Handshake recibido OK, mandando respuesta");
+	}
+	else{
+		send(socket_cliente, &resultError, sizeof(uint32_t), NULL);
+		log_info(logger, "Handshake recibido ERROR, mandando respuesta");
+	}
+}

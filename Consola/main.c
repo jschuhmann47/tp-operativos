@@ -45,8 +45,8 @@ int main(int argc, char**argv){
 	fclose(archivo);
 	
 	int sizeAMandar=0;
-	void * paquete_a_mandar = preparar_paquete(cantInstrucciones,listaInstrucciones,&sizeAMandar); //todo
-	list_destroy_and_destroy_elements(listaInstrucciones,free); //preguntar como pasar free x parametro
+	void * paquete_a_mandar = preparar_paquete(cantInstrucciones,listaInstrucciones,&sizeAMandar);
+	list_destroy_and_destroy_elements(listaInstrucciones,free);
 
 	t_config* consola_config=config_create("consola.config");
 	char* ip_kernel=config_get_string_value(consola_config, "IP_KERNEL");
