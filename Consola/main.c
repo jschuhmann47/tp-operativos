@@ -12,40 +12,44 @@ int main(int argc, char**argv){
 	consola_logger = log_create("consola.log","CONSOLA",1,LOG_LEVEL_DEBUG);
 
 	char **instruccionLeida;
-	Lista* lista;
-	Node* actual;
-	actual = NULL;
+	//Lista* lista;
+	//Node* actual;
+	//actual = NULL;
 	int resultAgregar = 0;
 	int resultIniciar = 0;
 
- 	resultIniciar = Inicializar(lista);
+ 	//resultIniciar = Inicializar(lista);
 
-	if (resultIniciar == -1)
-		 exit(EXIT_FAILURE);
+	// if (resultIniciar == -1)
+	// 	 exit(EXIT_FAILURE);
 
 	t_list *listaInstrucciones = list_create();
 
 	FILE* archivo = fopen(argv[1],"r"); //argv del archivo
 
-	t_paquete instruccionAEncolar;
-	void* aEnviar=malloc(sizeof(uint32_t));
+	
 
 	while(!feof(archivo) ){
+		t_paquete instruccionAEncolar;
 		char** lectura = parser(archivo);
 		op_code codigoOp= devolverCodigoOperacion(lectura[0]);
-		//pasarla a: op_code / size params / char params //todo
-		void* instSerializada=serializar_instruccion(codigoOp,lectura);
-		//resultAgregar = Agregar(lista, lista->fin, instSerializada);//A
-		list_add(listaInstrucciones,instSerializada); //B
+		instruccionAEncolar.codigo_operacion=codigoOp;
+		instruccionAEncolar.buffer->stream=lectura[1];
+		instruccionAEncolar.buffer->size=lectura;
+		
+			//void* instSerializada=serializar_instruccion(codigoOp,lectura);
+			//borrarle el codigo de operacion a cada instruccion serailizada y encajarle eso como uint32_t
+		
+		list_add(listaInstrucciones,&instruccionAEncolar); //B
 	}
 
 
 	uint32_t cantInstrucciones=list_size(listaInstrucciones);
-	Imprimir(lista);
+	//Imprimir(lista);
 	fclose(archivo);
 	
-	int sizeAMandar=0;
-	void * paquete_a_mandar = preparar_paquete(cantInstrucciones,listaInstrucciones,&sizeAMandar);
+	int sizeAMandar=argv[2]; //tamaño de la instruccion
+	void *paquete_a_mandar = preparar_paquete(cantInstrucciones,listaInstrucciones,sizeAMandar);
 	list_destroy_and_destroy_elements(listaInstrucciones,free);
 
 	t_config* consola_config=config_create("consola.config");
@@ -86,56 +90,56 @@ int main(int argc, char**argv){
 
 }
 
-int Inicializar (Lista *lista){
+// int Inicializar (Lista *lista){
 
-	if ((lista = (Lista *) malloc (sizeof (Lista))) == NULL)
-			return -1;
-	lista->inicio = NULL;
-	lista->fin = NULL;
-	lista->tamanio = 0;
-	return 0;
-}
+// 	if ((lista = (Lista *) malloc (sizeof (Lista))) == NULL)
+// 			return -1;
+// 	lista->inicio = NULL;
+// 	lista->fin = NULL;
+// 	lista->tamanio = 0;
+// 	return 0;
+// }
 
-int Agregar(Lista* lista, Node* actual, struct Instruccion dato){
-	Node *nuevo_nodo;
-	nuevo_nodo = (Node *) malloc(sizeof(Node));
+// int Agregar(Lista* lista, Node* actual, struct Instruccion dato){
+// 	Node *nuevo_nodo;
+// 	nuevo_nodo = (Node *) malloc(sizeof(Node));
 	
-	if(nuevo_nodo == NULL)
-	{
-		return -1;
-	}
-	if ((nuevo_nodo->Codigo = (char *) malloc (50 * sizeof (char))) == NULL) 
-	{
-		return -1;
-	}
-		//Copio los datos al nuevo nodo
-		strcpy (nuevo_nodo->Codigo, dato.codigo_instruccion);
-		nuevo_nodo->Parametro1 = dato.parametros[0];
-		nuevo_nodo->Parametro2 = dato.parametros[1];
-		nuevo_nodo->sig = NULL;	
+// 	if(nuevo_nodo == NULL)
+// 	{
+// 		return -1;
+// 	}
+// 	if ((nuevo_nodo->Codigo = (char *) malloc (50 * sizeof (char))) == NULL) 
+// 	{
+// 		return -1;
+// 	}
+// 		//Copio los datos al nuevo nodo
+// 		strcpy (nuevo_nodo->Codigo, dato.codigo_instruccion);
+// 		nuevo_nodo->Parametro1 = dato.parametros[0];
+// 		nuevo_nodo->Parametro2 = dato.parametros[1];
+// 		nuevo_nodo->sig = NULL;	
 		
-		//Insertar al final
-		actual->sig = nuevo_nodo; 
-		nuevo_nodo->sig = NULL; 
-		lista->fin = nuevo_nodo; 
-		lista->tamanio++; 
+// 		//Insertar al final
+// 		actual->sig = nuevo_nodo; 
+// 		nuevo_nodo->sig = NULL; 
+// 		lista->fin = nuevo_nodo; 
+// 		lista->tamanio++; 
 	
-	return 0;
-}
+// 	return 0;
+// }
 
 
-void Imprimir (Lista * lista){
-  Node *actual;
-  actual = lista->inicio;
-  printf("\nLista:\n\n");
+// void Imprimir (Lista * lista){
+//   Node *actual;
+//   actual = lista->inicio;
+//   printf("\nLista:\n\n");
   
-  while (actual != NULL){
-      printf ("%s\n", actual->Codigo);
-      //printf ("%d\n", actual.Parametro1);
-      //printf ("%d\n", actual.Parametro2);
-      actual = actual->sig;
-  }
-}
+//   while (actual != NULL){
+//       printf ("%s\n", actual->Codigo);
+//       //printf ("%d\n", actual.Parametro1);
+//       //printf ("%d\n", actual.Parametro2);
+//       actual = actual->sig;
+//   }
+// }
 
 uint32_t string_to_uint(char* string){
 	uint32_t result = 0;
@@ -197,15 +201,20 @@ void* serializar_instruccion(op_code opCode,char** leida){
 }
 
 
-void *preparar_paquete(uint32_t cantInstrucciones,t_list *listaInstrucciones,int *sizeAMandar){
+void *preparar_paquete(uint32_t cantInstrucciones,t_list *listaInstrucciones,int sizeAMandar){
 	//concatenar todo, liberar dps de concatenar, y actualizar sizeAMandar
-	void* stream = malloc(sizeof(uint32_t));
-	uint32_t desplazamiento = 0;
+	void* stream = malloc(sizeAMandar);
+	memcpy(stream,&cantInstrucciones,sizeof(uint32_t));
+	uint32_t desplazamiento = sizeof(uint32_t);
 	for (int i = 0;i<cantInstrucciones;i++){
-		uint32_t instruccionActual = list_get(listaInstrucciones,i);
-		memcpy(stream,instruccionActual,sizeof(instruccionActual)+desplazamiento);
-		desplazamiento+=sizeof(instruccionActual);
+		t_paquete* instruccionActual = list_get(listaInstrucciones,i);
+		memcpy(stream+desplazamiento,&instruccionActual->codigo_operacion,sizeof(uint32_t));
+		desplazamiento += sizeof(uint32_t);
+		//memcpy(stream+desplazamiento,&instruccionActual->buffer->stream,sizeof(uint32_t));
+		memcpy(stream,&instruccionActual,sizeof(&instruccionActual)+desplazamiento);
+		desplazamiento+=sizeof(&instruccionActual);
+		eliminar_paquete(instruccionActual);
 	}
-	sizeAMandar=sizeof(stream);
 	return stream;
 }
+

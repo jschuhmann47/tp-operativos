@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <commons/string.h>
 #include <commons/config.h>
+#include <commons/collections/list.h>
 //#include <sys/socket.h>
 //#include <commons/log.h>
 
@@ -25,9 +26,15 @@ typedef struct ListaIdentificar {
 	int tamanio;
 }Lista;
 
-int Inicializar(Lista*);
-int Agregar(Lista*, Node*, struct Instruccion);
-void Imprimir(Lista*);
+// int Inicializar(Lista*);
+// int Agregar(Lista*, Node*, struct Instruccion);
+// void Imprimir(Lista*);
+
+void *preparar_paquete(uint32_t cantInstrucciones,t_list* listaInstrucciones,uint32_t *sizeAMandar);
+uint32_t string_to_uint(char* string);
+op_code devolverCodigoOperacion(char* palabra);
+void* serializar_instruccion(op_code opCode,char** leida);
+
 
 t_log* consola_logger;
 
