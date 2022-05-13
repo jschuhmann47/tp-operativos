@@ -30,17 +30,14 @@ int main(int argc, char**argv){
 	
 
 	while(!feof(archivo) ){
-		t_paquete instruccionAEncolar;
+		
 		char** lectura = parser(archivo);
 		op_code codigoOp= devolverCodigoOperacion(lectura[0]);
-		instruccionAEncolar.codigo_operacion=codigoOp;
-		instruccionAEncolar.buffer->stream=lectura[1];
-		instruccionAEncolar.buffer->size=lectura;
+		t_paquete* instruccionAEncolar = crear_paquete(codigoOp);
+		instruccionAEncolar->buffer->stream=lectura[1];
+		instruccionAEncolar->buffer->size=tamanioInstruccion(codigoOp);
 		
-			//void* instSerializada=serializar_instruccion(codigoOp,lectura);
-			//borrarle el codigo de operacion a cada instruccion serailizada y encajarle eso como uint32_t
-		
-		list_add(listaInstrucciones,&instruccionAEncolar); //B
+		list_add(listaInstrucciones,&instruccionAEncolar);
 	}
 
 
@@ -48,9 +45,9 @@ int main(int argc, char**argv){
 	//Imprimir(lista);
 	fclose(archivo);
 	
-	int sizeAMandar=argv[2]; //tamaño de la instruccion
+	int sizeAMandar=argv[2]; //tamaño del proceso
 	void *paquete_a_mandar = preparar_paquete(cantInstrucciones,listaInstrucciones,sizeAMandar);
-	list_destroy_and_destroy_elements(listaInstrucciones,free);
+	//list_destroy_and_destroy_elements(listaInstrucciones,free);
 
 	t_config* consola_config=config_create("consola.config");
 	char* ip_kernel=config_get_string_value(consola_config, "IP_KERNEL");
@@ -203,18 +200,40 @@ void* serializar_instruccion(op_code opCode,char** leida){
 
 void *preparar_paquete(uint32_t cantInstrucciones,t_list *listaInstrucciones,int sizeAMandar){
 	//concatenar todo, liberar dps de concatenar, y actualizar sizeAMandar
-	void* stream = malloc(sizeAMandar);
+	void* stream = malloc(sizeAMandar+sizeof(uint32_t));
 	memcpy(stream,&cantInstrucciones,sizeof(uint32_t));
 	uint32_t desplazamiento = sizeof(uint32_t);
 	for (int i = 0;i<cantInstrucciones;i++){
 		t_paquete* instruccionActual = list_get(listaInstrucciones,i);
-		memcpy(stream+desplazamiento,&instruccionActual->codigo_operacion,sizeof(uint32_t));
-		desplazamiento += sizeof(uint32_t);
-		//memcpy(stream+desplazamiento,&instruccionActual->buffer->stream,sizeof(uint32_t));
-		memcpy(stream,&instruccionActual,sizeof(&instruccionActual)+desplazamiento);
-		desplazamiento+=sizeof(&instruccionActual);
+		void* serializada= serializar_instruccion(instruccionActual->codigo_operacion,instruccionActual->buffer->stream);
+		memcpy(stream+desplazamiento,serializada,instruccionActual->buffer->size);
+		desplazamiento+=instruccionActual->buffer->size;
 		eliminar_paquete(instruccionActual);
 	}
+	list_destroy(listaInstrucciones);
 	return stream;
 }
 
+int tamanioInstruccion(op_code codOp){
+	switch (codOp)
+	{
+		case NO_OP:
+			return sizeof(uint32_t)*2;
+			break;
+		case EXIT:
+			return sizeof(uint32_t);
+			break;
+		case IO:
+			return sizeof(uint32_t)*2;
+			break;
+		case READ:
+			return sizeof(uint32_t)*2;
+			break;
+		case WRITE:
+			return sizeof(uint32_t)*3;
+			break;
+		case COPY:
+			return sizeof(uint32_t)*3;
+			break;
+	}
+}

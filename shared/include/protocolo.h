@@ -10,7 +10,7 @@ typedef enum {
 typedef struct
 {
 	int size; //tamaño de los parametros
-	void* stream; //los parametros en si
+	char** stream; //los parametros en si
 } t_buffer;
 
 typedef struct
