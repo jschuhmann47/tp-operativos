@@ -2,6 +2,8 @@
 #define MODKERNEL_H
 
 #include "../../shared/include/sockets.h"
+#include <commons/collections/list.h>
+#include <commons/log.h>
 #include <commons/config.h>
 
 

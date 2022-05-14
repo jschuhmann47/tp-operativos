@@ -13,8 +13,8 @@ SHARED = $ (shell find ../shared/obj/*.o)
 build:makefolder makeshared $(OBJ)
 	$(CC) -o $(OUTFILE) main.c $(OBJ) $(SHARED)
 
-valegrind: build
-	valegrind --leak-check=full --show-leak-kinds=all --log-file=valegrind.log ./$(OUTFILE)
+valgrind: build
+	valgrind --leak-check=full --show-leak-kinds=all --log-file=valegrind.log ./$(OUTFILE)
 
 LINK = lpthread -lcommons -lm
 CFLAGS = -c

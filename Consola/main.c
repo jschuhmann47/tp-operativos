@@ -46,8 +46,7 @@ int main(int argc, char**argv){
 	fclose(archivo);
 	
 	int sizeAMandar=argv[2]; //tamaño del proceso
-	void *paquete_a_mandar = preparar_paquete(cantInstrucciones,listaInstrucciones,sizeAMandar);
-	//list_destroy_and_destroy_elements(listaInstrucciones,free);
+	void *paquete_a_mandar = preparar_paquete(cantInstrucciones,listaInstrucciones,sizeAMandar); //la func libera la lista
 
 	t_config* consola_config=config_create("consola.config");
 	char* ip_kernel=config_get_string_value(consola_config, "IP_KERNEL");
@@ -75,6 +74,8 @@ int main(int argc, char**argv){
 	if(send(consola_fd, &paquete_a_mandar, sizeAMandar, 0)==-1){ //uno de cant_inst y el
 		log_info(consola_logger, "Error al enviar las instrucciones");
 		return EXIT_FAILURE;
+	}else{
+		log_info(consola_logger, "Enviadas las instrucciones, esperando fin de proceso...");
 	}
 	if(recv(consola_fd, &result, sizeAMandar, MSG_WAITALL)==-1){ //al ok le manda un 1 o no se dps vemos
 		log_info(consola_logger, "Error al recibir fin de proceso del Kernel");
@@ -211,6 +212,7 @@ void *preparar_paquete(uint32_t cantInstrucciones,t_list *listaInstrucciones,int
 		eliminar_paquete(instruccionActual);
 	}
 	list_destroy(listaInstrucciones);
+	//destroy elements le pasas funcion para destruir
 	return stream;
 }
 

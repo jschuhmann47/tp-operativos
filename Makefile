@@ -10,6 +10,24 @@ clean:
 	make clean -C Kernel
 	make clean -C Memoria
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+#Esto de abajo es de Eclipse por defecto	
+	
 #PROJECT_ROOT = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 #OBJS = TpKiss.o
