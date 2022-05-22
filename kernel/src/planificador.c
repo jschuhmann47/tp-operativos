@@ -1,0 +1,457 @@
+#include "planificador.h"
+
+// TODO: PASAJES EXEC => BLOCKED | BLOCKED => READY | SUSBLOCKED => SUSREADY
+
+// Semaforos
+sem_t gradoMultiprog;
+sem_t hayPCBsParaAgregarAlSistema;
+sem_t hayPCBsParaPasarASusBlocked;
+sem_t transicionarSusReadyAready;
+sem_t suspensionConcluida;
+pthread_mutex_t mutexId;
+
+//ID para el PCB
+static uint32_t nextId;
+
+// Colas de planificación
+t_cola_planificacion* pcbsNew;
+t_cola_planificacion* pcbsReady;
+t_cola_planificacion* pcbsExec;
+t_cola_planificacion* pcbsBlocked;
+t_cola_planificacion* pcbsSusReady;
+t_cola_planificacion* pcbsSusBlocked;
+t_cola_planificacion* pcbsExit;
+
+void iniciar_planificacion(void) {
+
+    nextId = 1;
+    /* Inicializacion de semaforos */
+    sem_init(&gradoMultiprog, 0, kernelCfg->GRADO_MULTIPROGRAMACION);   /* contador */
+    sem_init(&hayPCBsParaAgregarAlSistema, 0, 0);                       /* contador */
+    sem_init(&hayPCBsParaPasarASusBlocked, 0, 0);                       /* contador */
+    sem_init(&transicionarSusReadyAready, 0, 0);                        /* binario  */
+    sem_init(&suspensionConcluida, 0, 0);                               /* binario  */
+
+    /* Inicialización de colas de planificación */
+    pcbsNew = cola_planificacion_create(0);
+    pcbsReady = cola_planificacion_create(0);
+    pcbsExec = cola_planificacion_create(0);
+    pcbsBlocked = cola_planificacion_create(0);
+    pcbsSusReady = cola_planificacion_create(0);
+    pcbsSusBlocked = cola_planificacion_create(0);
+    pcbsExit = cola_planificacion_create(0);
+    pthread_mutex_init(&mutexId, NULL);
+
+    pthread_t thread;
+    pthread_mutex_init(&mutexId, NULL);
+
+    /* Planificador largo plazo */
+    pthread_create(&thread, NULL, iniciar_largo_plazo, NULL);
+    pthread_detach(thread);
+
+    /* Planificador mediano plazo
+    pthread_create(&thread, NULL, iniciar_mediano_plazo, NULL);
+    pthread_detach(thread); */
+
+    /* Planificador corto plazo */
+    pthread_create(&thread, NULL, iniciar_corto_plazo, NULL);
+    pthread_detach(thread);
+
+}
+
+/*---------------------------------------------- PLANIFICADOR CORTO PLAZO ----------------------------------------------*/
+
+void* iniciar_corto_plazo(void* _) {
+    for(;;) {
+        sem_wait(&(pcbsReady->instanciasDisponibles)); //Llega un nuevo pcb a ready
+
+        /*
+        if(algoritmo_srt_loaded()) {
+            //Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
+            sem_wait(&(pcbsExec->instanciasDisponibles))
+            getPcbDeCPU();
+        }*/
+
+        log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
+
+        t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
+
+        //remover_pcb_de_cola(pcbQuePasaAExec, pcbsReady); //Ya lo estamos removiendo de la lista al elegir segun FIFO.
+        cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
+        agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
+
+        log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
+
+        //TODO: Y si la cola de planificación ready se quede sin PCBs??
+
+        //atender_peticiones_pcb(pcbQuePasaAExec);
+    }
+    pthread_exit(NULL);
+}
+
+void* getPcbDeCPU(void* _) {
+
+    pthread_t th;
+    pthread_create(&th, NULL, conexion_de_interrupt, NULL);
+    pthread_detach(th);
+
+    /*pthread_t th;
+    pthread_create(&th, NULL, conexion_de_dispatch, NULL);
+    pthread_detach(th);
+
+    sem_wait(&(pcbsExec->instanciasDisponibles));
+    t_pcb* pcbQueMeDaCPU = funcionLoca();
+
+    remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
+    cambiar_estado_pcb(pcbQueMeDaCPU, READY);
+    agregar_pcb_a_cola(pcbQueMeDaCPU, pcbsReady);
+
+    log_transition("Corto Plazo", "EXEC", "READY", pcbQueMeDaCPU->id);*/
+
+}
+
+//La conexión de interrupt dedicada solamente a enviar mensajes de interrupción
+void* conexion_de_interrupt(void* _) {
+    log_info(kernelLogger, "Hilo interrupt inicializado");
+
+    //TODO: Le aviso a CPU que me tiene que dar el pcb que esta en Exec, si es que hay alguno
+    //TODO: Si CPU maneja la cola de pcbsExec, solo tengo que sacarlo de ahi
+}
+
+//En todos los casos el PCB será recibido a través de la conexión de dispatch - Es bidireccional, por aca tambien le mando el PCB a CPU
+void* conexion_de_dispatch(void* _) {
+    log_info(kernelLogger, "Hilo dispatch EXEC->READY inicializado");
+
+    // CASO 1: Envio de PCB a CPU
+    // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
+}
+
+/*---------------------------------------------- PLANIFICADOR MEDIANO PLAZO ----------------------------------------------*/
+
+void* iniciar_mediano_plazo(void* _) {
+    pthread_t th;
+    pthread_create(&th, NULL, pasar_de_susready_a_ready, NULL);
+    pthread_detach(th);
+    //pthread_create(&th, NULL, recibir_pcb_bloqueado, NULL);
+    //pthread_detach(th);
+    for(;;) {
+        sem_wait(&hayPCBsParaPasarASusBlocked); // TODO: Va a estar esperando por que le hagan el post
+        t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked);
+        enviar_suspension_de_pcb_a_memoria(pcbASuspender);
+        cambiar_estado_pcb(pcbASuspender, SUSBLOCKED);
+        agregar_pcb_a_cola(pcbASuspender, pcbsSusBlocked);
+        log_info(kernelLogger, "Mediano Plazo: Se libera una instancia de Grado Multiprogramación");
+        log_transition("Mediano Plazo", "BLOCKED", "SUSP/BLOCKED", pcbASuspender->id);
+        /* Aumenta el grado de multiprogramción al suspender a un proceso */
+        sem_post(&gradoMultiprog);                              
+        sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for
+        //TODO: Aca pasar ya de SUSBLOCKED => SUSREADY ??? Un hilo?
+    }
+    pthread_exit(NULL);
+}
+
+/*void* recibir_pcb_bloqueado(void* pcb) {
+    pthread_t th;
+
+    if(pcb->programCounter->parametros[0] > kernelCfg->TIEMPO_MAXIMO_BLOQUEADO) {
+        pthread_create(&th, NULL, blocked_a_susblocked, NULL);
+        pthread_detach(th);
+    } else {
+        pthread_create(&th, NULL, blocked_a_ready, NULL);
+        pthread_detach(th);
+    }
+}
+
+void* blocked_a_susblocked(void* _) {
+    // Usar remover_pcb_de_cola?
+    sem_post(&hayPCBsParaPasarASusBlocked);
+}*/
+
+void* pasar_de_susready_a_ready(void* _) {
+    log_info(kernelLogger, "Mediano Plazo: Hilo pasar de SUSP/READY->READY inicializado");
+    for(;;) {
+        sem_wait(&transicionarSusReadyAready);
+        t_pcb* pcbQuePasaAReady = get_and_remove_primer_pcb_de_cola(pcbsSusReady);
+        cambiar_estado_pcb(pcbQuePasaAReady, READY);
+        agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
+
+        log_transition("Mediano Plazo", "SUSP/READY", "READY", pcbQuePasaAReady->id);
+
+        sem_post(&(pcbsReady->instanciasDisponibles));
+    }
+    pthread_exit(NULL);
+}
+
+void* pasar_de_blocked_a_ready(t_pcb* pcb) {
+    remover_pcb_de_cola(pcb, pcbsBlocked);
+    cambiar_estado_pcb(pcb, READY);
+    agregar_pcb_a_cola(pcb, pcbsReady);
+    sem_post(&(pcbsReady->instanciasDisponibles));
+}
+
+void* enviar_suspension_de_pcb_a_memoria(void* _) {
+    //se enviará un mensaje a Memoria con la información necesaria y se esperará la confirmación del mismo.
+    //Una vez recibo la confirmacion
+    sem_post(&suspensionConcluida);
+}
+
+/*---------------------------------------------- PLANIFICADOR LARGO PLAZO ----------------------------------------------*/
+
+void* iniciar_largo_plazo(void* _) {
+    pthread_t th;
+    pthread_create(&th, NULL, liberar_procesos_en_exit, NULL);
+    pthread_detach(th);
+    log_info(kernelLogger, "Largo Plazo: Inicialización exitosa");
+    for(;;) {
+        /* Tanto NEW como SUSREADY son parte del mismo conjunto: "El conjunto a pasar a READY" */
+        sem_wait(&hayPCBsParaAgregarAlSistema);
+        log_info(kernelLogger, "Largo Plazo: Se toma una instancia de PCBs a agregar al sistema");
+
+        /* Este semáforo debería ser "posteado" (sem_post) cuando un proceso se suspende (baja el grado de multiprogramación),
+        o bien cuando un proceso del sistema pasa a exit */
+        sem_wait(&gradoMultiprog);
+        log_info(kernelLogger, "Largo Plazo: Se toma una instancia de Grado Multiprogramación");
+
+        if(!list_is_empty(pcbsSusReady->lista)) {
+            /* Como tiene mayor prioridad los procesos en susp/ready > new, vemos si hay procesos en dicha cola */
+            sem_post(&transicionarSusReadyAready);
+            /* Con el post se libera el mecanismo de pasaje en el Planificador de Mediano Plazo */
+        } else {                                    
+            /* En caso de que no haya procesos en susp/ready, seguramente hay en new */
+            t_pcb* pcbQuePasaAReady = get_and_remove_primer_pcb_de_cola(pcbsNew);
+            pcbQuePasaAReady->est_rafaga_actual = kernelCfg->ESTIMACION_INICIAL; //Milisegundos
+            /* Solamente coloco la ESTIMACION_INICIAL cuando provenga de NEW (pues si viene de SUSREADY quiere decir que ya estuvo inicializado antes) */
+            log_info(kernelLogger, "Largo Plazo: Incialización de información del algoritmo correcta");
+
+            cambiar_estado_pcb(pcbQuePasaAReady, READY);
+            agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
+            log_transition("Largo Plazo", "NEW", "READY", pcbQuePasaAReady->id);
+
+            sem_post(&(pcbsReady->instanciasDisponibles));
+        }
+    }
+    pthread_exit(NULL);
+}
+
+void* liberar_procesos_en_exit(void* _) {
+    log_info(kernelLogger, "Largo Plazo: Hilo liberador de PCBs de Procesos en EXIT inicializado");
+    for(;;) {
+        sem_wait(&(pcbsExit->instanciasDisponibles));
+
+        t_pcb* pcbALiberar = get_and_remove_primer_pcb_de_cola(pcbsExit);
+
+        //TODO: Avisarle a Consola que finalizo su proceso
+        log_info(kernelLogger, "Kernel: Desconexión Proceso con ID %d", pcbALiberar->id);
+        pcb_destroy(pcbALiberar);
+
+        log_info(kernelLogger, "Largo Plazo: Se libera una instancia de Grado Multiprogramación");
+        /* Aumenta el grado de multiprogramación al tener proceso en EXIT */
+        sem_post(&gradoMultiprog);                          
+    }
+    pthread_exit(NULL);
+}
+
+/*---------------------------------------------- MANEJO DE PCBs ----------------------------------------------*/
+
+t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel_config* config) {
+    t_pcb* self = malloc(sizeof(t_pcb));
+    self->id = id;
+    self->status = NEW;
+    self->tamanio = tamanio;
+    self->instrucciones = instrucciones;
+    //self->programCounter; TODO: Apuntar al primer elemento de la lista de instrucciones
+    if(algoritmo_srt_loaded()) {
+        self->algoritmo_siguiente_estim = srt_actualizar_info_para_siguiente_estimacion;
+    }
+    return self;
+}
+
+void pcb_destroy(t_pcb *pcb) {
+    // Realiza los free correspondientes
+}
+
+void cambiar_estado_pcb(t_pcb* pcb, t_status nuevoEstado) {
+    pcb->status = nuevoEstado;
+}
+
+int get_grado_multiprog_actual(void) {
+    int gradoMultiprogActual;
+    sem_getvalue(&gradoMultiprog, &gradoMultiprogActual);
+    return gradoMultiprogActual;
+}
+
+void log_transition(const char* entityName, const char* prev, const char* post, int id) {
+    char* transicion = string_from_format("\e[1;93m%s->%s\e[0m", prev, post);
+    log_info(kernelLogger, "%s: Transición de %s Proceso de ID %d", entityName, transicion, id);
+    free(transicion);
+}
+
+
+void agregar_pcb_en_cola_new()
+{
+    char* mensaje;
+    t_list* instrucciones;
+    t_pcb* pcb;
+    uint32_t tamanio;
+    sem_t recibirInstruccion;
+    sem_init(&recibirInstruccion, 0, 0);
+    while (1) {
+        op_code cod_op = recibir_operacion(kernelCfg->CONSOLA_SOCKET);
+        switch (cod_op) {
+            case MENSAJE:
+                mensaje = recibir_mensaje(kernelCfg->CONSOLA_SOCKET);
+                tamanio = atoi(mensaje);
+                log_info(kernelLogger, "Me llego el mensaje %i", tamanio);
+                continue;
+            case INSTRUCCION:
+                instrucciones = recibir_instrucciones(kernelCfg->CONSOLA_SOCKET);
+                sem_post(&recibirInstruccion);
+                break;
+            default:
+                break;
+        }
+
+        sem_wait(&recibirInstruccion);
+        uint32_t idPcb = get_siguiente_id();
+        //CREAMOS EL PCB
+        pcb = pcb_create(idPcb, tamanio, instrucciones, kernelCfg); //utilizar socketEscucha como ID de PCB.
+        log_info(kernelLogger, "ID PCB %i", pcb->id);
+        if(pcb->status == NEW){
+            log_info(kernelLogger, "STATUS PCB %s", "NEW");
+        }
+        log_info(kernelLogger, "TAMAÑO PCB %i", pcb->tamanio);
+
+
+        agregar_pcb_a_cola(pcb, pcbsNew);
+        log_info(kernelLogger, "Kernel: Creación PCB con ID %d exitosa", pcb->id);
+
+        sem_post(&hayPCBsParaAgregarAlSistema); 
+    }
+        /*t_link_element* linkPrimerInstruccion = instrucciones->head;
+        t_link_element* linkSegundaInstruccion = linkPrimerInstruccion->next;
+        
+        t_instruccion* primerInstruccion = linkPrimerInstruccion->data;
+        t_instruccion* segundaInstruccion = linkSegundaInstruccion->data;
+        string_append(&primerInstruccion->indicador, segundaInstruccion->indicador);
+        log_info(kernelLogger, "INSTRUCCIONES PCB: %s", primerInstruccion->indicador);*/
+    free(mensaje);
+}
+
+uint32_t get_siguiente_id() 
+{
+    pthread_mutex_lock(&mutexId);
+    uint32_t id = nextId;
+    nextId++;
+    pthread_mutex_unlock(&mutexId);
+    return id;
+}
+
+/*---------------------------------------------- MANEJO DE COLAS ----------------------------------------------*/
+
+t_cola_planificacion* cola_planificacion_create(int semInitVal) {
+    t_cola_planificacion* self = malloc(sizeof(t_cola_planificacion));
+    self->lista = list_create();
+
+    pthread_mutex_init(&(self->mutex), NULL);
+    sem_init(&(self->instanciasDisponibles), 0, semInitVal);
+
+    return self;
+}
+
+t_pcb* get_and_remove_primer_pcb_de_cola(t_cola_planificacion* cola) {
+    t_pcb* pcb = NULL;
+    pthread_mutex_lock(&(cola->mutex));
+    if(!list_is_empty(cola->lista)) {
+        pcb = (t_pcb*) list_remove(cola->lista, 0);
+    }
+    pthread_mutex_unlock(&(cola->mutex));
+
+    return pcb;
+}
+
+int pcb_get_posicion(t_pcb* pcb, t_list* lista) {
+    for (int posicion = 0; posicion < list_size(lista); posicion++) {
+        if (pcb == (t_pcb*) list_get(lista, posicion)) {
+            return posicion;
+        }
+    }
+    return -1;
+}
+
+void agregar_pcb_a_cola(t_pcb* pcb, t_cola_planificacion* cola) {
+    pthread_mutex_lock(&(cola->mutex));
+    list_add(cola->lista, pcb);
+    pthread_mutex_unlock(&(cola->mutex));
+}
+
+void remover_pcb_de_cola(t_pcb* pcb, t_cola_planificacion* cola) {
+    pthread_mutex_lock(&(cola->mutex));
+    int posicion = pcb_get_posicion(pcb, cola->lista);
+    if(posicion != -1) {
+        list_remove(cola->lista, posicion);
+    } else {
+        log_error(kernelLogger, "Kernel: No existe tal elemento en la cola");
+    }
+    pthread_mutex_unlock(&(cola->mutex));
+}
+
+/*---------------------------------------------- ALGORITMOS ----------------------------------------------*/
+
+t_pcb* elegir_pcb_segun_algoritmo(t_cola_planificacion* cola) {
+    t_pcb* pcb = NULL;
+    if(algoritmo_fifo_loaded()) {
+        pcb = elegir_en_base_a_fifo(cola);
+    } else if(algoritmo_srt_loaded()) {
+        pcb = elegir_en_base_a_srt(cola);
+    }
+    return pcb;
+}
+
+bool algoritmo_fifo_loaded(void) {
+    return strcmp(kernelCfg->ALGORITMO_PLANIFICACION, "FIFO") == 0;
+}
+
+bool algoritmo_srt_loaded(void) {
+    return strcmp(kernelCfg->ALGORITMO_PLANIFICACION, "SRT") == 0;
+}
+
+/*---------------------------------------------- FIFO ----------------------------------------------*/
+
+t_pcb* elegir_en_base_a_fifo(t_cola_planificacion* colaPlanificacion) {
+    t_pcb* primerPcb = get_and_remove_primer_pcb_de_cola(colaPlanificacion);
+    pthread_mutex_lock(&(colaPlanificacion->mutex));
+    log_info(kernelLogger, "FIFO: Se toma una instancia de READY, PCB ID %d", primerPcb->id);
+    pthread_mutex_unlock(&(colaPlanificacion->mutex));
+    return primerPcb;
+}
+
+/*---------------------------------------------- SRT ----------------------------------------------*/
+
+t_pcb* srt_pcb_menor_estimacion_entre(t_pcb* unPcb, t_pcb* otroPcb) {
+    return unPcb->est_rafaga_actual <= otroPcb->est_rafaga_actual ? unPcb : otroPcb;
+}
+
+t_pcb* elegir_en_base_a_srt(t_cola_planificacion* colaPlanificacion) {
+    pthread_mutex_lock(&(colaPlanificacion->mutex));
+    t_pcb* pcbMenorEstimacion = (t_pcb*) list_get_minimum(colaPlanificacion->lista, (void*) srt_pcb_menor_estimacion_entre);
+    pthread_mutex_unlock(&(colaPlanificacion->mutex));
+    return pcbMenorEstimacion;
+}
+
+double get_diferencial_de_tiempo(time_t tiempoFinal, time_t tiempoInicial) {
+    /* difftime - calculate time difference
+        The difftime() function returns the number of seconds elapsed
+        between time time1 and time time0, represented as a double.*/
+    double diferencialT = difftime(tiempoFinal, tiempoInicial);
+    return diferencialT;
+}
+
+double media_exponencial(double realAnterior, double estAnterior) {
+    /* Est(n) = α . R(n-1) + (1 - α) . Est(n-1) */
+    return kernelCfg->ALFA * realAnterior + (1 - kernelCfg->ALFA) * estAnterior;
+}
+
+void srt_actualizar_info_para_siguiente_estimacion(t_pcb* pcb, time_t tiempoFinal, time_t tiempoInicial) {
+    double realAnterior = get_diferencial_de_tiempo(tiempoFinal, tiempoInicial);
+    pcb->est_rafaga_actual = media_exponencial(realAnterior, pcb->est_rafaga_actual);
+}
