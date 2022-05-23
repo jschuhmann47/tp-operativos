@@ -1,4 +1,6 @@
-#include "cpu.h"
+#include "cpu.h" //"../include/cpu.h"
+
+
 
 int main(int argc, char* argv[]) {
     cpuCfg = cpu_cfg_create();
@@ -6,6 +8,8 @@ int main(int argc, char* argv[]) {
     cargar_configuracion(CPU_MODULE_NAME, cpuCfg, CPU_CFG_PATH, cpuLogger, cpu_config_initialize);
 
     log_info(cpuLogger, "Valor de PUERTO_ESCUCHA_DISPATCH %s", cpuCfg->PUERTO_ESCUCHA_DISPATCH);
+    log_info(cpuLogger, "Valor de PUERTO_ESCUCHA_INTERRUPT %s", cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
+
 
     int socketEscuchaDispatch = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_DISPATCH);
 
