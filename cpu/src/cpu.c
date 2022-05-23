@@ -1,4 +1,6 @@
-#include "cpu.h"
+#include "cpu.h" //"../include/cpu.h"
+
+
 
 int main(int argc, char* argv[]) {
     cpuCfg = cpu_cfg_create();
@@ -6,13 +8,16 @@ int main(int argc, char* argv[]) {
     cargar_configuracion(CPU_MODULE_NAME, cpuCfg, CPU_CFG_PATH, cpuLogger, cpu_config_initialize);
 
     log_info(cpuLogger, "Valor de PUERTO_ESCUCHA_DISPATCH %s", cpuCfg->PUERTO_ESCUCHA_DISPATCH);
+    log_info(cpuLogger, "Valor de PUERTO_ESCUCHA_INTERRUPT %s", cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
 
     int socketEscucha = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_DISPATCH);
+    int socketEscuchaInterrupt = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
 
     struct sockaddr cliente;
     socklen_t len = sizeof(cliente);
 
-    aceptar_conexiones_cpu(socketEscucha, cliente, len);
+    aceptar_conexiones_cpu(socketEscucha, cliente, len); //ver como hacer que escuche de los dos puertos a la vez
+
 
     liberar_modulo_cpu(cpuLogger, cpuCfg);
 
