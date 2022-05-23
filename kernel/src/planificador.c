@@ -65,20 +65,21 @@ void* iniciar_corto_plazo(void* _) {
     for(;;) {
         sem_wait(&(pcbsReady->instanciasDisponibles)); //Llega un nuevo pcb a ready
 
-        /*
-        if(algoritmo_srt_loaded()) {
-            //Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
-            sem_wait(&(pcbsExec->instanciasDisponibles))
-            getPcbDeCPU();
-        }*/
 
         log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
+
+        /*if(algoritmo_srt_loaded()) {
+            //Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
+            sem_wait(&(pcbsExec->instanciasDisponibles));
+            getPcbDeCPU();
+        }*/
 
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
         //remover_pcb_de_cola(pcbQuePasaAExec, pcbsReady); //Ya lo estamos removiendo de la lista al elegir segun FIFO.
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
+        sem_post(&(pcbsExec->instanciasDisponibles));
 
         log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
 
@@ -89,20 +90,20 @@ void* iniciar_corto_plazo(void* _) {
     pthread_exit(NULL);
 }
 
-void* getPcbDeCPU(void* _) {
+void* getPcbDeCPU(void) {
 
-    pthread_t th;
-    pthread_create(&th, NULL, conexion_de_interrupt, NULL);
-    pthread_detach(th);
+    /*pthread_t th1;
+    pthread_create(&th1, NULL, conexion_de_interrupt, NULL);
+    pthread_detach(th1);*/
 
-    /*pthread_t th;
-    pthread_create(&th, NULL, conexion_de_dispatch, NULL);
-    pthread_detach(th);
+    pthread_t th2;
+    pthread_create(&th2, NULL, conexion_de_dispatch, NULL);
+    pthread_detach(th2);
 
     sem_wait(&(pcbsExec->instanciasDisponibles));
-    t_pcb* pcbQueMeDaCPU = funcionLoca();
+    //t_pcb* pcbQueMeDaCPU = funcionLoca();
 
-    remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
+    /*remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
     cambiar_estado_pcb(pcbQueMeDaCPU, READY);
     agregar_pcb_a_cola(pcbQueMeDaCPU, pcbsReady);
 
@@ -114,6 +115,16 @@ void* getPcbDeCPU(void* _) {
 void* conexion_de_interrupt(void* _) {
     log_info(kernelLogger, "Hilo interrupt inicializado");
 
+    int socketCpu = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_INTERRUPT);
+    log_info(kernelLogger, "Kernel: Conectando a CPU");
+
+    if (socketCpu == -1)
+    {
+        log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
+        return -1;
+    }
+    
+
     //TODO: Le aviso a CPU que me tiene que dar el pcb que esta en Exec, si es que hay alguno
     //TODO: Si CPU maneja la cola de pcbsExec, solo tengo que sacarlo de ahi
 }
@@ -121,6 +132,15 @@ void* conexion_de_interrupt(void* _) {
 //En todos los casos el PCB será recibido a través de la conexión de dispatch - Es bidireccional, por aca tambien le mando el PCB a CPU
 void* conexion_de_dispatch(void* _) {
     log_info(kernelLogger, "Hilo dispatch EXEC->READY inicializado");
+
+    int socketCpu = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH);
+    log_info(kernelLogger, "Kernel: Conectando a CPU");
+
+    if (socketCpu == -1)
+    {
+        log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
+        return -1;
+    }
 
     // CASO 1: Envio de PCB a CPU
     // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
@@ -182,7 +202,7 @@ void* pasar_de_susready_a_ready(void* _) {
     pthread_exit(NULL);
 }
 
-void* pasar_de_blocked_a_ready(t_pcb* pcb) {
+void* blocked_a_ready(t_pcb* pcb) {
     remover_pcb_de_cola(pcb, pcbsBlocked);
     cambiar_estado_pcb(pcb, READY);
     agregar_pcb_a_cola(pcb, pcbsReady);

@@ -13,16 +13,6 @@ int main(int argc, char* argv[]) {
 
     log_info(kernelLogger, "Kernel: Esperando conexión entrante de Módulo Consola...");
 
-    //Conexion a CPU
-    /*int socketCpu = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH);
-    log_info(kernelLogger, "Kernel: Conectando a CPU");
-
-    if (socketCpu == -1)
-    {
-        log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
-        return -1;
-    }*/
-
     iniciar_planificacion();
 
     aceptar_conexiones_kernel(socketEscucha, cliente, len);

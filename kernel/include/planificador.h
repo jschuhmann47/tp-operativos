@@ -12,14 +12,14 @@
 
 // Planificador Corto Plazo
 void* iniciar_corto_plazo(void* _);
-void* getPcbDeCPU(void* _);
+void* getPcbDeCPU(void);
 void* conexion_de_interrupt(void* _);
 void* conexion_de_dispatch(void* _);
 
 // Planificador Mediano Plazo
 void* iniciar_mediano_plazo(void* _);
 void* pasar_de_susready_a_ready(void* _);
-void* pasar_de_blocked_a_ready(t_pcb* pcb);
+void* blocked_a_ready(t_pcb* pcb);
 void* enviar_suspension_de_pcb_a_memoria(void* _);
 
 // Planificador Largo Plazo
