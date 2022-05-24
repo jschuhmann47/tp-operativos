@@ -28,7 +28,7 @@ void ejecutar_instruccion(t_pcb* pcb){
     }else{
         cpu_execute(instruccionAEjecutar);
     }
-    cpu_check_interrupt(??);
+    cpu_check_interrupt(/*??*/);
     
 }
 
@@ -36,7 +36,7 @@ void ejecutar_instruccion(t_pcb* pcb){
 
 
 t_instruccion* cpu_fetch (t_pcb* pcb){
-
+    //devuelve la instruccion de indice programCounter
     return list_get(pcb->instrucciones,pcb->programCounter); //uint32_t o int deberia ser el program counter? 
 }
 
@@ -53,7 +53,7 @@ uint32_t cpu_fetch_operands(instruccionAEjecutar){
 }
 
 void cpu_execute(t_instruccion* instruccion){
-    switch (instruccion->codigo.operacion) //no esta en el struct, ver de donde sale o si llega parseado
+    switch (instruccion->codigo.op) //no esta en el struct, ver de donde sale o si llega parseado
     {
     case NO_OP:
         /* code */
@@ -78,5 +78,11 @@ void cpu_execute(t_instruccion* instruccion){
 void cpu_execute_con_operandos(t_instruccion* instruccion,uint32_t operando){
     //el COPY y el WRITE son iguales solo que el valor que entra en WRITE lo mandan, y el de COPY se busca en memoria, pero despues
     //de conseguir el valor de ahi en adelante es igual
+    
+}
+
+uint32_t obtener_operando_en_memoria(t_instruccion* instruccion){
+    void* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
+    //TODO, buscarlo en la memoria
 }
 

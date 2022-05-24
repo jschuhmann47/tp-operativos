@@ -150,13 +150,13 @@ void* conexion_de_dispatch(void* _) {
 
 void* iniciar_mediano_plazo(void* _) {
     pthread_t th;
-    pthread_create(&th, NULL, pasar_de_susready_a_ready, NULL);
+    pthread_create(&th, NULL, pasar_de_susready_a_ready, NULL); 
     pthread_detach(th);
     //pthread_create(&th, NULL, recibir_pcb_bloqueado, NULL);
     //pthread_detach(th);
     for(;;) {
         sem_wait(&hayPCBsParaPasarASusBlocked); // TODO: Va a estar esperando por que le hagan el post
-        t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked);
+        t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked); //tiene que sacar segun el tiempo de configuracion, usar usleep()
         enviar_suspension_de_pcb_a_memoria(pcbASuspender);
         cambiar_estado_pcb(pcbASuspender, SUSBLOCKED);
         agregar_pcb_a_cola(pcbASuspender, pcbsSusBlocked);
@@ -166,6 +166,8 @@ void* iniciar_mediano_plazo(void* _) {
         sem_post(&gradoMultiprog);                              
         sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for
         //TODO: Aca pasar ya de SUSBLOCKED => SUSREADY ??? Un hilo?
+        //dice esto: La transición (SUSPENDED-BLOCKED -> SUSPENDED-READY), al ser una transición que va a darse al finalizar una entrada/salida, 
+        //no necesariamente forma parte del planificador de Mediano Plazo.
     }
     pthread_exit(NULL);
 }
@@ -209,10 +211,21 @@ void* blocked_a_ready(t_pcb* pcb) {
     sem_post(&(pcbsReady->instanciasDisponibles));
 }
 
-void* enviar_suspension_de_pcb_a_memoria(void* _) {
+void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
     //se enviará un mensaje a Memoria con la información necesaria y se esperará la confirmación del mismo.
     //Una vez recibo la confirmacion
-    sem_post(&suspensionConcluida);
+    int memoria_fd=conectar_a_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_MEMORIA);
+    if (memoria_fd == -1)
+    {
+        log_error(kernelCfg, "Kernel: No se pudo establecer conexión con Memoria. Valor conexión %d", kernelCfg);
+        return -1;
+    }
+    void* mensaje = serializar_pcb(pcb); //TODO, yo esta la definiria en static xq se va a usar banda me parece
+    if(send(memoria_fd, mensaje, sizeof(t_pcb), 0) == -1) {
+        log_error(kernelCfg, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", kernelCfg);
+        return -1;
+    }
+    sem_post(&suspensionConcluida); //creo que este va un poco despues
 }
 
 /*---------------------------------------------- PLANIFICADOR LARGO PLAZO ----------------------------------------------*/
