@@ -68,24 +68,25 @@ void* iniciar_corto_plazo(void* _) {
 
         log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
 
-        /*if(algoritmo_srt_loaded()) {
-            //Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
+        if(algoritmo_srt_loaded()) {
+            interrupcion_a_cpu();//Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
             sem_wait(&(pcbsExec->instanciasDisponibles));
             getPcbDeCPU();
-        }*/
+        }
 
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
         //remover_pcb_de_cola(pcbQuePasaAExec, pcbsReady); //Ya lo estamos removiendo de la lista al elegir segun FIFO.
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
+        mandar_pcb_a_cpu(pcbQuePasaAExec);
         sem_post(&(pcbsExec->instanciasDisponibles));
 
         log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
 
         //TODO: Y si la cola de planificación ready se quede sin PCBs??
 
-        //atender_peticiones_pcb(pcbQuePasaAExec);
+        atender_peticiones_pcb(pcbQuePasaAExec);
     }
     pthread_exit(NULL);
 }
@@ -101,14 +102,32 @@ void* getPcbDeCPU(void) {
     pthread_detach(th2);
 
     sem_wait(&(pcbsExec->instanciasDisponibles));
-    //t_pcb* pcbQueMeDaCPU = funcionLoca();
+    t_pcb* pcbQueMeDaCPU = traer_cpu_de_memoria();
 
-    /*remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
+    remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
     cambiar_estado_pcb(pcbQueMeDaCPU, READY);
     agregar_pcb_a_cola(pcbQueMeDaCPU, pcbsReady);
 
-    log_transition("Corto Plazo", "EXEC", "READY", pcbQueMeDaCPU->id);*/
+    log_transition("Corto Plazo", "EXEC", "READY", pcbQueMeDaCPU->id);
 
+}
+
+void mandar_pcb_a_cpu(t_pcb* pcb) {
+    log_info(kernelLogger, "Corto Plazo: Se manda el PCB %d a la CPU", pcb->id);
+    void* pcbAMandar=serializar_pcb(pcb);
+    if(send(cpuSocketDispatch, pcbAMandar, sizeof(t_pcb), 0) == -1) {
+        log_error(kernelLogger, "Error al mandar el PCB a la CPU");
+    }
+    log_info(kernelLogger, "Corto Plazo: Se mando el PCB %d a la CPU correctamente", pcb->id);
+    free(pcbAMandar);
+}
+
+void interrupcion_a_cpu() {
+    log_info(kernelLogger, "Corto Plazo: Se interrumpe la CPU");
+    if(send(cpuSocketInterrput, "interrupcion", sizeof("interrupcion"), 0) == -1) {
+        log_error(kernelLogger, "Error al interrumpir la CPU");
+    }
+    log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");
 }
 
 //La conexión de interrupt dedicada solamente a enviar mensajes de interrupción
@@ -141,7 +160,7 @@ void* conexion_de_dispatch(void* _) {
         log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
         return -1;
     }
-
+    return socketCpu;
     // CASO 1: Envio de PCB a CPU
     // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
 }
@@ -156,7 +175,7 @@ void* iniciar_mediano_plazo(void* _) {
     //pthread_detach(th);
     for(;;) {
         sem_wait(&hayPCBsParaPasarASusBlocked); // TODO: Va a estar esperando por que le hagan el post
-        t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked); //tiene que sacar segun el tiempo de configuracion, usar usleep()
+        t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked); //tiene que sacar segun el tiempo de configuracion, usar usleep
         enviar_suspension_de_pcb_a_memoria(pcbASuspender);
         cambiar_estado_pcb(pcbASuspender, SUSBLOCKED);
         agregar_pcb_a_cola(pcbASuspender, pcbsSusBlocked);
@@ -172,7 +191,7 @@ void* iniciar_mediano_plazo(void* _) {
     pthread_exit(NULL);
 }
 
-/*void* recibir_pcb_bloqueado(void* pcb) {
+void* recibir_pcb_bloqueado(void* pcb) {
     pthread_t th;
 
     if(pcb->programCounter->parametros[0] > kernelCfg->TIEMPO_MAXIMO_BLOQUEADO) {
@@ -187,7 +206,7 @@ void* iniciar_mediano_plazo(void* _) {
 void* blocked_a_susblocked(void* _) {
     // Usar remover_pcb_de_cola?
     sem_post(&hayPCBsParaPasarASusBlocked);
-}*/
+}
 
 void* pasar_de_susready_a_ready(void* _) {
     log_info(kernelLogger, "Mediano Plazo: Hilo pasar de SUSP/READY->READY inicializado");
@@ -220,11 +239,12 @@ void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
         log_error(kernelCfg, "Kernel: No se pudo establecer conexión con Memoria. Valor conexión %d", kernelCfg);
         return -1;
     }
-    void* mensaje = serializar_pcb(pcb); //TODO, yo esta la definiria en static xq se va a usar banda me parece
+    void* mensaje = serializar_pcb(pcb); //TODO
     if(send(memoria_fd, mensaje, sizeof(t_pcb), 0) == -1) {
         log_error(kernelCfg, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", kernelCfg);
         return -1;
     }
+    log_info(kernelLogger,"Kernel: Enviada PCB a Memoria");
     sem_post(&suspensionConcluida); //creo que este va un poco despues
 }
 
@@ -287,12 +307,14 @@ void* liberar_procesos_en_exit(void* _) {
 /*---------------------------------------------- MANEJO DE PCBs ----------------------------------------------*/
 
 t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel_config* config) {
+    time_t tf,ti;
     t_pcb* self = malloc(sizeof(t_pcb));
     self->id = id;
     self->status = NEW;
     self->tamanio = tamanio;
     self->instrucciones = instrucciones;
-    //self->programCounter; TODO: Apuntar al primer elemento de la lista de instrucciones
+    self->programCounter = 0;
+    self->est_rafaga_actual = kernelCfg->ESTIMACION_INICIAL;
     if(algoritmo_srt_loaded()) {
         self->algoritmo_siguiente_estim = srt_actualizar_info_para_siguiente_estimacion;
     }
@@ -488,3 +510,4 @@ void srt_actualizar_info_para_siguiente_estimacion(t_pcb* pcb, time_t tiempoFina
     double realAnterior = get_diferencial_de_tiempo(tiempoFinal, tiempoInicial);
     pcb->est_rafaga_actual = media_exponencial(realAnterior, pcb->est_rafaga_actual);
 }
+

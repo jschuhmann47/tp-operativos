@@ -122,22 +122,9 @@ int sizeArray(void **array)
     return cantidad;
 }
 
-void* serializar_pcb(t_pcb *pcb)
+void* serializar_pcb(t_pcb *pcb) //o string
 {
     void *buffer = malloc(sizeof(t_pcb));
     memcpy(buffer, pcb, sizeof(t_pcb)); //yo capaz q lo haria uno por uno para saber que es cada cosa, x ahora lo dejo asi
     return buffer;
 }
-
-// struct t_pcb
-// {
-//     uint32_t id;        
-//     t_status status;
-//     uint32_t tamanio;
-//     t_list *instrucciones;
-//     void *programCounter;
-//     // TODO: Tabla de paginas
-//     // Estos dos ultimos solo se usan cuando es SRT
-//     double est_rafaga_actual; // Esta en Milisegundos
-//     void (*algoritmo_siguiente_estim)(t_pcb *self, time_t tiempoFinal, time_t tiempoInicial);
-// };

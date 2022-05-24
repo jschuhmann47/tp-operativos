@@ -11,7 +11,7 @@
 #include <commons/string.h>
 
 typedef struct {
-    int32_t KERNEL_SOCKET;
+    uint32_t KERNEL_SOCKET;
     uint16_t ENTRADAS_TLB;
     char* REEMPLAZO_TLB;
     uint16_t RETARDO_NOOP;

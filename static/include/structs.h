@@ -49,10 +49,11 @@ struct t_pcb
     t_status status;
     uint32_t tamanio;
     t_list *instrucciones;
-    void *programCounter;
+    uint32_t programCounter;
     // TODO: Tabla de paginas
     // Estos dos ultimos solo se usan cuando es SRT
     double est_rafaga_actual; // Esta en Milisegundos
+    //double siguiente_est;
     void (*algoritmo_siguiente_estim)(t_pcb *self, time_t tiempoFinal, time_t tiempoInicial);
 };
 
@@ -64,3 +65,4 @@ typedef struct
 } t_cola_planificacion;
 
 #endif
+

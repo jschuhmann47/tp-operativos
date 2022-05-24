@@ -1,21 +1,6 @@
 #include "cpu.h"
 
-
-// typedef struct t_pcb t_pcb; // Se declara este para poder usar el del "algortimo_update"
-// struct t_pcb
-// {
-//     uint32_t id;        //como hacemos incremental el id? buscar.
-//     t_status status;
-//     uint32_t tamanio;
-//     t_list *instrucciones;
-//     void *programCounter;
-//     // TODO: Tabla de paginas
-//     // Estos dos ultimos solo se usan cuando es SRT
-//     double est_rafaga_actual; // Esta en Milisegundos
-//     void (*algoritmo_siguiente_estim)(t_pcb *self, time_t tiempoFinal, time_t tiempoInicial);
-// };
-
-
+pthread_mutex_t mutex_cpu;
 
 void ejecutar_instruccion(t_pcb* pcb){
     
@@ -34,23 +19,19 @@ void ejecutar_instruccion(t_pcb* pcb){
 
 
 
-
 t_instruccion* cpu_fetch (t_pcb* pcb){
     //devuelve la instruccion de indice programCounter
     return list_get(pcb->instrucciones,pcb->programCounter); //uint32_t o int deberia ser el program counter? 
 }
 
 bool cpu_decode(t_instruccion* instruccion){
-    //parsear aca?? o puede leer asi de una
-    if(instruccion->indicador == COPY){
+    
+    if(strcmp(instruccion->indicador, "COPY") == 0){
         return true;
     }
     return false;
 }
 
-uint32_t cpu_fetch_operands(instruccionAEjecutar){
-    //todo: buscar en memoria el operando
-}
 
 void cpu_execute(t_instruccion* instruccion){
     switch (instruccion->codigo.op) //no esta en el struct, ver de donde sale o si llega parseado
@@ -81,7 +62,7 @@ void cpu_execute_con_operandos(t_instruccion* instruccion,uint32_t operando){
     
 }
 
-uint32_t obtener_operando_en_memoria(t_instruccion* instruccion){
+uint32_t cpu_fetch_operands(t_instruccion* instruccion){
     void* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
     //TODO, buscarlo en la memoria
 }
