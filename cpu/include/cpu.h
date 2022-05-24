@@ -15,5 +15,6 @@ t_log* cpuLogger;
 t_cpu_config* cpuCfg;
 
 void aceptar_conexiones_cpu(int socketEscucha, struct sockaddr cliente, socklen_t len);
+void recibir_pcb_de_kernel(int socketKernelDispatch);
 
 #endif

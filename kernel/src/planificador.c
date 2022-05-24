@@ -191,22 +191,22 @@ void* iniciar_mediano_plazo(void* _) {
     pthread_exit(NULL);
 }
 
-void* recibir_pcb_bloqueado(void* pcb) {
-    pthread_t th;
+// void* recibir_pcb_bloqueado(void* pcb) {
+//     pthread_t th;
 
-    if(pcb->programCounter->parametros[0] > kernelCfg->TIEMPO_MAXIMO_BLOQUEADO) {
-        pthread_create(&th, NULL, blocked_a_susblocked, NULL);
-        pthread_detach(th);
-    } else {
-        pthread_create(&th, NULL, blocked_a_ready, NULL);
-        pthread_detach(th);
-    }
-}
+//     if(pcb->programCounter->parametros[0] > kernelCfg->TIEMPO_MAXIMO_BLOQUEADO) {
+//         pthread_create(&th, NULL, blocked_a_susblocked, NULL);
+//         pthread_detach(th);
+//     } else {
+//         pthread_create(&th, NULL, blocked_a_ready, NULL);
+//         pthread_detach(th);
+//     }
+// }
 
-void* blocked_a_susblocked(void* _) {
-    // Usar remover_pcb_de_cola?
-    sem_post(&hayPCBsParaPasarASusBlocked);
-}
+// void* blocked_a_susblocked(void* _) {
+//     // Usar remover_pcb_de_cola?
+//     sem_post(&hayPCBsParaPasarASusBlocked);
+// }
 
 void* pasar_de_susready_a_ready(void* _) {
     log_info(kernelLogger, "Mediano Plazo: Hilo pasar de SUSP/READY->READY inicializado");

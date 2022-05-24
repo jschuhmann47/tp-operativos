@@ -1,4 +1,5 @@
-#include "cpu.h"
+#include "instruccion.h"
+
 
 pthread_mutex_t mutex_cpu;
 

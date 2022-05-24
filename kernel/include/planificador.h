@@ -15,12 +15,14 @@ void* iniciar_corto_plazo(void* _);
 void* getPcbDeCPU(void);
 void* conexion_de_interrupt(void* _);
 void* conexion_de_dispatch(void* _);
+void interrupcion_a_cpu();
+void mandar_pcb_a_cpu(t_pcb* pcb);
 
 // Planificador Mediano Plazo
 void* iniciar_mediano_plazo(void* _);
 void* pasar_de_susready_a_ready(void* _);
 void* blocked_a_ready(t_pcb* pcb);
-void* enviar_suspension_de_pcb_a_memoria(void* _);
+void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb);
 
 // Planificador Largo Plazo
 void* iniciar_largo_plazo(void* _);
@@ -34,6 +36,7 @@ int get_grado_multiprog_actual(void);
 void log_transition(const char* entityName, const char* prev, const char* post, int pid);
 void agregar_pcb_en_cola_new();
 uint32_t get_siguiente_id();
+void* serializar_pcb(t_pcb* pcb);
 
 // Manejo de colas
 t_cola_planificacion* cola_planificacion_create(int semInitVal);
