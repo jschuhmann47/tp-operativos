@@ -47,8 +47,9 @@ void aceptar_conexiones_cpu(int socketEscucha, struct sockaddr cliente, socklen_
 void recibir_pcb_de_kernel(int socketKernelDispatch){
     log_info(cpuLogger, "CPU: Recibiendo PCB de Kernel");
     void* buffer = malloc(sizeof(t_pcb)); 
-	if(recv(socketKernelDispatch, &buffer, sizeof(t_pcb), MSG_WAITALL) > 0)
-		//TODO
+	if(recv(socketKernelDispatch, &buffer, sizeof(t_pcb), MSG_WAITALL) > 0){
+        //TODO
+    }
 	else{
 		//TODO
 	}

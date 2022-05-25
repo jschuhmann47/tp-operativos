@@ -7,7 +7,7 @@ int cargar_configuracion(const char *nombreModulo, void *moduleCfg, char *config
     t_config *localCfg = config_create(configPath);
     if (localCfg == NULL)
     {
-        log_error(logger, "No se encontró ", configPath);
+        log_error(logger, "No se encontró %s", configPath);
         return EXIT_FAILURE;
     }
     cargar_miembros(moduleCfg, localCfg);

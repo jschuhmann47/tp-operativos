@@ -7,6 +7,7 @@
 #include <commons/config.h>
 #include <commons/log.h>
 #include <commons/string.h>
+#include <string.h>
 #include "structs.h"
 
 ///////////////////////////// CONFIGS /////////////////////////////
@@ -15,4 +16,5 @@ int cargar_configuracion(const char *nombreModulo, void *moduleCfg, char *config
 char* agregarInstruccion(char **intruccion, char *mensaje);
 t_instruccion *crear_instruccion(void);
 int sizeArray(void **array);
+code_instruccion getCodeIntruccion(char *code);
 #endif

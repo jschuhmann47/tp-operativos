@@ -9,7 +9,7 @@ void ejecutar_instruccion(t_pcb* pcb);
 t_instruccion* cpu_fetch (t_pcb* pcb);
 bool cpu_decode(t_instruccion* instruccion);
 void cpu_execute(t_instruccion* instruccion);
-void cpu_execute_con_operandos(t_instruccion* instruccion,uint32_t operando);
+void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando);
 uint32_t cpu_fetch_operands(t_instruccion* instruccion);
 
 #endif

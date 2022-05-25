@@ -14,7 +14,7 @@ void ejecutar_instruccion(t_pcb* pcb){
     }else{
         cpu_execute(instruccionAEjecutar);
     }
-    cpu_check_interrupt(/*??*/);
+    //cpu_check_interrupt(/*??*/);
     
 }
 
@@ -35,7 +35,7 @@ bool cpu_decode(t_instruccion* instruccion){
 
 
 void cpu_execute(t_instruccion* instruccion){
-    switch (instruccion->codigo.op) //no esta en el struct, ver de donde sale o si llega parseado
+    switch (NO_OP /*instruccion->codigo.op*/) //no esta en el struct, ver de donde sale o si llega parseado
     {
     case NO_OP:
         /* code */
@@ -57,7 +57,7 @@ void cpu_execute(t_instruccion* instruccion){
     }
 }
 
-void cpu_execute_con_operandos(t_instruccion* instruccion,uint32_t operando){
+void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando){
     //el COPY y el WRITE son iguales solo que el valor que entra en WRITE lo mandan, y el de COPY se busca en memoria, pero despues
     //de conseguir el valor de ahi en adelante es igual
     

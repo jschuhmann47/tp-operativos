@@ -86,7 +86,7 @@ void* iniciar_corto_plazo(void* _) {
 
         //TODO: Y si la cola de planificación ready se quede sin PCBs??
 
-        atender_peticiones_pcb(pcbQuePasaAExec);
+        //atender_peticiones_pcb(pcbQuePasaAExec);
     }
     pthread_exit(NULL);
 }
@@ -112,9 +112,17 @@ void* getPcbDeCPU(void) {
 
 }
 
+t_pcb* traer_cpu_de_memoria(){
+    //TODO
+    t_list* asd;
+    t_pcb* hola = pcb_create(1,1,asd,kernelCfg);
+    return hola;
+}
+
 void mandar_pcb_a_cpu(t_pcb* pcb) {
     log_info(kernelLogger, "Corto Plazo: Se manda el PCB %d a la CPU", pcb->id);
     void* pcbAMandar=serializar_pcb(pcb);
+    int cpuSocketDispatch=1; //CAMBIAR, PUESTO PARA QUE NO ROMPA
     if(send(cpuSocketDispatch, pcbAMandar, sizeof(t_pcb), 0) == -1) {
         log_error(kernelLogger, "Error al mandar el PCB a la CPU");
     }
@@ -124,7 +132,8 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
 
 void interrupcion_a_cpu() {
     log_info(kernelLogger, "Corto Plazo: Se interrumpe la CPU");
-    if(send(cpuSocketInterrput, "interrupcion", sizeof("interrupcion"), 0) == -1) {
+    int cpuSocketInterrupt=1; //CAMBIAR, PUESTO PARA QUE NO ROMPA
+    if(send(cpuSocketInterrupt, "interrupcion", sizeof("interrupcion"), 0) == -1) {
         log_error(kernelLogger, "Error al interrumpir la CPU");
     }
     log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");
@@ -236,12 +245,12 @@ void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
     int memoria_fd=conectar_a_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_MEMORIA);
     if (memoria_fd == -1)
     {
-        log_error(kernelCfg, "Kernel: No se pudo establecer conexión con Memoria. Valor conexión %d", kernelCfg);
+        log_error(kernelCfg, "Kernel: No se pudo establecer conexión con Memoria. Valor conexión %d", memoria_fd);//warning de kernelCfg
         return -1;
     }
     void* mensaje = serializar_pcb(pcb); //TODO
     if(send(memoria_fd, mensaje, sizeof(t_pcb), 0) == -1) {
-        log_error(kernelCfg, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", kernelCfg);
+        log_error(kernelCfg, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", memoria_fd);
         return -1;
     }
     log_info(kernelLogger,"Kernel: Enviada PCB a Memoria");
