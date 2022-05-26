@@ -22,7 +22,7 @@ t_cola_planificacion* pcbsSusReady;
 t_cola_planificacion* pcbsSusBlocked;
 t_cola_planificacion* pcbsExit;
 
-void iniciar_planificacion(void) {
+void iniciar_planificacion() {
 
     nextId = 1;
     /* Inicializacion de semaforos */
@@ -74,7 +74,9 @@ void* iniciar_corto_plazo(void* _) {
             getPcbDeCPU();
         }
 
-        t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
+        t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady); 
+
+        //sem_wait(cpuLibre); xq si es fifo puede llegar uno a ready pero no necesariamente al toque a exec
 
         //remover_pcb_de_cola(pcbQuePasaAExec, pcbsReady); //Ya lo estamos removiendo de la lista al elegir segun FIFO.
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
@@ -116,9 +118,9 @@ t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esper
     //lo del socket ver como viene
     //x ahora lo declaro asi nomas
     //sem_wait(??);
-    int socketCPU = 0;
+
     void* pcb = malloc(sizeof(t_pcb));
-    if(recv(socketCPU, pcb, sizeof(t_pcb), 0) == -1){
+    if(recv(socketCpuDispatch, pcb, sizeof(t_pcb), MSG_WAITALL) == -1){
         log_error(kernelLogger, "Error al recibir el PCB de la CPU");
     }
     //t_pcb* pcbArribada = deserializar_pcb(pcb);

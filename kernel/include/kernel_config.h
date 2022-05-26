@@ -34,6 +34,9 @@ typedef struct {
 
 extern t_log* kernelLogger;
 extern t_kernel_config* kernelCfg;
+extern int socketCpuDispatch;
+extern int socketCpuInterrupt;
+extern int socketMemoria;
 
 t_kernel_config* kernel_cfg_create(void);
 void kernel_config_initialize(void* kernelCfg, t_config* config);

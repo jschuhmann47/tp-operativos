@@ -16,6 +16,10 @@
 t_log* kernelLogger;
 t_kernel_config* kernelCfg;
 
+int socketCpuDispatch;
+int socketCpuInterrupt;
+int socketMemoria;
+
 void aceptar_conexiones_kernel(int socketEscucha, struct sockaddr cliente, socklen_t len);
 void crear_hilo_handler_conexion_entrante(int* socket);
 void creacion_pcb();
