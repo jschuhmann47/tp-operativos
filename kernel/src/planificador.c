@@ -128,7 +128,8 @@ t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esper
 }
 
 void determinar_ready_o_blocked(t_pcb* pcb){
-    if(/*cumpleCondicionParaBLoqueado*/1){//no se si es el programCounter si apunta a IO o COPY, ver
+    t_instruccion* instruccionActual = list_get(pcb->instrucciones, pcb->programCounter);
+    if(strcmp(instruccionActual->indicador,"IO")==0){ 
             pcb->status = BLOCKED;
             agregar_pcb_a_cola(pcb, pcbsBlocked);
             log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
@@ -208,18 +209,13 @@ void* iniciar_mediano_plazo(void* _) {
     //pthread_create(&th, NULL, recibir_pcb_bloqueado, NULL);
     //pthread_detach(th);
     for(;;) {
-        sem_wait(&hayPCBsParaPasarASusBlocked); // TODO: Va a estar esperando por que le hagan el post
-        t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked); //tiene que sacar segun el tiempo de configuracion, usar usleep
-        enviar_suspension_de_pcb_a_memoria(pcbASuspender);
-        cambiar_estado_pcb(pcbASuspender, SUSBLOCKED);
-        agregar_pcb_a_cola(pcbASuspender, pcbsSusBlocked);
-        log_info(kernelLogger, "Mediano Plazo: Se libera una instancia de Grado Multiprogramación");
-        log_transition("Mediano Plazo", "BLOCKED", "SUSP/BLOCKED", pcbASuspender->id);
-        /* Aumenta el grado de multiprogramción al suspender a un proceso */
-        sem_post(&gradoMultiprog);                              
-        sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for
-        //TODO: Aca pasar ya de SUSBLOCKED => SUSREADY ??? Un hilo?
-        //dice esto: La transición (SUSPENDED-BLOCKED -> SUSPENDED-READY), al ser una transición que va a darse al finalizar una entrada/salida, 
+        sem_wait(&hayPCBsParaPasarASusBlocked); // espera que entre uno a bloqueado, cambiaria el semaforo yo
+        t_pcb* pcbASuspender; //obtener la pcb que acaba de entrar a bloqueado, TODO
+        contar_tiempo_bloqueado(pcbASuspender); //esta func la suspende si es necesario
+                                     
+        sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for.
+        
+        //La transición (SUSPENDED-BLOCKED -> SUSPENDED-READY), al ser una transición que va a darse al finalizar una entrada/salida, 
         //no necesariamente forma parte del planificador de Mediano Plazo.
     }
     pthread_exit(NULL);
@@ -245,9 +241,15 @@ void* iniciar_mediano_plazo(void* _) {
 void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO
     usleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO);
     if(pcb->status==BLOCKED){
-        pcb->status=SUSBLOCKED;
-        sem_post(&hayPCBsParaPasarASusBlocked);  
+        enviar_suspension_de_pcb_a_memoria(pcb);
+        cambiar_estado_pcb(pcb, SUSBLOCKED);
+        agregar_pcb_a_cola(pcb, pcbsSusBlocked);
+        log_info(kernelLogger, "Mediano Plazo: Se libera una instancia de Grado Multiprogramación");
+        log_transition("Mediano Plazo", "BLOCKED", "SUSP/BLOCKED", pcb->id);
+        /* Aumenta el grado de multiprogramción al suspender a un proceso */  
+        sem_post(&gradoMultiprog); 
     }
+    pthread_exit(NULL);
 }
 
 void* pasar_de_susready_a_ready(void* _) {
