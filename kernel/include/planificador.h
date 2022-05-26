@@ -20,6 +20,8 @@ void* conexion_de_interrupt(void* _);
 void* conexion_de_dispatch(void* _);
 void interrupcion_a_cpu();
 void mandar_pcb_a_cpu(t_pcb* pcb);
+t_pcb* traer_cpu_de_memoria();
+void determinar_ready_o_blocked(t_pcb* pcb);
 
 
 // Planificador Mediano Plazo
@@ -27,7 +29,7 @@ void* iniciar_mediano_plazo(void* _);
 void* pasar_de_susready_a_ready(void* _);
 void* blocked_a_ready(t_pcb* pcb);
 void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb);
-t_pcb* traer_cpu_de_memoria();
+void* contar_tiempo_bloqueado(t_pcb* pcb);
 
 // Planificador Largo Plazo
 void* iniciar_largo_plazo(void* _);

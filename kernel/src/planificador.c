@@ -112,11 +112,35 @@ void* getPcbDeCPU(void) {
 
 }
 
-t_pcb* traer_cpu_de_memoria(){
-    //TODO
+t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esperando que se la devuelva por el motivo que sea
+    //lo del socket ver como viene
+    //x ahora lo declaro asi nomas
+    //sem_wait(??);
+    int socketCPU = 0;
+    void* pcb = malloc(sizeof(t_pcb));
+    if(recv(socketCPU, pcb, sizeof(t_pcb), 0) == -1){
+        log_error(kernelLogger, "Error al recibir el PCB de la CPU");
+    }
+    //t_pcb* pcbArribada = deserializar_pcb(pcb);
     t_list* asd;
-    t_pcb* hola = pcb_create(1,1,asd,kernelCfg);
+    t_pcb* hola = pcb_create(1,1,asd,kernelCfg); //si fue a IO suspenderlo
     return hola;
+}
+
+void determinar_ready_o_blocked(t_pcb* pcb){
+    if(/*cumpleCondicionParaBLoqueado*/1){//no se si es el programCounter si apunta a IO o COPY, ver
+            pcb->status = BLOCKED;
+            agregar_pcb_a_cola(pcb, pcbsBlocked);
+            log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
+            sem_post(&(pcbsBlocked->instanciasDisponibles));
+    } 
+    else{ //que volvio por una interrupcion y no por IO
+        pcb->status = READY;
+        agregar_pcb_a_cola(pcb, pcbsReady);
+        log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
+        sem_post(&(pcbsReady->instanciasDisponibles));
+    }
+
 }
 
 void mandar_pcb_a_cpu(t_pcb* pcb) {
@@ -174,6 +198,7 @@ void* conexion_de_dispatch(void* _) {
     // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
 }
 
+
 /*---------------------------------------------- PLANIFICADOR MEDIANO PLAZO ----------------------------------------------*/
 
 void* iniciar_mediano_plazo(void* _) {
@@ -200,7 +225,7 @@ void* iniciar_mediano_plazo(void* _) {
     pthread_exit(NULL);
 }
 
-// void* recibir_pcb_bloqueado(void* pcb) {
+// void* recibir_pcb_bloqueado(void* pcb) { 
 //     pthread_t th;
 
 //     if(pcb->programCounter->parametros[0] > kernelCfg->TIEMPO_MAXIMO_BLOQUEADO) {
@@ -216,6 +241,14 @@ void* iniciar_mediano_plazo(void* _) {
 //     // Usar remover_pcb_de_cola?
 //     sem_post(&hayPCBsParaPasarASusBlocked);
 // }
+
+void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO
+    usleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO);
+    if(pcb->status==BLOCKED){
+        pcb->status=SUSBLOCKED;
+        sem_post(&hayPCBsParaPasarASusBlocked);  
+    }
+}
 
 void* pasar_de_susready_a_ready(void* _) {
     log_info(kernelLogger, "Mediano Plazo: Hilo pasar de SUSP/READY->READY inicializado");
