@@ -1,22 +1,28 @@
 #include "instruccion.h"
 
-
 pthread_mutex_t mutex_cpu;
 
-void ejecutar_instruccion(t_pcb* pcb){
+
+void hacer_ciclo_de_instruccion(t_pcb* pcb){
     
-    t_instruccion* instruccionAEjecutar = cpu_fetch(pcb); //utilizaremos el Program Counter (también llamado Instruction Pointer),  que representa el número de instrucción a buscar, para buscar la próxima instrucción. Al finalizar el ciclo, este último deberá ser actualizado (sumarle 1).
+    t_instruccion* instruccionAEjecutar = cpu_fetch(pcb);
     bool necesitaOperandos = cpu_decode(instruccionAEjecutar);
+    // int operandoIO = 0;
+    // operandoIO = 10;
     
-    if(necesitaOperandos){
-        uint32_t operando = cpu_fetch_operands(instruccionAEjecutar); //va a buscarlos a memoria solo si es COPY
+    if(necesitaOperandos){ //va a buscarlos a memoria solo si es COPY
+        uint32_t operando = cpu_fetch_operands(instruccionAEjecutar); 
         cpu_execute_con_operando(instruccionAEjecutar,operando);
+
     }else{
-        cpu_execute(instruccionAEjecutar);
+        cpu_execute(instruccionAEjecutar,pcb /*operandoDeIo*/);
     }
-    //cpu_check_interrupt(/*??*/);
+    cpu_check_interrupt(/*??*/);
+    //devolver_pcb_por_io(operandoDeIo) hace de cuenta que esta hecha
+    pcb->programCounter++;
     
 }
+
 
 
 
@@ -33,15 +39,24 @@ bool cpu_decode(t_instruccion* instruccion){
     return false;
 }
 
+// char** hola;
 
-void cpu_execute(t_instruccion* instruccion){
+// char a= 'a';
+// char* b="hola";
+
+// char** c = {"hola","chau"};
+// c[1]="hola";
+// c[1][1]='h';
+
+void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
     switch (NO_OP /*instruccion->codigo.op*/) //no esta en el struct, ver de donde sale o si llega parseado
     {
-    case NO_OP:
-        /* code */
+    case NO_OP: //TODO
+        /* code */ //funcion que les puede servir: usleep()
         break;
-    case I_O:
+    case I_O: //TODO
         /* code */
+        pcb->status=BLOCKED;
         break;
     case WRITE:
         /* code */
@@ -49,7 +64,7 @@ void cpu_execute(t_instruccion* instruccion){
     case READ:
         /* code */
         break;
-    case EXIT:
+    case EXIT: //TODO
         /* code */
         break;
     default:

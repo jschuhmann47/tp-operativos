@@ -124,6 +124,14 @@ t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esper
         log_error(kernelLogger, "Error al recibir el PCB de la CPU");
     }
     //t_pcb* pcbArribada = deserializar_pcb(pcb);
+    if(instruccion_actual_es_exit(pcbArribada)){
+        remover_pcb_de_cola(pcbArribada, pcbsExec);
+        cambiar_estado_pcb(pcbArribada, READY);
+        pcbArribada->status = EXIT;
+        agregar_pcb_a_cola(pcb, pcbsReady);
+        log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
+        sem_post(&(pcbsReady->instanciasDisponibles));
+    }
     t_list* asd;
     t_pcb* hola = pcb_create(1,1,asd,kernelCfg); //si fue a IO suspenderlo
     return hola;
