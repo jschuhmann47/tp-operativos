@@ -84,3 +84,7 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion){
     //TODO, buscarlo en la memoria
 }
 
+void cpu_check_interrupt(){
+    
+}
+

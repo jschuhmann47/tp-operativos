@@ -17,4 +17,6 @@ char* agregarInstruccion(char **intruccion, char *mensaje);
 t_instruccion *crear_instruccion(void);
 int sizeArray(void **array);
 code_instruccion getCodeIntruccion(char *code);
+t_pcb* deserializar_pcb(void* pcbSinDeserializar);
+void* serializar_pcb(t_pcb *pcb);
 #endif

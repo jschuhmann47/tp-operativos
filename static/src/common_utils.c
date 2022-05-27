@@ -128,3 +128,9 @@ void* serializar_pcb(t_pcb *pcb) //o string
     memcpy(buffer, pcb, sizeof(t_pcb)); //yo capaz q lo haria uno por uno para saber que es cada cosa, x ahora lo dejo asi
     return buffer;
 }
+
+t_pcb* deserializar_pcb(void* pcbSinDeserializar){
+    t_pcb* hola = NULL;
+    return hola;
+    //TODO
+}
