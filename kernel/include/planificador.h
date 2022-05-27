@@ -16,8 +16,8 @@ void iniciar_planificacion();
 // Planificador Corto Plazo
 void* iniciar_corto_plazo(void* _);
 void* getPcbDeCPU(void);
-void* conexion_de_interrupt(void* _);
-void* conexion_de_dispatch(void* _);
+void* conexion_de_interrupt();
+void* conexion_de_dispatch();
 void interrupcion_a_cpu();
 void mandar_pcb_a_cpu(t_pcb* pcb);
 t_pcb* traer_cpu_de_memoria();
@@ -47,7 +47,6 @@ int get_grado_multiprog_actual(void);
 void log_transition(const char* entityName, const char* prev, const char* post, int pid);
 void agregar_pcb_en_cola_new();
 uint32_t get_siguiente_id();
-void* serializar_pcb(t_pcb* pcb);
 
 // Manejo de colas
 t_cola_planificacion* cola_planificacion_create(int semInitVal);

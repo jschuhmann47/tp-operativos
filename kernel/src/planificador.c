@@ -22,7 +22,16 @@ t_cola_planificacion* pcbsSusReady;
 t_cola_planificacion* pcbsSusBlocked;
 t_cola_planificacion* pcbsExit;
 
-void iniciar_planificacion() {
+
+
+//Socket para dispatch
+int SOCKET_DISPATCH;
+
+//Socket para interrupt
+int SOCKET_INTERRUPT;
+
+void iniciar_planificacion(void) {
+
 
     nextId = 1;
     /* Inicializacion de semaforos */
@@ -68,14 +77,17 @@ void* iniciar_corto_plazo(void* _) {
 
         log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
 
-        if(algoritmo_srt_loaded()) {
+        /*if(algoritmo_srt_loaded()) {
             interrupcion_a_cpu();//Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
             getPcbDeCPU();
+
             sem_wait(&(pcbsExec->instanciasDisponibles));
             
-        }
+        }*/
         //sem_wait(&(pcbsExec->instanciasDisponibles)); para mi va aca xq en fifo tmb tiene que esperar que no haya nada en exec TODO
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady); 
+        
+
 
         
 
@@ -174,14 +186,22 @@ bool instruccion_actual_es(t_pcb* pcb, char* codOp){
 
 
 void mandar_pcb_a_cpu(t_pcb* pcb) {
+    uint32_t bytes = 0;
     log_info(kernelLogger, "Corto Plazo: Se manda el PCB %d a la CPU", pcb->id);
-    void* pcbAMandar=serializar_pcb(pcb);
+
+    char* pcbAMandar = serializar_pcb(pcb, &bytes);
+    conexion_de_dispatch(); //setea la variable SOCKET_DISPATCH de arriba de todo 
+
+    t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
+    tamanio_mensaje->tamanio = bytes;
     
-    if(send(socketCpuDispatch, pcbAMandar, sizeof(t_pcb), 0) == -1) {
-        log_error(kernelLogger, "Error al mandar el PCB a la CPU");
-    }
+    enviar_tamanio_mensaje(tamanio_mensaje, SOCKET_DISPATCH); //Enviamos primero el tamaño de mensaje, para saber que recibir.
+
+    send(SOCKET_DISPATCH, pcbAMandar, bytes, 0); //Enviamos el mensaje con el PCB entero y el tamaño.
+
+
     log_info(kernelLogger, "Corto Plazo: Se mando el PCB %d a la CPU correctamente", pcb->id);
-    free(pcbAMandar);
+    free(tamanio_mensaje);
 }
 
 void interrupcion_a_cpu() {
@@ -194,13 +214,13 @@ void interrupcion_a_cpu() {
 }
 
 //La conexión de interrupt dedicada solamente a enviar mensajes de interrupción
-void* conexion_de_interrupt(void* _) {
+void* conexion_de_interrupt() {
     log_info(kernelLogger, "Hilo interrupt inicializado");
 
-    int socketCpu = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_INTERRUPT);
+    int SOCKET_INTERRUPT = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_INTERRUPT);
     log_info(kernelLogger, "Kernel: Conectando a CPU");
 
-    if (socketCpu == -1)
+    if (SOCKET_INTERRUPT == -1)
     {
         log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
         return -1;
@@ -212,18 +232,17 @@ void* conexion_de_interrupt(void* _) {
 }
 
 //En todos los casos el PCB será recibido a través de la conexión de dispatch - Es bidireccional, por aca tambien le mando el PCB a CPU
-void* conexion_de_dispatch(void* _) {
+void* conexion_de_dispatch() {
     log_info(kernelLogger, "Hilo dispatch EXEC->READY inicializado");
 
-    int socketCpu = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH);
+    SOCKET_DISPATCH = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH);
     log_info(kernelLogger, "Kernel: Conectando a CPU");
 
-    if (socketCpu == -1)
+    if (SOCKET_DISPATCH == -1)
     {
         log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
         return -1;
     }
-    return socketCpu;
     // CASO 1: Envio de PCB a CPU
     // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
 }
@@ -238,13 +257,20 @@ void* iniciar_mediano_plazo(void* _) {
     //pthread_create(&th, NULL, recibir_pcb_bloqueado, NULL);
     //pthread_detach(th);
     for(;;) {
-        sem_wait(&(pcbsBlocked->instanciasDisponibles)); // espera que entre uno a bloq
-        t_pcb* pcbASuspender; //obtener la pcb que acaba de entrar a bloqueado, TODO
-        contar_tiempo_bloqueado(pcbASuspender); //esta func la suspende si es necesario
-                                     
-        sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for.
-        
-        //La transición (SUSPENDED-BLOCKED -> SUSPENDED-READY), al ser una transición que va a darse al finalizar una entrada/salida, 
+      
+        sem_wait(&hayPCBsParaPasarASusBlocked); // TODO: Va a estar esperando por que le hagan el post
+        t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked); //tiene que sacar segun el tiempo de configuracion, usar usleep
+        //enviar_suspension_de_pcb_a_memoria(pcbASuspender);
+        contar_tiempo_bloqueado(pcbASuspender); //HILO
+        cambiar_estado_pcb(pcbASuspender, SUSBLOCKED);
+        agregar_pcb_a_cola(pcbASuspender, pcbsSusBlocked);
+        log_info(kernelLogger, "Mediano Plazo: Se libera una instancia de Grado Multiprogramación");
+        log_transition("Mediano Plazo", "BLOCKED", "SUSP/BLOCKED", pcbASuspender->id);
+        /* Aumenta el grado de multiprogramción al suspender a un proceso */
+        sem_post(&gradoMultiprog);                              
+        sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for
+        //TODO: Aca pasar ya de SUSBLOCKED => SUSREADY ??? Un hilo?
+        //dice esto: La transición (SUSPENDED-BLOCKED -> SUSPENDED-READY), al ser una transición que va a darse al finalizar una entrada/salida, 
         //no necesariamente forma parte del planificador de Mediano Plazo.
     }
     pthread_exit(NULL);
@@ -303,7 +329,7 @@ void* blocked_a_ready(t_pcb* pcb) {
     sem_post(&(pcbsReady->instanciasDisponibles));
 }
 
-void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
+/*void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
     //se enviará un mensaje a Memoria con la información necesaria y se esperará la confirmación del mismo.
     //Una vez recibo la confirmacion
     int memoria_fd=conectar_a_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_MEMORIA);
@@ -319,7 +345,7 @@ void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
     }
     log_info(kernelLogger,"Kernel: Enviada PCB a Memoria");
     sem_post(&suspensionConcluida); //creo que este va un poco despues
-}
+}*/
 
 void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo){ //el tiempo es el que llega por parametro de la instruccion
     usleep(tiempo);
