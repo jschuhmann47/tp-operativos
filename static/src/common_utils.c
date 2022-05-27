@@ -134,3 +134,5 @@ t_pcb* deserializar_pcb(void* pcbSinDeserializar){
     return hola;
     //TODO
 }
+
+//o
