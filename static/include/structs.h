@@ -64,5 +64,9 @@ typedef struct
     pthread_mutex_t mutex;
 } t_cola_planificacion;
 
+typedef struct t_mensaje_tamanio {
+    uint32_t tamanio;
+}__attribute__((__packed__)) t_mensaje_tamanio;
+
 #endif
 
