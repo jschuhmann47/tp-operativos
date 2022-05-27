@@ -17,9 +17,10 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb){
     }else{
         cpu_execute(instruccionAEjecutar,pcb /*operandoDeIo*/);
     }
+    pcb->programCounter++;
     cpu_check_interrupt(/*??*/);
     //devolver_pcb_por_io(operandoDeIo) hace de cuenta que esta hecha
-    pcb->programCounter++;
+    
     
 }
 

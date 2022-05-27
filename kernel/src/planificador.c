@@ -38,7 +38,7 @@ void iniciar_planificacion() {
     pcbsExec = cola_planificacion_create(0);
     pcbsBlocked = cola_planificacion_create(0);
     pcbsSusReady = cola_planificacion_create(0);
-    pcbsSusBlocked = cola_planificacion_create(0);
+    pcbsSusBlocked = cola_planificacion_create(0); //esta la volamos
     pcbsExit = cola_planificacion_create(0);
     pthread_mutex_init(&mutexId, NULL);
 
@@ -70,13 +70,14 @@ void* iniciar_corto_plazo(void* _) {
 
         if(algoritmo_srt_loaded()) {
             interrupcion_a_cpu();//Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
-            sem_wait(&(pcbsExec->instanciasDisponibles));
             getPcbDeCPU();
+            sem_wait(&(pcbsExec->instanciasDisponibles));
+            
         }
-
+        //sem_wait(&(pcbsExec->instanciasDisponibles)); para mi va aca xq en fifo tmb tiene que esperar que no haya nada en exec TODO
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady); 
 
-        //sem_wait(cpuLibre); xq si es fifo puede llegar uno a ready pero no necesariamente al toque a exec
+        
 
         //remover_pcb_de_cola(pcbQuePasaAExec, pcbsReady); //Ya lo estamos removiendo de la lista al elegir segun FIFO.
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
@@ -86,7 +87,7 @@ void* iniciar_corto_plazo(void* _) {
 
         log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
 
-        //TODO: Y si la cola de planificación ready se quede sin PCBs??
+        
 
         //atender_peticiones_pcb(pcbQuePasaAExec);
     }
@@ -100,65 +101,83 @@ void* getPcbDeCPU(void) {
     pthread_detach(th1);*/
 
     pthread_t th2;
-    pthread_create(&th2, NULL, conexion_de_dispatch, NULL);
+    pthread_create(&th2, NULL, conexion_de_dispatch, NULL); //donde devuele el socket? yo lo declare global. TODO
     pthread_detach(th2);
 
     sem_wait(&(pcbsExec->instanciasDisponibles));
     t_pcb* pcbQueMeDaCPU = traer_cpu_de_memoria();
 
-    remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
-    cambiar_estado_pcb(pcbQueMeDaCPU, READY);
-    agregar_pcb_a_cola(pcbQueMeDaCPU, pcbsReady);
+    determinar_cola_pcb(pcbQueMeDaCPU);
 
-    log_transition("Corto Plazo", "EXEC", "READY", pcbQueMeDaCPU->id);
+    // remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
+    // cambiar_estado_pcb(pcbQueMeDaCPU, READY);
+    // agregar_pcb_a_cola(pcbQueMeDaCPU, pcbsReady);
+
+    //log_transition("Corto Plazo", "EXEC", "READY", pcbQueMeDaCPU->id);
 
 }
 
 t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esperando que se la devuelva por el motivo que sea
     //lo del socket ver como viene
     //x ahora lo declaro asi nomas
-    //sem_wait(??);
 
     void* pcb = malloc(sizeof(t_pcb));
     if(recv(socketCpuDispatch, pcb, sizeof(t_pcb), MSG_WAITALL) == -1){
         log_error(kernelLogger, "Error al recibir el PCB de la CPU");
     }
-    //t_pcb* pcbArribada = deserializar_pcb(pcb);
-    if(instruccion_actual_es_exit(pcbArribada)){
-        remover_pcb_de_cola(pcbArribada, pcbsExec);
-        cambiar_estado_pcb(pcbArribada, READY);
-        pcbArribada->status = EXIT;
-        agregar_pcb_a_cola(pcb, pcbsReady);
-        log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
-        sem_post(&(pcbsReady->instanciasDisponibles));
-    }
+    t_pcb* pcbArribada = deserializar_pcb(pcb); //esta es la que devuelve la funcion
+    
     t_list* asd;
     t_pcb* hola = pcb_create(1,1,asd,kernelCfg); //si fue a IO suspenderlo
     return hola;
 }
 
-void determinar_ready_o_blocked(t_pcb* pcb){
-    t_instruccion* instruccionActual = list_get(pcb->instrucciones, pcb->programCounter);
-    if(strcmp(instruccionActual->indicador,"IO")==0){ 
-            pcb->status = BLOCKED;
+void* determinar_cola_pcb(t_pcb* pcb){
+    if(instruccion_actual_es(pcb,"EXIT")){
+            //remover de cola no hace falta creo, xq no esta en ninguna, o esta en la de exec?
+            cambiar_estado_pcb(pcb, EXIT);
+            agregar_pcb_a_cola(pcb, pcbsExit);
+            log_transition("Corto Plazo", "EXEC", "EXIT", pcb->id);
+            sem_post(&(pcbsExit->instanciasDisponibles));
+        }
+    if(instruccion_actual_es(pcb,"I/O")){
+            cambiar_estado_pcb(pcb, BLOCKED);
             agregar_pcb_a_cola(pcb, pcbsBlocked);
             log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
             sem_post(&(pcbsBlocked->instanciasDisponibles));
-    } 
-    else{ //que volvio por una interrupcion y no por IO
-        pcb->status = READY;
+    }else{
+        cambiar_estado_pcb(pcb,READY);
         agregar_pcb_a_cola(pcb, pcbsReady);
         log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
         sem_post(&(pcbsReady->instanciasDisponibles));
     }
-
 }
+
+bool instruccion_actual_es(t_pcb* pcb, char* codOp){
+    t_instruccion* inst = list_get(pcb->instrucciones,pcb->programCounter);
+    return strcmp(codOp, inst->indicador) == 0;
+}
+
+// void determinar_ready_o_blocked(t_pcb* pcb){
+//     t_instruccion* instruccionActual = list_get(pcb->instrucciones, pcb->programCounter);
+//     if(strcmp(instruccionActual->indicador,"IO")==0){ 
+            
+//     } 
+//     else{ //que volvio por una interrupcion y no por IO
+//         pcb->status = READY;
+//         agregar_pcb_a_cola(pcb, pcbsReady);
+//         log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
+//         sem_post(&(pcbsReady->instanciasDisponibles));
+//     }
+
+// }
+
 
 void mandar_pcb_a_cpu(t_pcb* pcb) {
     log_info(kernelLogger, "Corto Plazo: Se manda el PCB %d a la CPU", pcb->id);
     void* pcbAMandar=serializar_pcb(pcb);
-    int cpuSocketDispatch=1; //CAMBIAR, PUESTO PARA QUE NO ROMPA
-    if(send(cpuSocketDispatch, pcbAMandar, sizeof(t_pcb), 0) == -1) {
+    
+    if(send(socketCpuDispatch, pcbAMandar, sizeof(t_pcb), 0) == -1) {
         log_error(kernelLogger, "Error al mandar el PCB a la CPU");
     }
     log_info(kernelLogger, "Corto Plazo: Se mando el PCB %d a la CPU correctamente", pcb->id);
@@ -167,8 +186,8 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
 
 void interrupcion_a_cpu() {
     log_info(kernelLogger, "Corto Plazo: Se interrumpe la CPU");
-    int cpuSocketInterrupt=1; //CAMBIAR, PUESTO PARA QUE NO ROMPA
-    if(send(cpuSocketInterrupt, "interrupcion", sizeof("interrupcion"), 0) == -1) {
+    
+    if(send(socketCpuInterrupt, "interrupcion", sizeof("interrupcion"), 0) == -1) {
         log_error(kernelLogger, "Error al interrumpir la CPU");
     }
     log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");
@@ -219,7 +238,7 @@ void* iniciar_mediano_plazo(void* _) {
     //pthread_create(&th, NULL, recibir_pcb_bloqueado, NULL);
     //pthread_detach(th);
     for(;;) {
-        sem_wait(&hayPCBsParaPasarASusBlocked); // espera que entre uno a bloqueado, cambiaria el semaforo yo
+        sem_wait(&(pcbsBlocked->instanciasDisponibles)); // espera que entre uno a bloq
         t_pcb* pcbASuspender; //obtener la pcb que acaba de entrar a bloqueado, TODO
         contar_tiempo_bloqueado(pcbASuspender); //esta func la suspende si es necesario
                                      
@@ -248,7 +267,7 @@ void* iniciar_mediano_plazo(void* _) {
 //     sem_post(&hayPCBsParaPasarASusBlocked);
 // }
 
-void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO
+void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a suspender siempre
     usleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO);
     if(pcb->status==BLOCKED){
         enviar_suspension_de_pcb_a_memoria(pcb);
@@ -302,6 +321,21 @@ void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
     sem_post(&suspensionConcluida); //creo que este va un poco despues
 }
 
+void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo){ //el tiempo es el que llega por parametro de la instruccion
+    usleep(tiempo);
+    if(pcb->status==BLOCKED){
+        blocked_a_ready(pcb);
+    }
+    if(pcb->status==SUSBLOCKED){
+        //susp_a_ready(pcb);
+        remover_pcb_de_cola(pcb, pcbsBlocked); //esto hace el wait del semaforo de instancias? 
+        cambiar_estado_pcb(pcb, SUSREADY);
+        agregar_pcb_a_cola(pcb,pcbsSusReady);
+        
+        sem_post(&(pcbsSusReady->instanciasDisponibles));
+    }
+}
+
 /*---------------------------------------------- PLANIFICADOR LARGO PLAZO ----------------------------------------------*/
 
 void* iniciar_largo_plazo(void* _) {
@@ -313,7 +347,7 @@ void* iniciar_largo_plazo(void* _) {
         /* Tanto NEW como SUSREADY son parte del mismo conjunto: "El conjunto a pasar a READY" */
         sem_wait(&hayPCBsParaAgregarAlSistema);
         log_info(kernelLogger, "Largo Plazo: Se toma una instancia de PCBs a agregar al sistema");
-
+        
         /* Este semáforo debería ser "posteado" (sem_post) cuando un proceso se suspende (baja el grado de multiprogramación),
         o bien cuando un proceso del sistema pasa a exit */
         sem_wait(&gradoMultiprog);
@@ -321,6 +355,10 @@ void* iniciar_largo_plazo(void* _) {
 
         if(!list_is_empty(pcbsSusReady->lista)) {
             /* Como tiene mayor prioridad los procesos en susp/ready > new, vemos si hay procesos en dicha cola */
+            t_pcb* pcbQuePasaAReady = get_and_remove_primer_pcb_de_cola(pcbsSusReady);
+            cambiar_estado_pcb(pcbQuePasaAReady, READY);
+            agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
+            log_transition("Largo Plazo", "SUSP/READY", "READY", pcbQuePasaAReady->id);
             sem_post(&transicionarSusReadyAready);
             /* Con el post se libera el mecanismo de pasaje en el Planificador de Mediano Plazo */
         } else {                                    
@@ -347,7 +385,7 @@ void* liberar_procesos_en_exit(void* _) {
 
         t_pcb* pcbALiberar = get_and_remove_primer_pcb_de_cola(pcbsExit);
 
-        //TODO: Avisarle a Consola que finalizo su proceso
+        //TODO: Avisarle a Consola que finalizo su proceso. obtener el socket de esa consola en particular
         log_info(kernelLogger, "Kernel: Desconexión Proceso con ID %d", pcbALiberar->id);
         pcb_destroy(pcbALiberar);
 
@@ -377,6 +415,15 @@ t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel
 
 void pcb_destroy(t_pcb *pcb) {
     // Realiza los free correspondientes
+    //las variables no se si hacen falta free, las instrucciones seguro
+
+    list_destroy_and_destroy_elements(pcb->instrucciones, (void*)destruir_instruccion);
+    free(pcb);
+}
+
+void destruir_instruccion(t_instruccion* instruccion) {
+    //free(instruccion->parametros...);
+    //TODO
 }
 
 void cambiar_estado_pcb(t_pcb* pcb, t_status nuevoEstado) {
@@ -563,5 +610,21 @@ double media_exponencial(double realAnterior, double estAnterior) {
 void srt_actualizar_info_para_siguiente_estimacion(t_pcb* pcb, time_t tiempoFinal, time_t tiempoInicial) {
     double realAnterior = get_diferencial_de_tiempo(tiempoFinal, tiempoInicial);
     pcb->est_rafaga_actual = media_exponencial(realAnterior, pcb->est_rafaga_actual);
+}
+
+uint32_t calcular_tiempo(){
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+    //aca hacer lo que haya que hacer
+    int a=2; //ej
+    for (int i=0;i<1000000;i++){}//ej
+    
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+    
+    u_int32_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+    
+    printf("%d",delta_us);
+
+    return delta_us;
 }
 

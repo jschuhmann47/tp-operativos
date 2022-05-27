@@ -21,7 +21,9 @@ void* conexion_de_dispatch(void* _);
 void interrupcion_a_cpu();
 void mandar_pcb_a_cpu(t_pcb* pcb);
 t_pcb* traer_cpu_de_memoria();
-void determinar_ready_o_blocked(t_pcb* pcb);
+//void determinar_ready_o_blocked(t_pcb* pcb);
+void* determinar_cola_pcb(t_pcb* pcb);
+bool instruccion_actual_es(t_pcb* pcb, char* codOp);
 
 
 // Planificador Mediano Plazo
@@ -30,6 +32,7 @@ void* pasar_de_susready_a_ready(void* _);
 void* blocked_a_ready(t_pcb* pcb);
 void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb);
 void* contar_tiempo_bloqueado(t_pcb* pcb);
+void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo);
 
 // Planificador Largo Plazo
 void* iniciar_largo_plazo(void* _);
@@ -38,6 +41,7 @@ void* liberar_procesos_en_exit(void* _);
 // Manejo de PCBs
 t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel_config* config);
 void pcb_destroy(t_pcb *pcb);
+void destruir_instruccion(t_instruccion* instruccion);
 void cambiar_estado_pcb(t_pcb* pcb, t_status nuevoEstado);
 int get_grado_multiprog_actual(void);
 void log_transition(const char* entityName, const char* prev, const char* post, int pid);
@@ -66,5 +70,6 @@ t_pcb* elegir_en_base_a_srt(t_cola_planificacion* colaPlanificacion);
 double get_diferencial_de_tiempo(time_t tiempoFinal, time_t tiempoInicial);
 double media_exponencial(double realAnterior, double estAnterior);
 void srt_actualizar_info_para_siguiente_estimacion(t_pcb* pcb, time_t tiempoFinal, time_t tiempoInicial);
+uint32_t calcular_tiempo();
 
 #endif
