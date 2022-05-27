@@ -17,10 +17,12 @@ char* agregarInstruccion(char **intruccion, char *mensaje);
 t_instruccion *crear_instruccion(void);
 int sizeArray(void **array);
 code_instruccion getCodeIntruccion(char *code);
+
 uint32_t enviar_tamanio_mensaje(t_mensaje_tamanio *msjeTamanio, int socket);
 char *serializar_tamanio(t_mensaje_tamanio *mensaje_tamanio, uint32_t *bytes);
 char* serializar_pcb(t_pcb *pcb, uint32_t *bytes);
 t_mensaje_tamanio* deserializar_tamanio(char *buffer);
 uint32_t recibir_tamanio_mensaje(t_mensaje_tamanio *tamanio_mensaje, int socket);
 t_pcb* recibir_pcb(char* buffer);
+
 #endif
