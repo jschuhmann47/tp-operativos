@@ -11,17 +11,6 @@ int main(int argc, char* argv[]) {
     struct sockaddr cliente;
     socklen_t len = sizeof(cliente);
 
-    socketCpuDispatch = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH); //deberia ser un hilo? sino se mete aca y si esta cerrado el cpu explota
-    if(socketCpuDispatch == -1) {
-        log_error(kernelLogger, "Kernel: No se pudo establecer conexión con CPU Dispatch. Valor conexión %d", socketCpuDispatch);
-        return EXIT_FAILURE;
-    }
-    socketCpuInterrupt = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_INTERRUPT);
-    if(socketCpuInterrupt == -1) {
-        log_error(kernelLogger, "Kernel: No se pudo establecer conexión con CPU Interrupt. Valor conexión %d", socketCpuInterrupt);
-        return EXIT_FAILURE;
-    }
-
     log_info(kernelLogger, "Kernel: Esperando conexión entrante de Módulo Consola...");
 
     iniciar_planificacion(socketCpuDispatch,socketCpuInterrupt);

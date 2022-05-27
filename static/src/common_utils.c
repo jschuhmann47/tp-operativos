@@ -148,7 +148,7 @@ char* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
     char *empaquetado = malloc(sizeof(typeof(pcb->id)) +
                                sizeof(t_status) +
                                sizeof(typeof(pcb->tamanio)) +
-                               sizeof(t_instruccion) +
+                               sizeof(t_list) +
                                sizeof(typeof(pcb->programCounter)) +
                                sizeof(typeof(pcb->est_rafaga_actual)));
 
@@ -213,7 +213,7 @@ t_pcb* recibir_pcb(char* buffer)
     offset += tmp_len;
     memcpy(&pcb->tamanio, buffer + offset, tmp_len = sizeof(typeof(pcb->tamanio)));
     offset += tmp_len;
-    memcpy(&pcb->instrucciones, buffer + offset, tmp_len = sizeof(t_instruccion));
+    memcpy(&pcb->instrucciones, buffer + offset, tmp_len = sizeof(t_list));
     offset += tmp_len;
     memcpy(&pcb->programCounter, buffer + offset, tmp_len = sizeof(typeof(pcb->programCounter)));
     offset += tmp_len;

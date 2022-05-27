@@ -22,8 +22,6 @@ t_cola_planificacion* pcbsSusReady;
 t_cola_planificacion* pcbsSusBlocked;
 t_cola_planificacion* pcbsExit;
 
-
-
 //Socket para dispatch
 int SOCKET_DISPATCH;
 
@@ -85,11 +83,7 @@ void* iniciar_corto_plazo(void* _) {
             
         }*/
         //sem_wait(&(pcbsExec->instanciasDisponibles)); para mi va aca xq en fifo tmb tiene que esperar que no haya nada en exec TODO
-        t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady); 
-        
-
-
-        
+        t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
         //remover_pcb_de_cola(pcbQuePasaAExec, pcbsReady); //Ya lo estamos removiendo de la lista al elegir segun FIFO.
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
@@ -137,7 +131,7 @@ t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esper
     if(recv(socketCpuDispatch, pcb, sizeof(t_pcb), MSG_WAITALL) == -1){
         log_error(kernelLogger, "Error al recibir el PCB de la CPU");
     }
-    t_pcb* pcbArribada = deserializar_pcb(pcb); //esta es la que devuelve la funcion
+    //t_pcb* pcbArribada = deserializar_pcb(pcb); //esta es la que devuelve la funcion
     
     t_list* asd;
     t_pcb* hola = pcb_create(1,1,asd,kernelCfg); //si fue a IO suspenderlo
@@ -198,7 +192,6 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
     enviar_tamanio_mensaje(tamanio_mensaje, SOCKET_DISPATCH); //Enviamos primero el tamaño de mensaje, para saber que recibir.
 
     send(SOCKET_DISPATCH, pcbAMandar, bytes, 0); //Enviamos el mensaje con el PCB entero y el tamaño.
-
 
     log_info(kernelLogger, "Corto Plazo: Se mando el PCB %d a la CPU correctamente", pcb->id);
     free(tamanio_mensaje);
@@ -296,7 +289,7 @@ void* iniciar_mediano_plazo(void* _) {
 void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a suspender siempre
     usleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO);
     if(pcb->status==BLOCKED){
-        enviar_suspension_de_pcb_a_memoria(pcb);
+        //enviar_suspension_de_pcb_a_memoria(pcb);
         cambiar_estado_pcb(pcb, SUSBLOCKED);
         agregar_pcb_a_cola(pcb, pcbsSusBlocked);
         log_info(kernelLogger, "Mediano Plazo: Se libera una instancia de Grado Multiprogramación");
