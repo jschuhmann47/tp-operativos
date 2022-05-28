@@ -28,8 +28,7 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb){
 
 
 t_instruccion* cpu_fetch (t_pcb* pcb){
-    //devuelve la instruccion de indice programCounter
-    return list_get(pcb->instrucciones,pcb->programCounter); //uint32_t o int deberia ser el program counter? 
+    return list_get(pcb->instrucciones,pcb->programCounter); 
 }
 
 bool cpu_decode(t_instruccion* instruccion){

@@ -63,3 +63,39 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
         }
     }
 }
+
+void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelDispatch){
+    log_info(cpuLogger, "CPU: Mando el PCB a Kernel");
+    if(send(socketKernelDispatch, PCB_NORMAL_RETURN, sizeof(PCB_NORMAL_RETURN), 0)){  
+        char* buffer = serializar_pcb(pcb,bytes->tamanio);
+        if (enviar_tamanio_mensaje(bytes, socketKernelDispatch)){
+            log_info(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
+            if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
+                log_info(cpuLogger, "CPU: Mande el PCB a Kernel");
+                free(buffer);
+                //free(pcb);-> creo que no alcanza, hay q liberar la lista de instrucciones tmb
+            }
+        }
+    }
+    else{
+        log_error(cpuLogger, "CPU: Error al enviar PCB a Kernel");
+    }
+}
+
+void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelDispatch,uint32_t tiempoABloquearse){
+    log_info(cpuLogger, "CPU: Mando el PCB con tiempo de IO a Kernel");
+    if(send(socketKernelDispatch, PCB_IO_RETURN, sizeof(PCB_IO_RETURN), 0)){ 
+        char* buffer = serializar_pcb(pcb,bytes->tamanio);
+        if (enviar_tamanio_mensaje(bytes, socketKernelDispatch)){
+            log_info(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
+            if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
+                log_info(cpuLogger, "CPU: Mande el PCB a Kernel");
+                free(buffer);
+                //free(pcb);-> creo que no alcanza, hay q liberar la lista de instrucciones tmb
+            }
+        }
+    }
+    else{
+        log_error(cpuLogger, "CPU: Error al enviar PCB a Kernel");
+    }
+}

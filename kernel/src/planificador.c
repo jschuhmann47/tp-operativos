@@ -111,6 +111,14 @@ void* getPcbDeCPU(void) {
     pthread_detach(th2);
 
     sem_wait(&(pcbsExec->instanciasDisponibles));
+    uint32_t hayQueBloquearPorIO;
+    if(recv(socketCpuDispatch, &hayQueBloquearPorIO, sizeof(uint32_t), 0) < 0) {
+        log_error(kernelLogger, "Error al recibir el PCB de CPU");
+    }
+    if(hayQueBloquearPorIO){
+        //uint32_t tiempoABloquear;
+        // t_pcb* pcbQueMeDaCPU = traer_cpu_de_memoria_por_io(&tiempoABloquear); //TODO
+    }
     t_pcb* pcbQueMeDaCPU = traer_cpu_de_memoria();
 
     determinar_cola_pcb(pcbQueMeDaCPU);
@@ -200,7 +208,7 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
 void interrupcion_a_cpu() {
     log_info(kernelLogger, "Corto Plazo: Se interrumpe la CPU");
     
-    if(send(socketCpuInterrupt, "interrupcion", sizeof("interrupcion"), 0) == -1) {
+    if(send(socketCpuInterrupt, INT_KEYWORD, sizeof(INT_KEYWORD), 0) == -1) {
         log_error(kernelLogger, "Error al interrumpir la CPU");
     }
     log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");

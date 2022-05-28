@@ -11,6 +11,8 @@
 #include "conexiones.h"
 #include "kernel_config.h"
 
+
+
 void iniciar_planificacion();
 
 // Planificador Corto Plazo
