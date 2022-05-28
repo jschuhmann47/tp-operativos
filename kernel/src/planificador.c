@@ -1,5 +1,8 @@
 #include "planificador.h"
 
+const uint32_t PCB_IO_RETURN = 1;
+const uint32_t PCB_NORMAL_RETURN = 0;
+const char* INT_KEYWORD = "interrupcion";
 // TODO: PASAJES EXEC => BLOCKED | BLOCKED => READY | SUSBLOCKED => SUSREADY | EXEC => FINISH
 
 // Semaforos
