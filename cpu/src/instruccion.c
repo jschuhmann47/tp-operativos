@@ -1,4 +1,5 @@
 #include "instruccion.h"
+#include <unistd.h>
 
 pthread_mutex_t mutex_cpu;
 
@@ -10,7 +11,10 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb){
     // int operandoIO = 0;
     // operandoIO = 10;
     
-    if(necesitaOperandos){ //va a buscarlos a memoria solo si es COPY
+    if(necesitaOperandos){ //va a buscarnf #include <unistd.h>
+
+       void usleep(unsigned long usec);
+       int usleep(unsigned long usec); /* SUSv2 */los a memoria solo si es COPY
         uint32_t operando = cpu_fetch_operands(instruccionAEjecutar); 
         cpu_execute_con_operando(instruccionAEjecutar,operando);
 
@@ -28,7 +32,8 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb){
 
 
 t_instruccion* cpu_fetch (t_pcb* pcb){
-    return list_get(pcb->instrucciones,pcb->programCounter); 
+    //devuelve la instruccion de indice programCounter
+    return list_get(pcb->instrucciones,pcb->programCounter); //uint32_t o int deberia ser el program counter? 
 }
 
 bool cpu_decode(t_instruccion* instruccion){
@@ -39,24 +44,19 @@ bool cpu_decode(t_instruccion* instruccion){
     return false;
 }
 
-// char** hola;
-
-// char a= 'a';
-// char* b="hola";
-
-// char** c = {"hola","chau"};
-// c[1]="hola";
-// c[1][1]='h';
-
 void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
     switch (NO_OP /*instruccion->codigo.op*/) //no esta en el struct, ver de donde sale o si llega parseado
     {
     case NO_OP: //TODO
-        /* code */ //funcion que les puede servir: usleep()
+        usleep(750000);
         break;
     case I_O: //TODO
-        /* code */
+        pcb->id = id;
         pcb->status=BLOCKED;
+        pcb->tamanio = tamanio;
+        pcb->instrucciones = instrucciones;
+        pcb->programCounter = 0; /*REVISARcomo calcular número de la próxima instrucción a ejecutar.*/
+        pcb->est_rafaga_actual = kernelCfg->TIEMPO_MAXIMO_BLOQUEADO; /*Confirmar tiempo bloqueado*/
         break;
     case WRITE:
         /* code */
@@ -65,8 +65,15 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
         /* code */
         break;
     case EXIT: //TODO
-        /* code */
+        // TODO: PASAJES EXEC => BLOCKED | BLOCKED => READY | SUSBLOCKED => SUSREADY | EXEC => FINISH
+        pcb->id = id;
+        pcb->status=FINISH;
+        pcb->tamanio = tamanio;
+        pcb->instrucciones = instrucciones;
+        pcb->programCounter = 0; /*REVISAR como calcular número de la próxima instrucción a ejecutar.*/
+        pcb->est_rafaga_actual = 0; /*Confirmar RAFAGA*/
         break;
+
     default:
         break;
     }
@@ -83,7 +90,7 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion){
     //TODO, buscarlo en la memoria
 }
 
-void cpu_check_interrupt(){
+void cpu_check_interrupt(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
     
 }
 
