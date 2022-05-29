@@ -12,6 +12,7 @@
 
 typedef struct {
     uint32_t KERNEL_SOCKET;
+    uint32_t KERNEL_INTERRUPT;
     uint16_t ENTRADAS_TLB;
     char* REEMPLAZO_TLB;
     uint16_t RETARDO_NOOP;

@@ -4,6 +4,7 @@
 #include "cpu_config.h"
 #include "common_utils.h"
 #include "conexiones.h"
+#include <unistd.h>
 
 void hacer_ciclo_de_instruccion(t_pcb* pcb);
 t_instruccion* cpu_fetch (t_pcb* pcb);

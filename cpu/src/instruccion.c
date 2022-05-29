@@ -1,27 +1,30 @@
 #include "instruccion.h"
-#include <unistd.h>
 
 pthread_mutex_t mutex_cpu;
 
 
 void hacer_ciclo_de_instruccion(t_pcb* pcb){
-    
-    t_instruccion* instruccionAEjecutar = cpu_fetch(pcb);
-    bool necesitaOperandos = cpu_decode(instruccionAEjecutar);
-    // int operandoIO = 0;
-    // operandoIO = 10;
-    
-    if(necesitaOperandos){ //va a buscarnf #include <unistd.h>
+    log_info(cpuLogger, "CPU: Ejecutando instruccion");
+    //while(){ CHEQUEAR QUE SEA EXIT, INTERRUPCION Y I/O
+        t_instruccion* instruccionAEjecutar = cpu_fetch(pcb);
+        log_info(cpuLogger, "CPU: Ejecuté fetch");
+        bool necesitaOperandos = cpu_decode(instruccionAEjecutar);
+        log_info(cpuLogger, "CPU: Ejecuté decode");
+        // int operandoIO = 0;
+        // operandoIO = 10;
+        
+        if(necesitaOperandos){ //va a buscarnf #include <unistd.h>
 
-       void usleep(unsigned long usec);
-       int usleep(unsigned long usec); /* SUSv2 */los a memoria solo si es COPY
-        uint32_t operando = cpu_fetch_operands(instruccionAEjecutar); 
-        cpu_execute_con_operando(instruccionAEjecutar,operando);
+            usleep(75000);
+            usleep(75000); /* SUSv2 los a memoria solo si es COPY*/
+            uint32_t operando = cpu_fetch_operands(instruccionAEjecutar); 
+            cpu_execute_con_operando(instruccionAEjecutar,operando);
 
-    }else{
-        cpu_execute(instruccionAEjecutar,pcb /*operandoDeIo*/);
-    }
-    pcb->programCounter++;
+        }else{
+            cpu_execute(instruccionAEjecutar,pcb /*operandoDeIo*/);
+        }
+        pcb->programCounter++;
+    //}
     cpu_check_interrupt(/*??*/);
     //devolver_pcb_por_io(operandoDeIo) hace de cuenta que esta hecha
     
@@ -32,12 +35,14 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb){
 
 
 t_instruccion* cpu_fetch (t_pcb* pcb){
+    log_info(cpuLogger, "CPU: Ejecutando fetch");
     //devuelve la instruccion de indice programCounter
-    return list_get(pcb->instrucciones,pcb->programCounter); //uint32_t o int deberia ser el program counter? 
+    return list_get(pcb->instrucciones,pcb->programCounter); 
 }
 
 bool cpu_decode(t_instruccion* instruccion){
     
+    log_info(cpuLogger, "CPU: Ejecutando decode");
     if(strcmp(instruccion->indicador, "COPY") == 0){
         return true;
     }
@@ -51,12 +56,8 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
         usleep(750000);
         break;
     case I_O: //TODO
-        pcb->id = id;
         pcb->status=BLOCKED;
-        pcb->tamanio = tamanio;
-        pcb->instrucciones = instrucciones;
-        pcb->programCounter = 0; /*REVISARcomo calcular número de la próxima instrucción a ejecutar.*/
-        pcb->est_rafaga_actual = kernelCfg->TIEMPO_MAXIMO_BLOQUEADO; /*Confirmar tiempo bloqueado*/
+        /*pcb->est_rafaga_actual = kernelCfg->TIEMPO_MAXIMO_BLOQUEADO; Confirmar tiempo bloqueado*/
         break;
     case WRITE:
         /* code */
@@ -66,12 +67,8 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
         break;
     case EXIT: //TODO
         // TODO: PASAJES EXEC => BLOCKED | BLOCKED => READY | SUSBLOCKED => SUSREADY | EXEC => FINISH
-        pcb->id = id;
-        pcb->status=FINISH;
-        pcb->tamanio = tamanio;
-        pcb->instrucciones = instrucciones;
-        pcb->programCounter = 0; /*REVISAR como calcular número de la próxima instrucción a ejecutar.*/
-        pcb->est_rafaga_actual = 0; /*Confirmar RAFAGA*/
+        pcb->status=EXIT;
+        /*pcb->est_rafaga_actual = 0; Confirmar RAFAGA*/
         break;
 
     default:

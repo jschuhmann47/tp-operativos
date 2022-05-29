@@ -1,9 +1,7 @@
 #include "planificador.h"
 
-const uint32_t PCB_IO_RETURN = 1;
-const uint32_t PCB_NORMAL_RETURN = 0;
 const char* INT_KEYWORD = "interrupcion";
-// TODO: PASAJES EXEC => BLOCKED | BLOCKED => READY | SUSBLOCKED => SUSREADY | EXEC => FINISH
+// TODO: PASAJES EXEC => BLOCKED | BLOCKED => READY | SUSBLOCKED => SUSREADY | EXEC => EXIT
 
 // Semaforos
 sem_t gradoMultiprog;
@@ -203,7 +201,7 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
 void interrupcion_a_cpu() {
     log_info(kernelLogger, "Corto Plazo: Se interrumpe la CPU");
     
-    if(send(socketCpuInterrupt, "interrupcion", sizeof("interrupcion"), 0) == -1) {
+    if(send(SOCKET_INTERRUPT, "interrupcion", sizeof("interrupcion"), 0) == -1) {
         log_error(kernelLogger, "Error al interrumpir la CPU");
     }
     log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");
@@ -505,13 +503,6 @@ void agregar_pcb_en_cola_new()
 
         sem_post(&hayPCBsParaAgregarAlSistema); 
     }
-        /*t_link_element* linkPrimerInstruccion = instrucciones->head;
-        t_link_element* linkSegundaInstruccion = linkPrimerInstruccion->next;
-        
-        t_instruccion* primerInstruccion = linkPrimerInstruccion->data;
-        t_instruccion* segundaInstruccion = linkSegundaInstruccion->data;
-        string_append(&primerInstruccion->indicador, segundaInstruccion->indicador);
-        log_info(kernelLogger, "INSTRUCCIONES PCB: %s", primerInstruccion->indicador);*/
     free(mensaje);
 }
 
@@ -645,7 +636,7 @@ uint32_t calcular_tiempo(){
     
     u_int32_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
     
-    printf("%d",delta_us);
+    log_info(kernelLogger, "Prueba de timer %i", delta_us);
 
     return delta_us;
 }

@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
 
     log_info(kernelLogger, "Kernel: Esperando conexión entrante de Módulo Consola...");
 
-    iniciar_planificacion(socketCpuDispatch,socketCpuInterrupt);
+    iniciar_planificacion();
 
     aceptar_conexiones_kernel(socketEscucha, cliente, len);
 

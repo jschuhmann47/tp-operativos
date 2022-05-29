@@ -1,5 +1,8 @@
 #include "common_utils.h"
 
+const uint32_t PCB_IO_RETURN = 1;
+const uint32_t PCB_NORMAL_RETURN = 0;
+
 ///////////////////////////// CONFIGS /////////////////////////////
 int cargar_configuracion(const char *nombreModulo, void *moduleCfg, char *configPath, t_log *logger,
                          void (*cargar_miembros)(void *cfg, t_config *localCfg))
@@ -148,7 +151,8 @@ char* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
     char *empaquetado = malloc(sizeof(typeof(pcb->id)) +
                                sizeof(t_status) +
                                sizeof(typeof(pcb->tamanio)) +
-                               sizeof(t_list) +
+                               sizeof(uint32_t) +
+                               (sizeof(t_instruccion) * pcb->instrucciones->elements_count) +
                                sizeof(typeof(pcb->programCounter)) +
                                sizeof(typeof(pcb->est_rafaga_actual)));
 
@@ -156,15 +160,22 @@ char* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
     tmp_size = sizeof(pcb->id);
     memcpy(empaquetado + offset, &(pcb->id), tmp_size);
     offset += tmp_size;
-    tmp_size = sizeof(pcb->status);
+    tmp_size = sizeof(t_status);
     memcpy(empaquetado + offset, &(pcb->status), tmp_size);
     offset += tmp_size;
     tmp_size = sizeof(pcb->tamanio);
     memcpy(empaquetado + offset, &(pcb->tamanio), tmp_size);
     offset += tmp_size;
-    tmp_size = sizeof(pcb->instrucciones);
-    memcpy(empaquetado + offset, &(pcb->instrucciones), tmp_size);
+    tmp_size = sizeof(uint32_t);
+    memcpy(empaquetado + offset, &(pcb->instrucciones->elements_count), tmp_size);
     offset += tmp_size;
+    //tmp_size = sizeof(t_instruccion) * pcb->instrucciones->elements_count;
+    //memcpy(empaquetado + offset, &(pcb->instrucciones), tmp_size);
+    for(int i=0; i < (pcb->instrucciones->elements_count); i++){
+        t_instruccion* instruccion = crear_instruccion();
+        memcpy(empaquetado + offset, instruccion, tmp_size = sizeof(t_instruccion));
+        offset += tmp_size;
+    }
     tmp_size = sizeof(pcb->programCounter);
     memcpy(empaquetado + offset, &(pcb->programCounter), tmp_size);
     offset += tmp_size;
@@ -205,6 +216,7 @@ t_pcb* recibir_pcb(char* buffer)
 {
     t_pcb *pcb = malloc(sizeof(t_pcb));
     pcb->instrucciones = list_create();
+    uint32_t tamanioLista = 0;
 
     uint32_t offset = 0, tmp_len = 0;
     memcpy(&pcb->id, buffer + offset, tmp_len = sizeof(typeof(pcb->id)));
@@ -213,12 +225,17 @@ t_pcb* recibir_pcb(char* buffer)
     offset += tmp_len;
     memcpy(&pcb->tamanio, buffer + offset, tmp_len = sizeof(typeof(pcb->tamanio)));
     offset += tmp_len;
-    memcpy(&pcb->instrucciones, buffer + offset, tmp_len = sizeof(t_list));
+    memcpy(&tamanioLista, buffer + offset, tmp_len = sizeof(uint32_t));
     offset += tmp_len;
+    for (int i = 0; i < tamanioLista; i++){
+        t_instruccion *instruccion = crear_instruccion();
+        memcpy(instruccion, buffer + offset, tmp_len = sizeof(t_instruccion));
+        offset += tmp_len;
+        list_add(pcb->instrucciones, instruccion);
+    }
     memcpy(&pcb->programCounter, buffer + offset, tmp_len = sizeof(typeof(pcb->programCounter)));
     offset += tmp_len;
     memcpy(&pcb->est_rafaga_actual, buffer + offset, tmp_len = sizeof(typeof(pcb->est_rafaga_actual)));
 
     return pcb;
 }
-

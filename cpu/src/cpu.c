@@ -1,7 +1,5 @@
 #include "cpu.h" //"../include/cpu.h"
 
-
-
 int main(int argc, char* argv[]) {
     cpuCfg = cpu_cfg_create();
     cpuLogger = log_create(CPU_LOG_DEST, CPU_MODULE_NAME, true, LOG_LEVEL_INFO);
@@ -59,6 +57,17 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
             if(pcb->status == EXEC){
                 log_info(cpuLogger, "CPU: Recibi el PCB con Status: %s", "EXEC");
             }
+            log_info(cpuLogger, "CPU: Recibi el PCB con PC: %i", pcb->programCounter);
+            log_info(cpuLogger, "CPU: Recibi el PCB con Rafaga: %f", pcb->est_rafaga_actual);
+            log_info(cpuLogger, "Cantidad de Instrucciones: %i", pcb->instrucciones->elements_count);
+            t_link_element* linkPrimerInstruccion = pcb->instrucciones->head;
+            //t_link_element* linkSegundaInstruccion = linkPrimerInstruccion->next;
+            
+            t_instruccion* primerInstruccion = linkPrimerInstruccion->data;
+            //t_instruccion* segundaInstruccion = linkSegundaInstruccion->data;
+            //string_append(&primerInstruccion->indicador, segundaInstruccion->indicador);
+            log_info(cpuLogger, "Indicador: %s", primerInstruccion->indicador);
+            hacer_ciclo_de_instruccion(pcb);
             free(pcb);
         }
     }
