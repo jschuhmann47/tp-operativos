@@ -305,7 +305,9 @@ t_pcb* recibir_pcb(void* buffer)
                 //uint32_t param1;
                 memcpy(&param1, buffer + offset, tmp_len = sizeof(uint32_t));
                 offset += tmp_len;
+                
                 list_add(instruccion->parametros, &param1);
+                printf("%d\n", param1);
                 list_add(instruccionesPcb, instruccion);
                 printf("io");
                 break;

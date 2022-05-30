@@ -66,7 +66,7 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
             //t_instruccion* primerInstruccion = linkPrimerInstruccion->data;
             //t_instruccion* segundaInstruccion = linkSegundaInstruccion->data;
             //string_append(&primerInstruccion->indicador, segundaInstruccion->indicador);
-            log_info(cpuLogger, "Indicador: %d", pcb->instrucciones->head);
+            log_info(cpuLogger, "Indicador: %d", pcb->instrucciones->head->data);
             hacer_ciclo_de_instruccion(pcb);
             free(pcb);
         }
@@ -94,7 +94,7 @@ void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelD
 void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelDispatch,uint32_t tiempoABloquearse){
     log_info(cpuLogger, "CPU: Mando el PCB con tiempo de IO a Kernel");
     if(send(socketKernelDispatch, PCB_IO_RETURN, sizeof(PCB_IO_RETURN), 0)){ 
-        char* buffer = serializar_pcb(pcb,bytes->tamanio);
+        void* buffer = serializar_pcb(pcb,bytes->tamanio);
         if (enviar_tamanio_mensaje(bytes, socketKernelDispatch)){
             log_info(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
             if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {

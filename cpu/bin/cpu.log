@@ -1,16 +1,7 @@
-[INFO] 13:49:56:761 Cpu/(22094:22094): Cpu: Inicialización de campos correcta
-[INFO] 13:49:56:812 Cpu/(22094:22094): Valor de PUERTO_ESCUCHA_DISPATCH 8001
-[INFO] 13:49:56:814 Cpu/(22094:22094): Valor de PUERTO_ESCUCHA_INTERRUPT 8005
-[INFO] 13:49:56:824 Cpu/(22094:22094): CPU: A la escucha de nuevas conexiones en puerto 4
-[INFO] 13:50:11:832 Cpu/(22094:22094): CPU: Acepto la conexión del socket: 5
-[INFO] 13:50:11:833 Cpu/(22094:22094): CPU: Recibiendo PCB de Kernel
-[INFO] 13:50:11:838 Cpu/(22094:22094): CPU: Recibi el tamanio: 92
-[INFO] 13:50:11:842 Cpu/(22094:22094): CPU: Recibi el PCB con ID: 1
-[INFO] 13:50:11:845 Cpu/(22094:22094): CPU: Recibi el PCB con Tamanio: 50
-[INFO] 13:50:11:846 Cpu/(22094:22094): CPU: Recibi el PCB con Status: EXEC
-[INFO] 13:50:11:847 Cpu/(22094:22094): CPU: Recibi el PCB con PC: 0
-[INFO] 13:50:11:855 Cpu/(22094:22094): CPU: Recibi el PCB con Rafaga: 0.000000
-[INFO] 13:50:11:860 Cpu/(22094:22094): Cantidad de Instrucciones: 0
-[INFO] 13:50:11:861 Cpu/(22094:22094): Indicador: 0
-[INFO] 13:50:11:862 Cpu/(22094:22094): CPU: Ejecutando instruccion
-[INFO] 13:50:11:862 Cpu/(22094:22094): CPU: Ejecutando fetch
+[INFO] 14:16:35:992 Cpu/(25129:25129): Cpu: Inicialización de campos correcta
+[INFO] 14:16:36:044 Cpu/(25129:25129): Valor de PUERTO_ESCUCHA_DISPATCH 8001
+[INFO] 14:16:36:046 Cpu/(25129:25129): Valor de PUERTO_ESCUCHA_INTERRUPT 8005
+[INFO] 14:16:36:056 Cpu/(25129:25129): CPU: A la escucha de nuevas conexiones en puerto 4
+[INFO] 14:17:02:742 Cpu/(25129:25129): CPU: Acepto la conexión del socket: 5
+[INFO] 14:17:02:743 Cpu/(25129:25129): CPU: Recibiendo PCB de Kernel
+[INFO] 14:17:02:749 Cpu/(25129:25129): CPU: Recibi el tamanio: 92
