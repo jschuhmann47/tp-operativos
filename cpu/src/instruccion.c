@@ -65,7 +65,7 @@ bool cpu_decode(t_instruccion* instruccion){
 }
 
 void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
-    op_code codOp = getCodeIntruccion(instruccion->indicador);
+    code_instruccion codOp = getCodeIntruccion(instruccion->indicador);
     switch (codOp)
     {
     case NO_OP: //TODO
