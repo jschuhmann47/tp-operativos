@@ -108,3 +108,20 @@ void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socket
         log_error(cpuLogger, "CPU: Error al enviar PCB a Kernel");
     }
 }
+
+void* check_interrupt(){ //diria de hacer esto un hilo, y que edite un flag global: hayInterrupcion que cambie entre true y false
+    while(1){
+      if(recv(cpuCfg->KERNEL_INTERRUPT, &hayInterrupcion, sizeof(uint32_t), MSG_WAITALL)){
+        log_info(cpuLogger, "CPU: Recibi una interrupcion");
+        pthread_mutex_lock(&mutex_interrupciones);
+        hayInterrupcion=1; //y que se ponga en 0 en instruccion.c cuando se haga el ciclo
+        pthread_mutex_unlock(&mutex_interrupciones);
+        return NULL;
+    }
+    else{
+        log_error(cpuLogger, "CPU: Error al recibir una interrupcion");
+        return NULL;
+    }  
+    }
+    
+}

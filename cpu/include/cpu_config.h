@@ -25,6 +25,9 @@ typedef struct {
 extern t_log* cpuLogger;
 extern t_cpu_config* consolaCfg;
 
+pthread_mutex_t mutex_interrupciones;
+uint32_t hayInterrupcion;
+
 t_cpu_config* cpu_cfg_create(void);
 void cpu_config_initialize(void* cpuCfg, t_config* config);
 void liberar_modulo_cpu(t_log* cpuLogger, t_cpu_config* cpuCfg);

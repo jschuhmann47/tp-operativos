@@ -5,6 +5,11 @@ pthread_mutex_t mutex_cpu;
 
 void hacer_ciclo_de_instruccion(t_pcb* pcb){
     log_info(cpuLogger, "CPU: Ejecutando instruccion");
+
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+
+
     //while(){ CHEQUEAR QUE SEA EXIT, INTERRUPCION Y I/O
         t_instruccion* instruccionAEjecutar = cpu_fetch(pcb);
         log_info(cpuLogger, "CPU: Ejecuté fetch");
@@ -13,19 +18,29 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb){
         // int operandoIO = 0;
         // operandoIO = 10;
         
-        if(necesitaOperandos){ //va a buscarnf #include <unistd.h>
-
-            usleep(75000);
-            usleep(75000); /* SUSv2 los a memoria solo si es COPY*/
+        if(necesitaOperandos){ 
             uint32_t operando = cpu_fetch_operands(instruccionAEjecutar); 
             cpu_execute_con_operando(instruccionAEjecutar,operando);
 
         }else{
-            cpu_execute(instruccionAEjecutar,pcb /*operandoDeIo*/);
+            cpu_execute(instruccionAEjecutar,pcb);
         }
         pcb->programCounter++;
+    
+    if(cpu_check_interrupt()){
+        log_info(cpuLogger, "CPU: Hay una interrupción, devolviendo PCB a Kernel");
+        //mandar_pcb_a_kernel(pcb); ver si es justo io??
+    }
+
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+    
+    u_int32_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+    
+    log_info(cpuLogger, "Prueba de timer %i", delta_us);
+
+    //La rafaga la seteamos antes de que vuelva a kernel, xq sino en cada instruccion estas pisando el valor anterior
+    //Ver bien donde va esto del tiempo, es x aca pero depende de si hay interrupcion o no, dps lo veo bien
     //}
-    cpu_check_interrupt(/*??*/);
     //devolver_pcb_por_io(operandoDeIo) hace de cuenta que esta hecha
     
     
@@ -50,14 +65,15 @@ bool cpu_decode(t_instruccion* instruccion){
 }
 
 void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
-    switch (NO_OP /*instruccion->codigo.op*/) //no esta en el struct, ver de donde sale o si llega parseado
+    op_code codOp = getCodeIntruccion(instruccion->indicador);
+    switch (codOp)
     {
     case NO_OP: //TODO
-        usleep(750000);
+        usleep(/*cpuCfg->RETARDO_NOOP*/1);
         break;
     case I_O: //TODO
         pcb->status=BLOCKED;
-        /*pcb->est_rafaga_actual = kernelCfg->TIEMPO_MAXIMO_BLOQUEADO; Confirmar tiempo bloqueado*/
+        
         break;
     case WRITE:
         /* code */
@@ -66,9 +82,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
         /* code */
         break;
     case EXIT: //TODO
-        // TODO: PASAJES EXEC => BLOCKED | BLOCKED => READY | SUSBLOCKED => SUSREADY | EXEC => FINISH
         pcb->status=EXIT;
-        /*pcb->est_rafaga_actual = 0; Confirmar RAFAGA*/
         break;
 
     default:
@@ -87,7 +101,16 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion){
     //TODO, buscarlo en la memoria
 }
 
-void cpu_check_interrupt(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
-    
+bool cpu_check_interrupt(){
+    pthread_mutex_lock(&mutex_interrupciones);//este mutex comparte con cpu.c
+    if(hayInterrupcion){
+        hayInterrupcion=0;
+        pthread_mutex_unlock(&mutex_interrupciones);
+        return true;
+    }
+    else{
+        pthread_mutex_unlock(&mutex_interrupciones);
+        return false;
+    }
 }
 
