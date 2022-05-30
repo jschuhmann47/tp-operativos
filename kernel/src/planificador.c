@@ -162,7 +162,7 @@ void* determinar_cola_pcb(t_pcb* pcb){
 
 bool instruccion_actual_es(t_pcb* pcb, char* codOp){
     t_instruccion* inst = list_get(pcb->instrucciones,pcb->programCounter);
-    return strcmp(codOp, inst->indicador) == 0;
+    return codOp == inst->indicador;
 }
 
 // void determinar_ready_o_blocked(t_pcb* pcb){

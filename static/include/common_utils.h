@@ -25,4 +25,8 @@ t_mensaje_tamanio* deserializar_tamanio(char *buffer);
 uint32_t recibir_tamanio_mensaje(t_mensaje_tamanio *tamanio_mensaje, int socket);
 t_pcb* recibir_pcb(char* buffer);
 
+//Utilities//
+int tamanioInstruccion(op_code codOp);
+uint32_t string_to_uint(char* string);
+
 #endif
