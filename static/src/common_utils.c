@@ -110,7 +110,7 @@ char* agregarInstruccion(char **intruccion, char *mensaje)
 t_instruccion *crear_instruccion(void)
 {
 	t_instruccion *instruccion = malloc(sizeof(t_instruccion));
-	instruccion->indicador = NULL;
+	instruccion->indicador = 0; //ver como se inicia si es enum
 	instruccion->parametros = list_create();
 	return instruccion;
 }
@@ -181,7 +181,7 @@ char* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
 
     for(int i=0; i < (pcb->instrucciones->elements_count); i++){
         t_instruccion* instruccion = list_get(pcb->instrucciones,i);
-        memcpy(empaquetado + offset, instruccion->indicador, tmp_size = sizeof(code_instruccion));
+        memcpy(empaquetado + offset, &(instruccion->indicador), tmp_size = sizeof(code_instruccion));
         offset += tmp_size;
         switch (instruccion->indicador){
             case NO_OP:
@@ -206,7 +206,7 @@ char* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
                 memcpy(empaquetado + offset, list_get(instruccion->parametros,1), tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 break;
-            case EXIT:
+            case EXIT_I:
                 break;
         }
     }
@@ -286,25 +286,26 @@ t_pcb* recibir_pcb(char* buffer)
         t_instruccion *instruccion = crear_instruccion();
         memcpy(&(instruccion->indicador), buffer + offset, tmp_len = sizeof(code_instruccion));
         offset += tmp_len;
+        uint32_t param1,param2;
         switch (instruccion->indicador){
             case NO_OP:
                 break;
             case I_O:
-                uint32_t param1;
+                //uint32_t param1;
                 memcpy(&param1, buffer + offset, tmp_len = sizeof(uint32_t));
                 offset += tmp_len;
                 list_add(instruccion->parametros, &param1);
                 list_add(instruccionesPcb, instruccion);
                 break;
             case READ:
-                uint32_t param1;
+                //uint32_t param1;
                 memcpy(&param1, buffer + offset, tmp_len = sizeof(uint32_t));
                 offset += tmp_len;
                 list_add(instruccion->parametros, &param1);
                 list_add(instruccionesPcb, instruccion);
                 break;
             case WRITE:
-                uint32_t param1,param2;
+                //uint32_t param1,param2;
                 memcpy(&param1, buffer + offset, tmp_len = sizeof(uint32_t));
                 offset += tmp_len;
                 memcpy(&param2, buffer + offset, tmp_len = sizeof(uint32_t));
@@ -314,7 +315,7 @@ t_pcb* recibir_pcb(char* buffer)
                 list_add(instruccionesPcb, instruccion);
                 break;
             case COPY:
-                uint32_t param1,param2;
+                //uint32_t param1,param2;
                 memcpy(&param1, buffer + offset, tmp_len = sizeof(uint32_t));
                 offset += tmp_len;
                 memcpy(&param2, buffer + offset, tmp_len = sizeof(uint32_t));
@@ -323,7 +324,7 @@ t_pcb* recibir_pcb(char* buffer)
                 list_add(instruccion->parametros, &param2);
                 list_add(instruccionesPcb, instruccion);
                 break;
-            case EXIT:
+            case EXIT_I:
                 break;
         }
         list_add(pcb->instrucciones, instruccion);
