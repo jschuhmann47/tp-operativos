@@ -44,7 +44,7 @@ void aceptar_conexiones_cpu(int socketEscucha, struct sockaddr cliente, socklen_
 }
 
 void recibir_pcb_de_kernel(int socketKernelDispatch){
-    char* buffer;
+    void* buffer;
     log_info(cpuLogger, "CPU: Recibiendo PCB de Kernel");
     t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
     if (recibir_tamanio_mensaje(tamanio_mensaje, socketKernelDispatch)){
@@ -60,13 +60,13 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
             log_info(cpuLogger, "CPU: Recibi el PCB con PC: %i", pcb->programCounter);
             log_info(cpuLogger, "CPU: Recibi el PCB con Rafaga: %f", pcb->est_rafaga_actual);
             log_info(cpuLogger, "Cantidad de Instrucciones: %i", pcb->instrucciones->elements_count);
-            t_link_element* linkPrimerInstruccion = pcb->instrucciones->head;
+            //t_link_element* linkPrimerInstruccion = pcb->instrucciones->head;
             //t_link_element* linkSegundaInstruccion = linkPrimerInstruccion->next;
             
-            t_instruccion* primerInstruccion = linkPrimerInstruccion->data;
+            //t_instruccion* primerInstruccion = linkPrimerInstruccion->data;
             //t_instruccion* segundaInstruccion = linkSegundaInstruccion->data;
             //string_append(&primerInstruccion->indicador, segundaInstruccion->indicador);
-            log_info(cpuLogger, "Indicador: %s", primerInstruccion->indicador);
+            log_info(cpuLogger, "Indicador: %d", pcb->instrucciones->head);
             hacer_ciclo_de_instruccion(pcb);
             free(pcb);
         }

@@ -105,7 +105,7 @@ t_list* convertir_instruccion(char* buffer)
             char* segundoParametroSinPipe = pseudoInstruccion[2];
 
             code_instruccion cod_op = getCodeIntruccion(instruccionSinPipe);
-
+            uint32_t param1,param2;
             switch(cod_op)
             {
                 case NO_OP:
@@ -114,24 +114,30 @@ t_list* convertir_instruccion(char* buffer)
                     break;
                 case I_O:
                     instruccion->indicador = I_O;
-                    list_add(instruccion->parametros, string_to_uint(primerParametroSinPipe));
+                    param1=string_to_uint(primerParametroSinPipe);
+                    list_add(instruccion->parametros, &param1);
                     list_add(instrucciones, instruccion);
                     break;
                 case WRITE:
                     instruccion->indicador = WRITE;
-                    list_add(instruccion->parametros, string_to_uint(primerParametroSinPipe));
-                    list_add(instruccion->parametros, string_to_uint(segundoParametroSinPipe));
+                    param1=string_to_uint(primerParametroSinPipe);
+                    list_add(instruccion->parametros, &param1);
+                    param2=string_to_uint(segundoParametroSinPipe);
+                    list_add(instruccion->parametros, &param2);
                     list_add(instrucciones, instruccion);
                     break;
                 case COPY:
                     instruccion->indicador = COPY;
-                    list_add(instruccion->parametros, string_to_uint(primerParametroSinPipe));
-                    list_add(instruccion->parametros, string_to_uint(segundoParametroSinPipe));
+                    param1=string_to_uint(primerParametroSinPipe);
+                    list_add(instruccion->parametros, &param1);
+                    param2=string_to_uint(segundoParametroSinPipe);
+                    list_add(instruccion->parametros, &param2);
                     list_add(instrucciones, instruccion);
                     break;
                 case READ:
                     instruccion->indicador = READ;
-                    list_add(instruccion->parametros, string_to_uint(primerParametroSinPipe));
+                    param1=string_to_uint(primerParametroSinPipe);
+                    list_add(instruccion->parametros, &param1);
                     list_add(instrucciones, instruccion);
                     break;
                 case EXIT_I:

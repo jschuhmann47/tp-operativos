@@ -1,0 +1,23 @@
+[INFO] 13:50:08:787 Kernel/(22161:22161): Kernel: Inicialización de campos correcta
+[INFO] 13:50:08:846 Kernel/(22161:22161): Kernel: Esperando conexión entrante de Módulo Consola...
+[INFO] 13:50:08:857 Kernel/(22161:22161): Kernel: A la escucha de nuevas conexiones en puerto 4
+[INFO] 13:50:08:863 Kernel/(22161:22164): Largo Plazo: Hilo liberador de PCBs de Procesos en EXIT inicializado
+[INFO] 13:50:08:865 Kernel/(22161:22162): Largo Plazo: Inicialización exitosa
+[INFO] 13:50:11:761 Kernel/(22161:22161): Kernel: Acepto la conexión del socket: 5
+[INFO] 13:50:11:774 Kernel/(22161:22167): Me llego el mensaje 50
+[INFO] 13:50:11:776 Kernel/(22161:22167): Me llego el mensaje [[NO_OP],[NO_OP],[NO_OP],[NO_OP],[NO_OP],[I_O|3000],[WRITE|4|42],[COPY|0|4],[READ|0],[EXIT_I]]
+[INFO] 13:50:11:801 Kernel/(22161:22167): ID PCB 1
+[INFO] 13:50:11:803 Kernel/(22161:22167): STATUS PCB NEW
+[INFO] 13:50:11:804 Kernel/(22161:22167): TAMAÑO PCB 50
+[INFO] 13:50:11:805 Kernel/(22161:22167): Kernel: Creación PCB con ID 1 exitosa
+[INFO] 13:50:11:806 Kernel/(22161:22162): Largo Plazo: Se toma una instancia de PCBs a agregar al sistema
+[INFO] 13:50:11:807 Kernel/(22161:22162): Largo Plazo: Se toma una instancia de Grado Multiprogramación
+[INFO] 13:50:11:810 Kernel/(22161:22162): Largo Plazo: Incialización de información del algoritmo correcta
+[INFO] 13:50:11:813 Kernel/(22161:22162): Largo Plazo: Transición de [1;93mNEW->READY[0m Proceso de ID 1
+[INFO] 13:50:11:814 Kernel/(22161:22163): Corto Plazo: Se toma una instancia de READY
+[INFO] 13:50:11:815 Kernel/(22161:22163): FIFO: Se toma una instancia de READY, PCB ID 1
+[INFO] 13:50:11:816 Kernel/(22161:22163): Corto Plazo: Se manda el PCB 1 a la CPU
+[INFO] 13:50:11:829 Kernel/(22161:22163): Hilo dispatch EXEC->READY inicializado
+[INFO] 13:50:11:835 Kernel/(22161:22163): Kernel: Conectando a CPU
+[INFO] 13:50:11:843 Kernel/(22161:22163): Corto Plazo: Se mando el PCB 1 a la CPU correctamente
+[INFO] 13:50:11:844 Kernel/(22161:22163): Corto Plazo: Transición de [1;93mREADY->EXEC[0m Proceso de ID 1
