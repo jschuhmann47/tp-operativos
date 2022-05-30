@@ -30,6 +30,12 @@ int main(int argc, char *argv[])
     enviar_mensaje(tamanio, socketKernel, MENSAJE);
     enviar_mensaje(instruccionesAEnviar, socketKernel, INSTRUCCION);
 
+    char* mensaje = recibir_mensaje_finalizacion(socketKernel);
+    log_info(consolaLogger, "El mensaje es: %s", mensaje);
+    if(mensaje){
+        terminar_conexion(socketKernel);
+    }
+    
     // ESPERAR MENSAJE DE FINALIZACION
 
     // TERMINAR
@@ -88,7 +94,7 @@ char *leer_archivo(char *nombre)
             else
             {
                 mensaje = agregarInstruccion(token, mensaje);
-                log_info(consolaLogger, "mensaje ---->: %i", mensaje);
+                log_info(consolaLogger, "mensaje ---->: %s", mensaje);
             }
         }
     }

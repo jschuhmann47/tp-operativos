@@ -68,5 +68,9 @@ typedef struct t_mensaje_tamanio {
     uint32_t tamanio;
 }__attribute__((__packed__)) t_mensaje_tamanio;
 
+typedef struct{
+	uint32_t size;
+	void* stream;
+} t_buffer;
 #endif
 

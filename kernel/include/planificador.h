@@ -10,6 +10,7 @@
 #include "structs.h"
 #include "conexiones.h"
 #include "kernel_config.h"
+#include "kernel.h"
 
 
 

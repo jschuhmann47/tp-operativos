@@ -10,6 +10,7 @@ sem_t hayPCBsParaPasarASusBlocked;
 sem_t transicionarSusReadyAready;
 sem_t suspensionConcluida;
 pthread_mutex_t mutexId;
+sem_t pcbsEnExit;
 
 //ID para el PCB
 static uint32_t nextId;
@@ -29,7 +30,7 @@ int SOCKET_DISPATCH;
 //Socket para interrupt
 int SOCKET_INTERRUPT;
 
-void iniciar_planificacion(void) {
+void iniciar_planificacion() {
 
 
     nextId = 1;
@@ -39,6 +40,7 @@ void iniciar_planificacion(void) {
     sem_init(&hayPCBsParaPasarASusBlocked, 0, 0);                       /* contador */
     sem_init(&transicionarSusReadyAready, 0, 0);                        /* binario  */
     sem_init(&suspensionConcluida, 0, 0);                               /* binario  */
+    sem_init(&pcbsEnExit, 0, 0);
 
     /* Inicialización de colas de planificación */
     pcbsNew = cola_planificacion_create(0);
@@ -89,12 +91,16 @@ void* iniciar_corto_plazo(void* _) {
         //remover_pcb_de_cola(pcbQuePasaAExec, pcbsReady); //Ya lo estamos removiendo de la lista al elegir segun FIFO.
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
-        mandar_pcb_a_cpu(pcbQuePasaAExec);
         sem_post(&(pcbsExec->instanciasDisponibles));
 
         log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
 
+        mandar_pcb_a_cpu(pcbQuePasaAExec);
+
+        /*log_transition("Corto Plazo", "EXEC", "EXIT", pcbQuePasaAExec->id); //Esto es un ejemplo para cerrar la conexion, no va aca.
         
+        sem_post(&pcbsEnExit);
+        enviar_finalizacion_consola("Finish", kernelCfg->CONSOLA_SOCKET);*/
 
         //atender_peticiones_pcb(pcbQuePasaAExec);
     }
@@ -227,7 +233,7 @@ void* conexion_de_interrupt() {
 
 //En todos los casos el PCB será recibido a través de la conexión de dispatch - Es bidireccional, por aca tambien le mando el PCB a CPU
 void* conexion_de_dispatch() {
-    log_info(kernelLogger, "Hilo dispatch EXEC->READY inicializado");
+    log_info(kernelLogger, "Hilo dispatch inicializado");
 
     SOCKET_DISPATCH = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH);
     log_info(kernelLogger, "Kernel: Conectando a CPU");
@@ -483,6 +489,10 @@ void agregar_pcb_en_cola_new()
                 instrucciones = recibir_instrucciones(kernelCfg->CONSOLA_SOCKET);
                 sem_post(&recibirInstruccion);
                 break;
+            case -1:
+                sem_wait(&pcbsEnExit);
+			    log_error(kernelLogger, "Se desconecto la Consola");
+			    return EXIT_FAILURE;
             default:
                 break;
         }
@@ -497,12 +507,12 @@ void agregar_pcb_en_cola_new()
         }
         log_info(kernelLogger, "TAMAÑO PCB %i", pcb->tamanio);
 
-
         agregar_pcb_a_cola(pcb, pcbsNew);
         log_info(kernelLogger, "Kernel: Creación PCB con ID %d exitosa", pcb->id);
 
         sem_post(&hayPCBsParaAgregarAlSistema); 
     }
+    return EXIT_SUCCESS;
     free(mensaje);
 }
 

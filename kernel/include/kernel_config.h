@@ -46,5 +46,7 @@ char* recibir_mensaje(int);
 t_list* recibir_instrucciones(int socket_cliente);
 void* recibir_buffer(int);
 t_list* convertir_instruccion(char* buffer);
+void enviar_finalizacion_consola(char *mensaje, int socket_cliente);
+void *serializar_mensaje(t_buffer *mensaje, uint32_t bytes);
 
 #endif

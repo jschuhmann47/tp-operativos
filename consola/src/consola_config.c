@@ -72,3 +72,28 @@ void eliminar_paquete(t_paquete *paquete)
 	free(paquete->buffer);
 	free(paquete);
 }
+
+void terminar_conexion(int socketKernel)
+{
+    close(socketKernel);
+	log_info(consolaLogger, "Conexion finalizada.");
+}
+
+char* recibir_mensaje_finalizacion(int socketKernel)
+{
+	char* buffer = recibir_buffer(socketKernel);
+
+    return buffer;
+}
+
+void* recibir_buffer(int socketKernel)
+{
+	void *buffer;
+    uint32_t size = 0;
+
+	recv(socketKernel, &size, sizeof(uint32_t), MSG_WAITALL);
+	buffer = malloc(size);
+	recv(socketKernel, buffer, size, MSG_WAITALL);
+
+	return buffer;
+}

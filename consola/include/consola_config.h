@@ -20,11 +20,6 @@ typedef struct {
 } t_consola_config;
 
 typedef struct{
-	uint32_t size;
-	void* stream;
-} t_buffer;
-
-typedef struct{
 	op_code codigo_operacion;
 	t_buffer* buffer;
 } t_paquete;
@@ -40,5 +35,8 @@ void* serializar_paquete(t_paquete* paquete, uint32_t bytes);
 void liberar_modulo_consola(t_log* consolaLogger, t_consola_config* consolaCfg);
 void eliminar_paquete(t_paquete* paquete);
 t_instruccion* crear_instruccion(void);
+void terminar_conexion(int socketKernel);
+char* recibir_mensaje_finalizacion(int socketKernel);
+void* recibir_buffer(int socketKernel);
 
 #endif

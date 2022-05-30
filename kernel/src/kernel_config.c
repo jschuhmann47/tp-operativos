@@ -154,3 +154,41 @@ t_list* convertir_instruccion(char* buffer)
     string_append(&primerInstruccion->indicador, segundaInstruccion->indicador);
     log_info(kernelLogger, "Cantidad de instrucciones: %s", primerInstruccion->indicador);*/
 }
+
+void enviar_finalizacion_consola(char *mensaje, int socket_cliente)
+{
+	t_buffer *buffer = malloc(sizeof(t_buffer));
+	char *datos = string_new();
+	string_append(&datos, mensaje);
+
+	buffer->size = strlen(datos) + 1;
+	buffer->stream = datos;
+	memcpy(buffer->stream, mensaje, buffer->size);
+
+	uint32_t bytes = buffer->size + sizeof(uint32_t);
+
+	void *a_enviar = serializar_mensaje(buffer, bytes);
+
+	send(socket_cliente, a_enviar, bytes, 0);
+
+	free(a_enviar);
+}
+
+void *serializar_mensaje(t_buffer *mensaje, uint32_t bytes)
+{
+	void *buffer = malloc(bytes);
+
+	if (buffer == NULL)
+	{
+		printf("No hay memoria para buffer en serializar_mensaje");
+	};
+
+	uint32_t bytes_escritos = 0;
+
+	memcpy(buffer + bytes_escritos, &(mensaje->size), sizeof(uint32_t));
+	bytes_escritos += sizeof(uint32_t);
+	memcpy(buffer + bytes_escritos, mensaje->stream, mensaje->size);
+	bytes_escritos += mensaje->size;
+
+	return buffer;
+}

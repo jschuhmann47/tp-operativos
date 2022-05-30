@@ -42,4 +42,3 @@ void crear_hilo_handler_conexion_entrante(int* socket)
     pthread_detach(threadSuscripcion);
     return;
 }
-
