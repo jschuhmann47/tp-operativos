@@ -106,14 +106,14 @@ void* iniciar_corto_plazo(void* _) {
     pthread_exit(NULL);
 }
 
-void* getPcbDeCPU(void) {
+void* getPcbDeCPU(void) { //deberia haber un hilo con esto corriendo
 
     /*pthread_t th1;
     pthread_create(&th1, NULL, conexion_de_interrupt, NULL);
     pthread_detach(th1);*/
 
     pthread_t th2;
-    pthread_create(&th2, NULL, conexion_de_dispatch, NULL); //donde devuele el socket? yo lo declare global. TODO
+    pthread_create(&th2, NULL, conexion_de_dispatch, NULL);
     pthread_detach(th2);
 
     sem_wait(&(pcbsExec->instanciasDisponibles));
@@ -130,14 +130,43 @@ void* getPcbDeCPU(void) {
 }
 
 t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esperando que se la devuelva por el motivo que sea
-    //lo del socket ver como viene
-    //x ahora lo declaro asi nomas
+    
+    t_pcb* pcb;
+    void* buffer;
+    log_info(kernelLogger, "Kernel: Recibiendo PCB de CPU");
+    t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
 
-    void* pcb = malloc(sizeof(t_pcb));
-    if(recv(socketCpuDispatch, pcb, sizeof(t_pcb), MSG_WAITALL) == -1){
-        log_error(kernelLogger, "Error al recibir el PCB de la CPU");
+    uint32_t volvioPorIO;
+    if(recv(SOCKET_DISPATCH,&volvioPorIO,sizeof(uint32_t),0)<0){
+        log_error(kernelLogger, "Kernel: Error al recibir el mensaje de volvio por IO");
+        exit(1);
     }
-    //t_pcb* pcbArribada = deserializar_pcb(pcb); //esta es la que devuelve la funcion
+
+    if (recibir_tamanio_mensaje(tamanio_mensaje, SOCKET_DISPATCH)){
+        buffer = malloc(tamanio_mensaje->tamanio);
+        log_info(kernelLogger, "Kernel: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
+        if (recv(SOCKET_DISPATCH, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
+            pcb = recibir_pcb(buffer);
+            log_info(kernelLogger, "Kernel: Recibi el PCB con ID: %i", pcb->id);
+            log_info(kernelLogger, "Kernel: Recibi el PCB con Tamanio: %i", pcb->tamanio);
+            log_info(kernelLogger, "Kernel: Recibi el PCB con PC: %i", pcb->programCounter);
+            log_info(kernelLogger, "Kernel: Recibi el PCB con Rafaga: %f", pcb->est_rafaga_actual);
+            log_info(kernelLogger, "Cantidad de Instrucciones: %i", pcb->instrucciones->elements_count);
+        }
+    }
+    uint32_t tiempoABloquearsePorIO;
+
+    if(volvioPorIO){
+        if(recv(SOCKET_DISPATCH,&tiempoABloquearsePorIO,sizeof(uint32_t),MSG_WAITALL)<0){
+            log_error(kernelLogger, "Kernel: Error al recibir el mensaje de tiempo a bloquearse por IO");
+        }
+        log_info(kernelLogger, "Kernel: Recibi el tiempo a bloquearse por IO: %i", tiempoABloquearsePorIO);
+        //pasar a bloqueado
+    }else{
+        //ready o exit preguntar
+    }
+    
+    
     
     t_list* asd;
     t_pcb* hola = pcb_create(1,1,asd,kernelCfg); //si fue a IO suspenderlo
