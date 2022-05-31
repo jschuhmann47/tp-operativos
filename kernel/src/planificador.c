@@ -168,7 +168,7 @@ void* determinar_cola_pcb(t_pcb* pcb){
 
 bool instruccion_actual_es(t_pcb* pcb, char* codOp){
     t_instruccion* inst = list_get(pcb->instrucciones,pcb->programCounter);
-    return strcmp(codOp, inst->indicador) == 0;
+    return codOp == inst->indicador;
 }
 
 // void determinar_ready_o_blocked(t_pcb* pcb){
@@ -190,7 +190,7 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
     uint32_t bytes = 0;
     log_info(kernelLogger, "Corto Plazo: Se manda el PCB %d a la CPU", pcb->id);
 
-    char* pcbAMandar = serializar_pcb(pcb, &bytes);
+    void* pcbAMandar = serializar_pcb(pcb, &bytes);
     conexion_de_dispatch(); //setea la variable SOCKET_DISPATCH de arriba de todo 
 
     t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));

@@ -19,8 +19,7 @@ int cargar_configuracion(const char *nombreModulo, void *moduleCfg, char *config
     return EXIT_SUCCESS;
 }
 
-code_instruccion getCodeIntruccion(char *code)
-{
+code_instruccion getCodeIntruccion(char *code){
     if (string_equals_ignore_case(code, "NO_OP"))
         return NO_OP;
     if (string_equals_ignore_case(code, "WRITE"))
@@ -110,7 +109,7 @@ char* agregarInstruccion(char **intruccion, char *mensaje)
 t_instruccion *crear_instruccion(void)
 {
 	t_instruccion *instruccion = malloc(sizeof(t_instruccion));
-	instruccion->indicador = NULL;
+	instruccion->indicador = 0; //ver como se inicia si es enum
 	instruccion->parametros = list_create();
 	return instruccion;
 }
@@ -146,39 +145,98 @@ char *serializar_tamanio(t_mensaje_tamanio *mensaje_tamanio, uint32_t *bytes)
     return empaquetado;
 }
 
-char* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
+void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
 {
-    char *empaquetado = malloc(sizeof(typeof(pcb->id)) +
-                               sizeof(t_status) +
-                               sizeof(typeof(pcb->tamanio)) +
-                               sizeof(uint32_t) +
-                               (sizeof(t_instruccion) * pcb->instrucciones->elements_count) +
-                               sizeof(typeof(pcb->programCounter)) +
-                               sizeof(typeof(pcb->est_rafaga_actual)));
+    
+    uint32_t tamanioListaInstrucciones = 0;
+    for(int i=0; i < (pcb->instrucciones->elements_count); i++){
+        t_instruccion* instruccion = list_get(pcb->instrucciones,i);
+        tamanioListaInstrucciones += tamanioInstruccion(instruccion->indicador);
+    }
+    
+    void *empaquetado = malloc(tamanioListaInstrucciones +
+                                sizeof(typeof(pcb->id)) + //id
+                                sizeof(t_status) +
+                                sizeof(typeof(pcb->tamanio)) +//tamanio
+                                sizeof(uint32_t) +//cantidadInstrucciones
+                                sizeof(typeof(pcb->programCounter)) +//PC
+                                sizeof(typeof(pcb->est_rafaga_actual))); //rafaga
 
     uint32_t offset = 0, tmp_size = 0;
-    tmp_size = sizeof(pcb->id);
+    
+    tmp_size = sizeof(uint32_t);
+    memcpy(empaquetado + offset, &tamanioListaInstrucciones, tmp_size);
+    offset += tmp_size;
+
+    tmp_size = sizeof(uint32_t);
     memcpy(empaquetado + offset, &(pcb->id), tmp_size);
     offset += tmp_size;
+   
     tmp_size = sizeof(t_status);
     memcpy(empaquetado + offset, &(pcb->status), tmp_size);
     offset += tmp_size;
-    tmp_size = sizeof(pcb->tamanio);
+    
+    tmp_size = sizeof(uint32_t);
     memcpy(empaquetado + offset, &(pcb->tamanio), tmp_size);
     offset += tmp_size;
+
     tmp_size = sizeof(uint32_t);
     memcpy(empaquetado + offset, &(pcb->instrucciones->elements_count), tmp_size);
     offset += tmp_size;
-    //tmp_size = sizeof(t_instruccion) * pcb->instrucciones->elements_count;
-    //memcpy(empaquetado + offset, &(pcb->instrucciones), tmp_size);
+
+   
     for(int i=0; i < (pcb->instrucciones->elements_count); i++){
-        t_instruccion* instruccion = crear_instruccion();
-        memcpy(empaquetado + offset, instruccion, tmp_size = sizeof(t_instruccion));
+        t_instruccion* instruccion = list_get(pcb->instrucciones,i);
+        
+        memcpy(empaquetado + offset, &(instruccion->indicador), tmp_size = sizeof(code_instruccion));
         offset += tmp_size;
+       
+       
+        uint32_t param1,param2;
+        switch (instruccion->indicador){
+            case NO_OP:
+                
+                continue;
+            case I_O:
+                param1=list_get(instruccion->parametros,0);
+                memcpy(empaquetado + offset, &param1, tmp_size = sizeof(uint32_t));
+                offset += tmp_size;
+                
+                continue;
+            case READ:
+                param1=list_get(instruccion->parametros,0);
+                memcpy(empaquetado + offset, &param1, tmp_size = sizeof(uint32_t));
+                offset += tmp_size;
+                
+                continue;
+            case WRITE:
+                param1=list_get(instruccion->parametros,0);
+                memcpy(empaquetado + offset, &param1, tmp_size = sizeof(uint32_t));
+                offset += tmp_size;
+                param2=list_get(instruccion->parametros,1);
+                memcpy(empaquetado + offset,&param2 , tmp_size = sizeof(uint32_t));
+                offset += tmp_size;
+               
+                continue;
+            case COPY:
+                param1=list_get(instruccion->parametros,0);
+                memcpy(empaquetado + offset, &param1, tmp_size = sizeof(uint32_t));
+                offset += tmp_size;
+                param2=list_get(instruccion->parametros,1);
+                memcpy(empaquetado + offset,&param2 , tmp_size = sizeof(uint32_t));
+                offset += tmp_size;
+                
+                continue;
+            case EXIT_I:
+                
+                continue;
+        }
     }
+    
     tmp_size = sizeof(pcb->programCounter);
     memcpy(empaquetado + offset, &(pcb->programCounter), tmp_size);
     offset += tmp_size;
+
     tmp_size = sizeof(pcb->est_rafaga_actual);
     memcpy(empaquetado + offset, &(pcb->est_rafaga_actual), tmp_size);
     offset += tmp_size;
@@ -212,30 +270,140 @@ t_mensaje_tamanio* deserializar_tamanio(char *buffer) {
     return header_message;
 }
 
-t_pcb* recibir_pcb(char* buffer)
+t_pcb* recibir_pcb(void* buffer)
 {
-    t_pcb *pcb = malloc(sizeof(t_pcb));
-    pcb->instrucciones = list_create();
-    uint32_t tamanioLista = 0;
-
     uint32_t offset = 0, tmp_len = 0;
-    memcpy(&pcb->id, buffer + offset, tmp_len = sizeof(typeof(pcb->id)));
+    
+    
+    uint32_t tamanioListaInstrucciones;
+    
+    memcpy(&tamanioListaInstrucciones, buffer + offset, tmp_len = sizeof(uint32_t));
     offset += tmp_len;
+
+    t_list* instruccionesPcb = list_create();
+
+    t_pcb *pcb = malloc(sizeof(typeof(pcb->id)) +
+                        sizeof(t_status) +
+                        sizeof(typeof(pcb->tamanio)) +
+                        sizeof(uint32_t) +
+                        tamanioListaInstrucciones +
+                        sizeof(typeof(pcb->programCounter)) +
+                        sizeof(typeof(pcb->est_rafaga_actual)));
+
+    
+    memcpy(&pcb->id, buffer + offset, tmp_len = sizeof(uint32_t));
+    offset += tmp_len;
+
     memcpy(&pcb->status, buffer + offset, tmp_len = sizeof(t_status));
     offset += tmp_len;
-    memcpy(&pcb->tamanio, buffer + offset, tmp_len = sizeof(typeof(pcb->tamanio)));
+
+    memcpy(&pcb->tamanio, buffer + offset, tmp_len = sizeof(uint32_t));
     offset += tmp_len;
-    memcpy(&tamanioLista, buffer + offset, tmp_len = sizeof(uint32_t));
+
+    uint32_t cantidadInstrucciones;
+    memcpy(&cantidadInstrucciones, buffer + offset, tmp_len = sizeof(uint32_t));
     offset += tmp_len;
-    for (int i = 0; i < tamanioLista; i++){
+    
+    
+    
+    for (int i = 0; i < cantidadInstrucciones; i++){
         t_instruccion *instruccion = crear_instruccion();
-        memcpy(instruccion, buffer + offset, tmp_len = sizeof(t_instruccion));
+        memcpy(&instruccion->indicador, buffer + offset, tmp_len = sizeof(code_instruccion));
         offset += tmp_len;
+        uint32_t param1,param2;
+        
+        
+        switch (instruccion->indicador){
+            case NO_OP:
+                list_add(instruccionesPcb, instruccion);
+                continue;
+            case I_O:
+                
+                memcpy(&param1, buffer + offset, tmp_len = sizeof(uint32_t));
+                offset += tmp_len;
+                
+                list_add(instruccion->parametros, &param1);
+                
+                list_add(instruccionesPcb, instruccion);
+                
+                continue;
+            case READ:
+                
+                memcpy(&param1, buffer + offset, tmp_len = sizeof(uint32_t));
+                offset += tmp_len;
+                list_add(instruccion->parametros, &param1);
+                list_add(instruccionesPcb, instruccion);
+                
+                continue;
+            case WRITE:
+                
+                memcpy(&param1, buffer + offset, tmp_len = sizeof(uint32_t));
+                offset += tmp_len;
+                memcpy(&param2, buffer + offset, tmp_len = sizeof(uint32_t));
+                offset += tmp_len;
+                list_add(instruccion->parametros, &param1);
+                list_add(instruccion->parametros, &param2);
+                list_add(instruccionesPcb, instruccion);
+                
+                continue;
+            case COPY:
+                
+                memcpy(&param1, buffer + offset, tmp_len = sizeof(uint32_t));
+                offset += tmp_len;
+                memcpy(&param2, buffer + offset, tmp_len = sizeof(uint32_t));
+                offset += tmp_len;
+                list_add(instruccion->parametros, &param1);
+                list_add(instruccion->parametros, &param2);
+                list_add(instruccionesPcb, instruccion);
+                
+                continue;
+            case EXIT_I:
+                list_add(instruccionesPcb, instruccion);
+                continue;
+        }
         list_add(pcb->instrucciones, instruccion);
     }
+    
     memcpy(&pcb->programCounter, buffer + offset, tmp_len = sizeof(typeof(pcb->programCounter)));
     offset += tmp_len;
+
     memcpy(&pcb->est_rafaga_actual, buffer + offset, tmp_len = sizeof(typeof(pcb->est_rafaga_actual)));
 
+    pcb->instrucciones=instruccionesPcb;
     return pcb;
+}
+
+uint32_t string_to_uint(char* string){
+	uint32_t result = 0;
+    int len = strlen(string);
+
+	for(int i=0; i<len; i++){
+		result = result * 10 + ( string[i] - '0' );
+	}
+
+	return result;
+}
+
+int tamanioInstruccion(code_instruccion codOp){
+	switch (codOp)
+	{
+		case NO_OP:
+			return sizeof(code_instruccion);
+			break;
+		case I_O:
+			return sizeof(uint32_t)+sizeof(code_instruccion);
+			break;
+		case WRITE:
+			return sizeof(uint32_t)*2+sizeof(code_instruccion);
+			break;
+		case COPY:
+			return sizeof(uint32_t)*2+sizeof(code_instruccion);
+			break;
+        case READ:
+			return sizeof(uint32_t)+sizeof(code_instruccion);
+			break;
+        case EXIT_I:
+			return sizeof(code_instruccion);
+			break;
+	}
 }

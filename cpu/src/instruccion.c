@@ -58,14 +58,14 @@ t_instruccion* cpu_fetch (t_pcb* pcb){
 bool cpu_decode(t_instruccion* instruccion){
     
     log_info(cpuLogger, "CPU: Ejecutando decode");
-    if(strcmp(instruccion->indicador, "COPY") == 0){
+    if(instruccion->indicador == COPY){
         return true;
     }
     return false;
 }
 
 void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
-    op_code codOp = getCodeIntruccion(instruccion->indicador);
+    code_instruccion codOp = instruccion->indicador;
     switch (codOp)
     {
     case NO_OP: //TODO

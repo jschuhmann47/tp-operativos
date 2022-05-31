@@ -38,7 +38,7 @@ typedef enum
 // TODO: Ver si cuando tomamos el archivo de instrucciones lo podemos parsear a esta estructura
 typedef struct
 {
-    char *indicador;
+    code_instruccion indicador;
     t_list *parametros;
 } t_instruccion;
 
