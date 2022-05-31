@@ -9,6 +9,8 @@ int main(int argc, char *argv[])
 
     inicializar_memoria(memoria_swapCfg);
 
+    //iniciar_servidor
+
     int socket_servidor = crearSocketEscucha(memoria_swapCfg->PUERTO_ESCUCHA, memoria_swapLogger);
     if (socket_servidor > 0)
     {
