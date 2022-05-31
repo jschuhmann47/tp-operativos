@@ -114,29 +114,29 @@ t_list* convertir_instruccion(char* buffer)
                     break;
                 case I_O:
                     instruccion->indicador = I_O;
-                    param1=string_to_uint(primerParametroSinPipe);
+                    param1=atoi(primerParametroSinPipe);
                     list_add(instruccion->parametros, &param1);
                     list_add(instrucciones, instruccion);
                     break;
                 case WRITE:
                     instruccion->indicador = WRITE;
-                    param1=string_to_uint(primerParametroSinPipe);
+                    param1=atoi(primerParametroSinPipe);
                     list_add(instruccion->parametros, &param1);
-                    param2=string_to_uint(segundoParametroSinPipe);
+                    param2=atoi(segundoParametroSinPipe);
                     list_add(instruccion->parametros, &param2);
                     list_add(instrucciones, instruccion);
                     break;
                 case COPY:
                     instruccion->indicador = COPY;
-                    param1=string_to_uint(primerParametroSinPipe);
+                    param1=atoi(primerParametroSinPipe);
                     list_add(instruccion->parametros, &param1);
-                    param2=string_to_uint(segundoParametroSinPipe);
+                    param2=atoi(segundoParametroSinPipe);
                     list_add(instruccion->parametros, &param2);
                     list_add(instrucciones, instruccion);
                     break;
                 case READ:
                     instruccion->indicador = READ;
-                    param1=string_to_uint(primerParametroSinPipe);
+                    param1=atoi(primerParametroSinPipe);
                     list_add(instruccion->parametros, &param1);
                     list_add(instrucciones, instruccion);
                     break;
