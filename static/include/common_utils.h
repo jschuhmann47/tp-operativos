@@ -27,6 +27,5 @@ t_pcb* recibir_pcb(void* buffer);
 
 //Utilities//
 int tamanioInstruccion(code_instruccion codOp);
-uint32_t string_to_uint(char* string);
 
 #endif

@@ -69,11 +69,10 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
     switch (codOp)
     {
     case NO_OP: //TODO
-        usleep(/*cpuCfg->RETARDO_NOOP*/1);
+        usleep(cpuCfg->RETARDO_NOOP);
         break;
     case I_O: //TODO
         pcb->status=BLOCKED;
-        
         break;
     case WRITE:
         /* code */

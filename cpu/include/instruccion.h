@@ -6,6 +6,8 @@
 #include "conexiones.h"
 #include <unistd.h>
 #include <time.h>
+#include "cpu_config.h"
+#include "cpu.h"
 
 void hacer_ciclo_de_instruccion(t_pcb* pcb);
 t_instruccion* cpu_fetch (t_pcb* pcb);

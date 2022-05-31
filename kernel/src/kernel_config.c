@@ -149,16 +149,7 @@ t_list* convertir_instruccion(char* buffer)
             }
         }
     }
-
     return instrucciones;
-    //DESCOMENTAR PARA VER COMO SE TOMAN LOS PARAMETROS MEDIANTE LOS LINKS DE LAS COMMONS;
-    /*t_link_element* linkPrimerInstruccion = instrucciones->head;
-    t_link_element* linkSegundaInstruccion = linkPrimerInstruccion->next;
-    
-    t_instruccion* primerInstruccion = linkPrimerInstruccion->data;
-    t_instruccion* segundaInstruccion = linkSegundaInstruccion->data;
-    string_append(&primerInstruccion->indicador, segundaInstruccion->indicador);
-    log_info(kernelLogger, "Cantidad de instrucciones: %s", primerInstruccion->indicador);*/
 }
 
 void enviar_finalizacion_consola(char *mensaje, int socket_cliente)

@@ -88,7 +88,6 @@ void* iniciar_corto_plazo(void* _) {
         //sem_wait(&(pcbsExec->instanciasDisponibles)); para mi va aca xq en fifo tmb tiene que esperar que no haya nada en exec TODO
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
-        //remover_pcb_de_cola(pcbQuePasaAExec, pcbsReady); //Ya lo estamos removiendo de la lista al elegir segun FIFO.
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
         sem_post(&(pcbsExec->instanciasDisponibles));
@@ -188,7 +187,7 @@ bool instruccion_actual_es(t_pcb* pcb, char* codOp){
 
 void mandar_pcb_a_cpu(t_pcb* pcb) {
     uint32_t bytes = 0;
-    log_info(kernelLogger, "Corto Plazo: Se manda el PCB %d a la CPU", pcb->id);
+    log_info(kernelLogger, "Corto Plazo: Se manda el PCB %i a la CPU", pcb->id);
 
     void* pcbAMandar = serializar_pcb(pcb, &bytes);
     conexion_de_dispatch(); //setea la variable SOCKET_DISPATCH de arriba de todo 
@@ -200,7 +199,7 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
 
     send(SOCKET_DISPATCH, pcbAMandar, bytes, 0); //Enviamos el mensaje con el PCB entero y el tamaño.
 
-    log_info(kernelLogger, "Corto Plazo: Se mando el PCB %d a la CPU correctamente", pcb->id);
+    log_info(kernelLogger, "Corto Plazo: Se mando el PCB %i a la CPU correctamente", pcb->id);
     free(tamanio_mensaje);
 }
 

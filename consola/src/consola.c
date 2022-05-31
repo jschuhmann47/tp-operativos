@@ -29,14 +29,12 @@ int main(int argc, char *argv[])
 
     enviar_mensaje(tamanio, socketKernel, MENSAJE);
     enviar_mensaje(instruccionesAEnviar, socketKernel, INSTRUCCION);
-
+    
+    // ESPERAR MENSAJE DE FINALIZACION
     char* mensaje = recibir_mensaje_finalizacion(socketKernel);
-    log_info(consolaLogger, "El mensaje es: %s", mensaje);
     if(mensaje){
         terminar_conexion(socketKernel);
     }
-    
-    // ESPERAR MENSAJE DE FINALIZACION
 
     // TERMINAR
     liberar_modulo_consola(consolaLogger, consolaCfg);
@@ -101,22 +99,3 @@ char *leer_archivo(char *nombre)
 
     return mensaje;
 }
-
-/*
-
-t_list *tomar_parametros(char **token)
-{
-    t_list *parametros = list_create();
-    int numeroDeParametros = sizeArray(token); // string_array_size(token) - 1;
-    log_info(consolaLogger, "Numero Parametro %d", numeroDeParametros);
-    int i;
-
-    for (i = 1; i <= numeroDeParametros; i++)
-    {
-        int parametro = atoi(token[i]);
-        list_add(parametros, &parametro);
-        log_info(consolaLogger, "Parametro %s", token[i]);
-    }
-
-    return parametros;
-}*/
