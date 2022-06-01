@@ -60,3 +60,5 @@ Debug/
 .vscode
 
 dudas.md
+
+*.log
