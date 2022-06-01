@@ -31,10 +31,7 @@ int main(int argc, char* argv[]) {
     pthread_create(&atenderInterrupciones, NULL, check_interrupt, NULL); 
 
     /*struct sockaddr clienteInterrupt;
-    socklen_t lenCliInt = sizeof(clienteInterrupt);
-
-    aceptar_conexiones_cpu(socketEscuchaInterrupt, clienteInterrupt, lenCliInt);
-    log_info(cpuLogger, "CPU: Acepto la conexión de Interrupcion");*/
+    socklen_t lenCliInt = sizeof(clienteInterrupt);*/
 
     liberar_modulo_cpu(cpuLogger, cpuCfg);
 
@@ -77,17 +74,6 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
         if (recv(socketKernelDispatch, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
             t_pcb *pcb = recibir_pcb(buffer);
             log_info(cpuLogger, "CPU: Recibi el PCB con ID: %i", pcb->id);
-            log_info(cpuLogger, "CPU: Recibi el PCB con Tamanio: %i", pcb->tamanio);
-            if(pcb->status == EXEC){
-                log_info(cpuLogger, "CPU: Recibi el PCB con Status: %s", "EXEC");
-            }
-            log_info(cpuLogger, "CPU: Recibi el PCB con PC: %i", pcb->programCounter);
-            log_info(cpuLogger, "CPU: Recibi el PCB con Rafaga: %f", pcb->est_rafaga_actual);
-            log_info(cpuLogger, "Cantidad de Instrucciones: %i", pcb->instrucciones->elements_count);
-            t_instruccion* instr = list_get(pcb->instrucciones,0);
-            if(instr->indicador == NO_OP){
-                log_info(cpuLogger, "Instr: %i", instr->indicador);
-            }
             hacer_ciclo_de_instruccion(pcb, tamanio_mensaje, socketKernelDispatch);
             free(pcb);
         }
@@ -121,11 +107,11 @@ void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socket
             log_info(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
             if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
                 log_info(cpuLogger, "CPU: Mande el PCB a Kernel");
-                free(buffer);
                 if(send(socketKernelDispatch, &tiempoABloquearse, sizeof(uint32_t), 0)){ //falta hacer la recepcion apropiada de esto en kernel 
                     log_info(cpuLogger, "CPU: Mande el tiempo de IO a Kernel");
                     log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
                     free(buffer);
+                    free(bytes);
                 }
                 else{
                     log_error(cpuLogger, "CPU: Error al enviar tiempo de bloqueo a Kernel");

@@ -40,7 +40,7 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
         if (instruccionAEjecutar->indicador == I_O){
             log_info(cpuLogger, "CPU: Desalojo por instruccion I/O");
             t_instruccion* instruccionActual = list_get(pcb->instrucciones, pcb->programCounter);
-            uint32_t tiempoABloquearPorIO = list_get(instruccionActual,0);
+            uint32_t tiempoABloquearPorIO = list_get(instruccionActual->parametros,0);
             calcularTiempoEnMs(pcb,start,end);
             mandar_pcb_a_kernel_con_io(pcb,bytes,socketKernelDispatch,tiempoABloquearPorIO);
             break;
