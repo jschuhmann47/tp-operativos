@@ -66,7 +66,7 @@ typedef struct
 
 typedef struct t_mensaje_tamanio {
     uint32_t tamanio;
-}__attribute__((__packed__)) t_mensaje_tamanio;
+} t_mensaje_tamanio;
 
 typedef struct{
 	uint32_t size;

@@ -340,6 +340,12 @@ t_pcb* recibir_pcb(void* buffer)
     return pcb;
 }
 
+void* serializar_tiempo_io(uint32_t tiempoIO, uint32_t bytes){
+    void *buffer = malloc(bytes);
+    memcpy(buffer, &tiempoIO, sizeof(uint32_t));
+    return buffer;
+}
+
 int tamanioInstruccion(code_instruccion codOp){
 	switch (codOp)
 	{
