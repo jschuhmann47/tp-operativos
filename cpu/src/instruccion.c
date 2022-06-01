@@ -42,7 +42,7 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
             t_instruccion* instruccionActual = list_get(pcb->instrucciones, pcb->programCounter);
             uint32_t tiempoABloquearPorIO = list_get(instruccionActual,0);
             calcularTiempoEnMs(pcb,start,end);
-            mandar_pcb_a_kernel_por_io(pcb,bytes,socketKernelDispatch,tiempoABloquearPorIO);
+            mandar_pcb_a_kernel_con_io(pcb,bytes,socketKernelDispatch,tiempoABloquearPorIO);
             break;
         }
         if(salirPorInterrupcion){
@@ -115,7 +115,7 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion){
     //TODO, buscarlo en la memoria
 }
 
-bool cpu_check_interrupt(){
+bool cpu_check_interrupcion(){
     pthread_mutex_lock(&mutex_interrupciones);//este mutex comparte con cpu.c
     if(hayInterrupcion){
         hayInterrupcion=0;

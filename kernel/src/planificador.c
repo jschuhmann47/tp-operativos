@@ -162,6 +162,7 @@ t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esper
             log_error(kernelLogger, "Kernel: Error al recibir el mensaje de tiempo a bloquearse por IO");
         }
         log_info(kernelLogger, "Kernel: Recibi el tiempo a bloquearse por IO: %i", tiempoABloquearsePorIO);
+        sem_post(&(pcbsBlocked->instanciasDisponibles));
         //pasar a bloqueado
     }else{
         //ready o exit preguntar
@@ -260,19 +261,22 @@ void* conexion_de_dispatch() {
     // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
 }
 
-void* atender_procesos_bloqueados(){
+void* atender_procesos_bloqueados(/*tiempoBloqueadoPorIo*/){
     log_info(kernelLogger, "Corto Plazo: Hilo atender procesos bloqueados inicializado");
-    while(1){
-        //sem_wait(&hayPCBsBloqueadas);
-        t_pcb* pcbABloquear = get_and_remove_primer_pcb_de_cola(pcbsBlocked); //algun tipo de semaforo porque esta corriendo el hilo de contar_tiempo_bloqueado a la vez?
-        log_info(kernelLogger, "Corto Plazo: Se bloquea el proceso %d", pcbABloquear->id);
-        //usleep(tiempoBloqueadoPorIO); //aca tiene que estar esta variable que te manda la cpu
-        if(pcbABloquear->status==BLOCKED){ //chequea que no lo hayan suspendido
-            cambiar_estado_pcb(pcbABloquear, READY);
-            agregar_pcb_a_cola(pcbABloquear, pcbsReady);
-            sem_signal(&(pcbsReady->instanciasDisponibles));
-        }
+    
+    sem_wait(&(pcbsBlocked->instanciasDisponibles));
+    t_pcb* pcbABloquear = get_and_remove_primer_pcb_de_cola(pcbsBlocked); //algun tipo de semaforo porque esta corriendo el hilo de contar_tiempo_bloqueado a la vez?
+    log_info(kernelLogger, "Corto Plazo: Se bloquea el proceso %d", pcbABloquear->id);
+    pthread_t contarTiempo;
+    pthread_create(&contarTiempo,NULL,contar_tiempo_bloqueado,pcbABloquear);
+    
+    //usleep(tiempoBloqueadoPorIO); //aca tiene que estar esta variable que te manda la cpu
+    if(pcbABloquear->status==BLOCKED){ //chequea que no lo hayan suspendido
+        cambiar_estado_pcb(pcbABloquear, READY);
+        agregar_pcb_a_cola(pcbABloquear, pcbsReady);
+        sem_post(&(pcbsReady->instanciasDisponibles));
     }
+    
 }
 
 
@@ -317,6 +321,9 @@ void* iniciar_mediano_plazo(void* _) {
 //     // Usar remover_pcb_de_cola?
 //     sem_post(&hayPCBsParaPasarASusBlocked);
 // }
+
+//
+//
 
 void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a suspender siempre
     usleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO);

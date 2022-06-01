@@ -12,17 +12,23 @@ int main(int argc, char* argv[]) {
     int socketEscuchaDispatch = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_DISPATCH);
 
     int socketEscuchaInterrupt = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
+    
+
+    
 
     struct sockaddr clienteDispatch;
     socklen_t lenCliD = sizeof(clienteDispatch);
 
-    pthread_t atenderInterrupciones;
-    pthread_create(&atenderInterrupciones, NULL, check_interrupt, NULL); 
+    
 
     aceptar_conexiones_cpu(socketEscuchaDispatch, clienteDispatch, lenCliD);
     log_info(cpuLogger, "CPU: Acepto la conexión de Dispatch");
 
-    
+    aceptar_conexiones_cpu_interrupcion(socketEscuchaInterrupt, clienteDispatch, lenCliD);
+    log_info(cpuLogger, "CPU: Acepto la conexión de Interrpucion");
+
+    pthread_t atenderInterrupciones;
+    pthread_create(&atenderInterrupciones, NULL, check_interrupt, NULL); 
 
     /*struct sockaddr clienteInterrupt;
     socklen_t lenCliInt = sizeof(clienteInterrupt);
@@ -42,6 +48,19 @@ void aceptar_conexiones_cpu(int socketEscucha, struct sockaddr cliente, socklen_
         if(cpuCfg->KERNEL_SOCKET > 0) {
             log_info(cpuLogger, "CPU: Acepto la conexión del socket: %d", cpuCfg->KERNEL_SOCKET);
             recibir_pcb_de_kernel(cpuCfg->KERNEL_SOCKET);
+        } else {
+            log_error(cpuLogger, "CPU: Error al aceptar conexión: %s", strerror(errno));
+        }
+    }
+}
+
+void aceptar_conexiones_cpu_interrupcion(int socketEscucha, struct sockaddr cliente, socklen_t len) {
+    log_info(cpuLogger, "CPU: A la escucha de nuevas conexiones en puerto %d", socketEscucha);
+    for(;;) {
+        cpuCfg->KERNEL_INTERRUPT = accept(socketEscucha, &cliente, &len);
+        if(cpuCfg->KERNEL_INTERRUPT > 0) {
+            log_info(cpuLogger, "CPU: Acepto la conexión del socket: %d", cpuCfg->KERNEL_INTERRUPT);
+            recibir_pcb_de_kernel(cpuCfg->KERNEL_INTERRUPT);
         } else {
             log_error(cpuLogger, "CPU: Error al aceptar conexión: %s", strerror(errno));
         }
