@@ -83,6 +83,7 @@ void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelD
             log_info(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
             if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
                 log_info(cpuLogger, "CPU: Mande el PCB a Kernel");
+                log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
                 free(buffer);
                 //free(pcb);-> creo que no alcanza, hay q liberar la lista de instrucciones tmb
             }
@@ -105,6 +106,7 @@ void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socket
                 if(send(socketKernelDispatch, &tiempoABloquearse, sizeof(uint32_t), 0)){ //falta hacer la recepcion apropiada de esto en kernel 
                     log_info(cpuLogger, "CPU: Mande el tiempo de IO a Kernel");
                     log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
+                    free(buffer);
                 }
                 else{
                     log_error(cpuLogger, "CPU: Error al enviar tiempo de bloqueo a Kernel");
