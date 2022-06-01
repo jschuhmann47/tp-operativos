@@ -6,6 +6,8 @@
 #include "cpu_config.h"
 #include "common_utils.h"
 #include "conexiones.h"
+#include "instruccion.h"
+
 
 #define CPU_CFG_PATH "cfg/cpu.cfg"
 #define CPU_LOG_DEST "bin/cpu.log"
@@ -15,9 +17,11 @@ t_log* cpuLogger;
 t_cpu_config* cpuCfg;
 
 void aceptar_conexiones_cpu(int socketEscucha, struct sockaddr cliente, socklen_t len);
+void aceptar_conexiones_cpu_interrupcion(int socketEscucha, struct sockaddr cliente, socklen_t len);
 void recibir_pcb_de_kernel(int socketKernelDispatch);
 void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelDispatch,uint32_t tiempoABloquearse);
 void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelDispatch);
-void hacer_ciclo_de_instruccion(t_pcb* pcb);
+void* check_interrupt();
+
 
 #endif

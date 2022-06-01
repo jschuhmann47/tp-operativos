@@ -11,13 +11,24 @@ int main(int argc, char* argv[]) {
 
     int socketEscuchaDispatch = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_DISPATCH);
 
-    //int socketEscuchaInterrupt = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
+    int socketEscuchaInterrupt = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
+    
+
+    
 
     struct sockaddr clienteDispatch;
     socklen_t lenCliD = sizeof(clienteDispatch);
 
+    
+
     aceptar_conexiones_cpu(socketEscuchaDispatch, clienteDispatch, lenCliD);
     log_info(cpuLogger, "CPU: Acepto la conexión de Dispatch");
+
+    aceptar_conexiones_cpu_interrupcion(socketEscuchaInterrupt, clienteDispatch, lenCliD);
+    log_info(cpuLogger, "CPU: Acepto la conexión de Interrpucion");
+
+    pthread_t atenderInterrupciones;
+    pthread_create(&atenderInterrupciones, NULL, check_interrupt, NULL); 
 
     /*struct sockaddr clienteInterrupt;
     socklen_t lenCliInt = sizeof(clienteInterrupt);
@@ -37,6 +48,19 @@ void aceptar_conexiones_cpu(int socketEscucha, struct sockaddr cliente, socklen_
         if(cpuCfg->KERNEL_SOCKET > 0) {
             log_info(cpuLogger, "CPU: Acepto la conexión del socket: %d", cpuCfg->KERNEL_SOCKET);
             recibir_pcb_de_kernel(cpuCfg->KERNEL_SOCKET);
+        } else {
+            log_error(cpuLogger, "CPU: Error al aceptar conexión: %s", strerror(errno));
+        }
+    }
+}
+
+void aceptar_conexiones_cpu_interrupcion(int socketEscucha, struct sockaddr cliente, socklen_t len) {
+    log_info(cpuLogger, "CPU: A la escucha de nuevas conexiones en puerto %d", socketEscucha);
+    for(;;) {
+        cpuCfg->KERNEL_INTERRUPT = accept(socketEscucha, &cliente, &len);
+        if(cpuCfg->KERNEL_INTERRUPT > 0) {
+            log_info(cpuLogger, "CPU: Acepto la conexión del socket: %d", cpuCfg->KERNEL_INTERRUPT);
+            recibir_pcb_de_kernel(cpuCfg->KERNEL_INTERRUPT);
         } else {
             log_error(cpuLogger, "CPU: Error al aceptar conexión: %s", strerror(errno));
         }
@@ -64,7 +88,7 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
             if(instr->indicador == NO_OP){
                 log_info(cpuLogger, "Instr: %i", instr->indicador);
             }
-            hacer_ciclo_de_instruccion(pcb);
+            hacer_ciclo_de_instruccion(pcb, tamanio_mensaje, socketKernelDispatch);
             free(pcb);
         }
     }
@@ -78,6 +102,7 @@ void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelD
             log_info(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
             if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
                 log_info(cpuLogger, "CPU: Mande el PCB a Kernel");
+                log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
                 free(buffer);
                 //free(pcb);-> creo que no alcanza, hay q liberar la lista de instrucciones tmb
             }
@@ -97,6 +122,14 @@ void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socket
             if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
                 log_info(cpuLogger, "CPU: Mande el PCB a Kernel");
                 free(buffer);
+                if(send(socketKernelDispatch, &tiempoABloquearse, sizeof(uint32_t), 0)){ //falta hacer la recepcion apropiada de esto en kernel 
+                    log_info(cpuLogger, "CPU: Mande el tiempo de IO a Kernel");
+                    log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
+                    free(buffer);
+                }
+                else{
+                    log_error(cpuLogger, "CPU: Error al enviar tiempo de bloqueo a Kernel");
+                }
                 //free(pcb);-> creo que no alcanza, hay q liberar la lista de instrucciones tmb
             }
         }
@@ -106,19 +139,18 @@ void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socket
     }
 }
 
-void* check_interrupt(){ //diria de hacer esto un hilo, y que edite un flag global: hayInterrupcion que cambie entre true y false
+void* check_interrupt(){
     while(1){
-      if(recv(cpuCfg->KERNEL_INTERRUPT, &hayInterrupcion, sizeof(uint32_t), MSG_WAITALL)){
-        log_info(cpuLogger, "CPU: Recibi una interrupcion");
-        pthread_mutex_lock(&mutex_interrupciones);
-        hayInterrupcion=1; //y que se ponga en 0 en instruccion.c cuando se haga el ciclo
-        pthread_mutex_unlock(&mutex_interrupciones);
-        return NULL;
-    }
+        uint32_t mensaje;
+        if(recv(cpuCfg->KERNEL_INTERRUPT, &mensaje, sizeof(uint32_t), MSG_WAITALL)){
+            log_info(cpuLogger, "CPU: Recibi una interrupcion");
+            pthread_mutex_lock(&mutex_interrupciones);
+            hayInterrupcion=1; //y que se ponga en 0 en instruccion.c cuando se haga el ciclo
+            pthread_mutex_unlock(&mutex_interrupciones);
+        }
     else{
         log_error(cpuLogger, "CPU: Error al recibir una interrupcion");
-        return NULL;
-    }  
+        }  
     }
     
 }
