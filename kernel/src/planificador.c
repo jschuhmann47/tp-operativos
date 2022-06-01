@@ -96,6 +96,8 @@ void* iniciar_corto_plazo(void* _) {
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
 
+        getPcbDeCPU();
+
         /*log_transition("Corto Plazo", "EXEC", "EXIT", pcbQuePasaAExec->id); //Esto es un ejemplo para cerrar la conexion, no va aca.
         
         sem_post(&pcbsEnExit);
@@ -112,9 +114,9 @@ void* getPcbDeCPU(void) { //deberia haber un hilo con esto corriendo
     pthread_create(&th1, NULL, conexion_de_interrupt, NULL);
     pthread_detach(th1);*/
 
-    pthread_t th2;
+    /*pthread_t th2;
     pthread_create(&th2, NULL, conexion_de_dispatch, NULL);
-    pthread_detach(th2);
+    pthread_detach(th2);*/
 
     sem_wait(&(pcbsExec->instanciasDisponibles));
     
@@ -142,6 +144,7 @@ t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esper
         log_error(kernelLogger, "Kernel: Error al recibir el mensaje de volvio por IO");
         exit(1);
     }
+    log_info(kernelLogger, "Kernel: Volvio por IO: %i", volvioPorIO);
 
     if (recibir_tamanio_mensaje(tamanio_mensaje, SOCKET_DISPATCH)){
         buffer = malloc(tamanio_mensaje->tamanio);
@@ -168,7 +171,7 @@ t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esper
         //ready o exit preguntar
     }
     
-    determinar_cola_pcb(pcb,tiempoABloquearsePorIO);
+    //determinar_cola_pcb(pcb,tiempoABloquearsePorIO);
     
     return pcb;
 }
@@ -215,6 +218,7 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
     send(SOCKET_DISPATCH, pcbAMandar, bytes, 0); //Enviamos el mensaje con el PCB entero y el tamaño.
 
     log_info(kernelLogger, "Corto Plazo: Se mando el PCB %i a la CPU correctamente", pcb->id);
+    free(pcbAMandar);
     free(tamanio_mensaje);
 }
 
@@ -225,40 +229,6 @@ void interrupcion_a_cpu() {
         log_error(kernelLogger, "Error al interrumpir la CPU");
     }
     log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");
-}
-
-//La conexión de interrupt dedicada solamente a enviar mensajes de interrupción
-void* conexion_de_interrupt() {
-    log_info(kernelLogger, "Hilo interrupt inicializado");
-
-    int SOCKET_INTERRUPT = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_INTERRUPT);
-    log_info(kernelLogger, "Kernel: Conectando a CPU");
-
-    if (SOCKET_INTERRUPT == -1)
-    {
-        log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
-        return -1;
-    }
-    
-
-    //TODO: Le aviso a CPU que me tiene que dar el pcb que esta en Exec, si es que hay alguno
-    //TODO: Si CPU maneja la cola de pcbsExec, solo tengo que sacarlo de ahi
-}
-
-//En todos los casos el PCB será recibido a través de la conexión de dispatch - Es bidireccional, por aca tambien le mando el PCB a CPU
-void* conexion_de_dispatch() {
-    log_info(kernelLogger, "Hilo dispatch inicializado");
-
-    SOCKET_DISPATCH = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH);
-    log_info(kernelLogger, "Kernel: Conectando a CPU");
-
-    if (SOCKET_DISPATCH == -1)
-    {
-        log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
-        return -1;
-    }
-    // CASO 1: Envio de PCB a CPU
-    // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
 }
 
 void* atender_procesos_bloqueados(/*tiempoBloqueadoPorIo*/){
@@ -685,3 +655,38 @@ uint32_t calcular_tiempo(){
     return delta_us;
 }
 
+/*---------------------------------------------- CONEXIONES ----------------------------------------------*/
+
+//La conexión de interrupt dedicada solamente a enviar mensajes de interrupción
+void* conexion_de_interrupt() {
+    log_info(kernelLogger, "Hilo interrupt inicializado");
+
+    int SOCKET_INTERRUPT = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_INTERRUPT);
+    log_info(kernelLogger, "Kernel: Conectando a CPU");
+
+    if (SOCKET_INTERRUPT == -1)
+    {
+        log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
+        return -1;
+    }
+    
+
+    //TODO: Le aviso a CPU que me tiene que dar el pcb que esta en Exec, si es que hay alguno
+    //TODO: Si CPU maneja la cola de pcbsExec, solo tengo que sacarlo de ahi
+}
+
+//En todos los casos el PCB será recibido a través de la conexión de dispatch - Es bidireccional, por aca tambien le mando el PCB a CPU
+void* conexion_de_dispatch() {
+    log_info(kernelLogger, "Hilo dispatch inicializado");
+
+    SOCKET_DISPATCH = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH);
+    log_info(kernelLogger, "Kernel: Conectando a CPU");
+
+    if (SOCKET_DISPATCH == -1)
+    {
+        log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
+        return -1;
+    }
+    // CASO 1: Envio de PCB a CPU
+    // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
+}
