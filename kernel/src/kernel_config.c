@@ -105,42 +105,49 @@ t_list* convertir_instruccion(char* buffer)
             char* segundoParametroSinPipe = pseudoInstruccion[2];
 
             code_instruccion cod_op = getCodeIntruccion(instruccionSinPipe);
-            uint32_t param1,param2;
+            uint32_t* param1=malloc(sizeof(uint32_t));
+            uint32_t* param2=malloc(sizeof(uint32_t));
             switch(cod_op)
             {
                 case NO_OP:
+                    free(param1);
+                    free(param2);
                     instruccion->indicador = NO_OP;
                     list_add(instrucciones, instruccion);
                     break;
                 case I_O:
+                    free(param2);   
                     instruccion->indicador = I_O;
-                    param1=atoi(primerParametroSinPipe);
-                    list_add(instruccion->parametros, &param1);
+                    *param1=atoi(primerParametroSinPipe);
+                    list_add(instruccion->parametros, param1);
                     list_add(instrucciones, instruccion);
                     break;
                 case WRITE:
                     instruccion->indicador = WRITE;
-                    param1=atoi(primerParametroSinPipe);
-                    list_add(instruccion->parametros, &param1);
-                    param2=atoi(segundoParametroSinPipe);
-                    list_add(instruccion->parametros, &param2);
+                    *param1=atoi(primerParametroSinPipe);
+                    list_add(instruccion->parametros,&param1);
+                    *param2=atoi(segundoParametroSinPipe);
+                    list_add(instruccion->parametros, param2);
                     list_add(instrucciones, instruccion);
                     break;
                 case COPY:
                     instruccion->indicador = COPY;
-                    param1=atoi(primerParametroSinPipe);
-                    list_add(instruccion->parametros, &param1);
-                    param2=atoi(segundoParametroSinPipe);
-                    list_add(instruccion->parametros, &param2);
-                    list_add(instrucciones, instruccion);
+                    *param1=atoi(primerParametroSinPipe);
+                    list_add(instruccion->parametros,&param1);
+                    *param2=atoi(segundoParametroSinPipe);
+                    list_add(instruccion->parametros, param2);
+                    list_add(instrucciones, instruccion);;
                     break;
                 case READ:
+                    free(param2);
                     instruccion->indicador = READ;
-                    param1=atoi(primerParametroSinPipe);
-                    list_add(instruccion->parametros, &param1);
+                    *param1=atoi(primerParametroSinPipe);
+                    list_add(instruccion->parametros, param1);
                     list_add(instrucciones, instruccion);
                     break;
                 case EXIT_I:
+                    free(param1);
+                    free(param2);
                     instruccion->indicador = EXIT_I;
                     list_add(instrucciones, instruccion);
                     break;
