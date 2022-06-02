@@ -59,14 +59,16 @@ void iniciar_planificacion() {
     pthread_create(&thread, NULL, iniciar_largo_plazo, NULL);
     pthread_detach(thread);
 
-    /* Planificador mediano plazo
+    /* Planificador mediano plazo */
     pthread_create(&thread, NULL, iniciar_mediano_plazo, NULL);
-    pthread_detach(thread); */
+    pthread_detach(thread); 
 
     /* Planificador corto plazo */
     pthread_create(&thread, NULL, iniciar_corto_plazo, NULL);
     pthread_detach(thread);
 
+    /*pthread_t contarTiempo;
+    pthread_create(&contarTiempo, NULL, atender_procesos_bloqueados, tiempoBloqueado);*/
 }
 
 /*---------------------------------------------- PLANIFICADOR CORTO PLAZO ----------------------------------------------*/
@@ -98,11 +100,6 @@ void* iniciar_corto_plazo(void* _) {
 
         getPcbDeCPU();
 
-        /*log_transition("Corto Plazo", "EXEC", "EXIT", pcbQuePasaAExec->id); //Esto es un ejemplo para cerrar la conexion, no va aca.
-        
-        sem_post(&pcbsEnExit);
-        enviar_finalizacion_consola("Finish", kernelCfg->CONSOLA_SOCKET);*/
-
         //atender_peticiones_pcb(pcbQuePasaAExec);
     }
     pthread_exit(NULL);
@@ -122,14 +119,6 @@ void* getPcbDeCPU(void) { //deberia haber un hilo con esto corriendo
     
     t_pcb* pcbQueMeDaCPU = traer_cpu_de_memoria();
 
-    //determinar_cola_pcb(pcbQueMeDaCPU); meterlo a traer?
-
-    // remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
-    // cambiar_estado_pcb(pcbQueMeDaCPU, READY);
-    // agregar_pcb_a_cola(pcbQueMeDaCPU, pcbsReady);
-
-    //log_transition("Corto Plazo", "EXEC", "READY", pcbQueMeDaCPU->id);
-
 }
 
 t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esperando que se la devuelva por el motivo que sea
@@ -139,36 +128,33 @@ t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esper
     log_info(kernelLogger, "Kernel: Recibiendo PCB de CPU");
     t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
 
-    uint32_t volvioPorIO;
-    if(recv(SOCKET_DISPATCH,&volvioPorIO,sizeof(uint32_t),MSG_WAITALL)<0){
-        log_error(kernelLogger, "Kernel: Error al recibir el mensaje de volvio por IO");
-        exit(1);
-    }
-    log_info(kernelLogger, "Kernel: Volvio por IO: %i", volvioPorIO);
-
     if (recibir_tamanio_mensaje(tamanio_mensaje, SOCKET_DISPATCH)){
         buffer = malloc(tamanio_mensaje->tamanio);
         log_info(kernelLogger, "Kernel: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
         if (recv(SOCKET_DISPATCH, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
             pcb = recibir_pcb(buffer);
             log_info(kernelLogger, "Kernel: Recibi el PCB con ID: %i", pcb->id);
-            log_info(kernelLogger, "Kernel: Recibi el PCB con Tamanio: %i", pcb->tamanio);
-            log_info(kernelLogger, "Kernel: Recibi el PCB con PC: %i", pcb->programCounter);
-            log_info(kernelLogger, "Kernel: Recibi el PCB con Rafaga: %f", pcb->est_rafaga_actual);
-            log_info(kernelLogger, "Cantidad de Instrucciones: %i", pcb->instrucciones->elements_count);
         }
     }
     uint32_t tiempoABloquearsePorIO; //como devolver esto
-
-    if(volvioPorIO){
+    t_instruccion* ultimaInstruccion = list_get(pcb->instrucciones, (pcb->programCounter)-1);
+    if(ultimaInstruccion->indicador == I_O){
         if(recv(SOCKET_DISPATCH,&tiempoABloquearsePorIO,sizeof(uint32_t),MSG_WAITALL)<0){
             log_error(kernelLogger, "Kernel: Error al recibir el mensaje de tiempo a bloquearse por IO");
         }
         log_info(kernelLogger, "Kernel: Recibi el tiempo a bloquearse por IO: %i", tiempoABloquearsePorIO);
+        /*agregar_pcb_a_cola(pcb, pcbsExec);
+        remover_pcb_de_cola(pcb, pcbsExec);*/
+        cambiar_estado_pcb(pcb, BLOCKED);
+        agregar_pcb_a_cola(pcb, pcbsBlocked);
+        log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
         sem_post(&(pcbsBlocked->instanciasDisponibles));
-        //pasar a bloqueado
+        atender_procesos_bloqueados(tiempoABloquearsePorIO);
     }else{
-        //ready o exit preguntar
+        if(ultimaInstruccion->indicador == EXIT_I){
+            agregar_pcb_a_cola(pcb, pcbsExit);
+            sem_post(&(pcbsExit->instanciasDisponibles));
+        }
     }
     
     //determinar_cola_pcb(pcb,tiempoABloquearsePorIO);
@@ -231,22 +217,30 @@ void interrupcion_a_cpu() {
     log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");
 }
 
-void* atender_procesos_bloqueados(/*tiempoBloqueadoPorIo*/){
-    log_info(kernelLogger, "Corto Plazo: Hilo atender procesos bloqueados inicializado");
+void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
+    log_info(kernelLogger, "Corto Plazo: Se atienden procesos bloqueados inicializado");
     
     sem_wait(&(pcbsBlocked->instanciasDisponibles));
     t_pcb* pcbABloquear = get_and_remove_primer_pcb_de_cola(pcbsBlocked); //algun tipo de semaforo porque esta corriendo el hilo de contar_tiempo_bloqueado a la vez?
     log_info(kernelLogger, "Corto Plazo: Se bloquea el proceso %d", pcbABloquear->id);
     pthread_t contarTiempo;
     pthread_create(&contarTiempo,NULL,contar_tiempo_bloqueado,pcbABloquear);
-    
-    //usleep(tiempoBloqueadoPorIO); //aca tiene que estar esta variable que te manda la cpu
+    pthread_detach(contarTiempo);
+        
+    usleep(tiempoBloqueadoPorIo); //aca tiene que estar esta variable que te manda la cpu
     if(pcbABloquear->status==BLOCKED){ //chequea que no lo hayan suspendido
         cambiar_estado_pcb(pcbABloquear, READY);
         agregar_pcb_a_cola(pcbABloquear, pcbsReady);
+        log_transition("Corto Plazo", "BLOCKED", "READY", pcbABloquear->id);
         sem_post(&(pcbsReady->instanciasDisponibles));
     }
-    
+    if(pcbABloquear->status == SUSBLOCKED){
+        remover_pcb_de_cola(pcbABloquear, pcbsBlocked);
+        cambiar_estado_pcb(pcbABloquear, SUSREADY);
+        agregar_pcb_a_cola(pcbABloquear, pcbsSusReady);
+        log_transition("Kernel:", "SUSBLOCKED", "SUSREADY", pcbABloquear->id);
+        sem_post(&(pcbsSusReady->instanciasDisponibles));
+    }
 }
 
 
@@ -265,7 +259,6 @@ void* iniciar_mediano_plazo(void* _) {
         //enviar_suspension_de_pcb_a_memoria(pcbASuspender);
         pthread_t contarTiempoBloqueado;
         pthread_create(&contarTiempoBloqueado, NULL, contar_tiempo_bloqueado, pcbASuspender);
-        
                                  
         sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for
         //TODO: Aca pasar ya de SUSBLOCKED => SUSREADY ??? Un hilo?
@@ -275,32 +268,12 @@ void* iniciar_mediano_plazo(void* _) {
     pthread_exit(NULL);
 }
 
-// void* recibir_pcb_bloqueado(void* pcb) { 
-//     pthread_t th;
-
-//     if(pcb->programCounter->parametros[0] > kernelCfg->TIEMPO_MAXIMO_BLOQUEADO) {
-//         pthread_create(&th, NULL, blocked_a_susblocked, NULL);
-//         pthread_detach(th);
-//     } else {
-//         pthread_create(&th, NULL, blocked_a_ready, NULL);
-//         pthread_detach(th);
-//     }
-// }
-
-// void* blocked_a_susblocked(void* _) {
-//     // Usar remover_pcb_de_cola?
-//     sem_post(&hayPCBsParaPasarASusBlocked);
-// }
-
-//
-//
-
 void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a suspender siempre
     usleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO);
     if(pcb->status==BLOCKED){
         //enviar_suspension_de_pcb_a_memoria(pcb);
+        sem_wait(&(pcbsBlocked->instanciasDisponibles));
         cambiar_estado_pcb(pcb, SUSBLOCKED);
-        agregar_pcb_a_cola(pcb, pcbsSusBlocked);
         log_info(kernelLogger, "Mediano Plazo: Se libera una instancia de Grado Multiprogramación");
         log_transition("Mediano Plazo", "BLOCKED", "SUSP/BLOCKED", pcb->id);
         /* Aumenta el grado de multiprogramción al suspender a un proceso */  
@@ -312,7 +285,7 @@ void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a
 void* pasar_de_susready_a_ready(void* _) {
     log_info(kernelLogger, "Mediano Plazo: Hilo pasar de SUSP/READY->READY inicializado");
     for(;;) {
-        sem_wait(&transicionarSusReadyAready);
+        sem_wait(&(pcbsSusReady->instanciasDisponibles));
         t_pcb* pcbQuePasaAReady = get_and_remove_primer_pcb_de_cola(pcbsSusReady);
         cambiar_estado_pcb(pcbQuePasaAReady, READY);
         agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
@@ -349,7 +322,7 @@ void* blocked_a_ready(t_pcb* pcb) {
     sem_post(&suspensionConcluida); //creo que este va un poco despues
 }*/
 
-void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo){ //el tiempo es el que llega por parametro de la instruccion
+/*void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo){ //el tiempo es el que llega por parametro de la instruccion
     usleep(tiempo);
     if(pcb->status==BLOCKED){
         blocked_a_ready(pcb);
@@ -362,9 +335,7 @@ void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo){ //el tiempo es el que 
         
         sem_post(&(pcbsSusReady->instanciasDisponibles));
     }
-}
-
-
+}*/
 
 /*---------------------------------------------- PLANIFICADOR LARGO PLAZO ----------------------------------------------*/
 
@@ -421,7 +392,11 @@ void* liberar_procesos_en_exit(void* _) {
 
         log_info(kernelLogger, "Largo Plazo: Se libera una instancia de Grado Multiprogramación");
         /* Aumenta el grado de multiprogramación al tener proceso en EXIT */
-        sem_post(&gradoMultiprog);                          
+        sem_post(&gradoMultiprog);  
+
+        log_transition("Corto Plazo", "EXEC", "EXIT", pcbALiberar->id);
+        
+        enviar_finalizacion_consola("Finish", kernelCfg->CONSOLA_SOCKET);
     }
     pthread_exit(NULL);
 }

@@ -28,8 +28,8 @@ typedef struct {
     char* ALGORITMO_PLANIFICACION;
     double ESTIMACION_INICIAL;
     double ALFA;
-    uint16_t GRADO_MULTIPROGRAMACION;
-    uint16_t TIEMPO_MAXIMO_BLOQUEADO;
+    uint32_t GRADO_MULTIPROGRAMACION;
+    uint32_t TIEMPO_MAXIMO_BLOQUEADO;
 } t_kernel_config;
 
 extern t_log* kernelLogger;

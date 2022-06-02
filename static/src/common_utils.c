@@ -1,8 +1,5 @@
 #include "common_utils.h"
 
-const uint32_t PCB_IO_RETURN = 1;
-const uint32_t PCB_NORMAL_RETURN = 0;
-
 ///////////////////////////// CONFIGS /////////////////////////////
 int cargar_configuracion(const char *nombreModulo, void *moduleCfg, char *configPath, t_log *logger,
                          void (*cargar_miembros)(void *cfg, t_config *localCfg))
@@ -197,31 +194,28 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
                 continue;
             case I_O:
                 param1=list_get(instruccion->parametros,0);
-                printf("parametro io %ld",*param1);
-                printf("parametro io %ld",param1);
-                printf("parametro io %ld",&param1);
                 memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 continue;
             case READ:
                 param1=list_get(instruccion->parametros,0);
-                memcpy(empaquetado + offset, &param1, tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 continue;
             case WRITE:
                 param1=list_get(instruccion->parametros,0);
-                memcpy(empaquetado + offset, &param1, tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 param2=list_get(instruccion->parametros,1);
-                memcpy(empaquetado + offset,&param2 , tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, param2 , tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 continue;
             case COPY:
                 param1=list_get(instruccion->parametros,0);
-                memcpy(empaquetado + offset, &param1, tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 param2=list_get(instruccion->parametros,1);
-                memcpy(empaquetado + offset,&param2 , tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, param2 , tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 continue;
             case EXIT_I:
@@ -346,12 +340,6 @@ t_pcb* recibir_pcb(void* buffer)
     memcpy(&pcb->est_rafaga_actual, buffer + offset, tmp_len = sizeof(typeof(pcb->est_rafaga_actual)));
 
     return pcb;
-}
-
-void* serializar_tiempo_io(uint32_t tiempoIO, uint32_t bytes){
-    void *buffer = malloc(bytes);
-    memcpy(buffer, &tiempoIO, sizeof(uint32_t));
-    return buffer;
 }
 
 int tamanioInstruccion(code_instruccion codOp){

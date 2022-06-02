@@ -27,6 +27,7 @@ t_pcb* traer_cpu_de_memoria();
 //void determinar_ready_o_blocked(t_pcb* pcb);
 void* determinar_cola_pcb(t_pcb* pcb, uint32_t tiempoABloquearsePorIO);
 bool instruccion_actual_es(t_pcb* pcb, code_instruccion codOp);
+void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo);
 
 
 // Planificador Mediano Plazo
