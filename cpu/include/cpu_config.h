@@ -13,9 +13,9 @@
 typedef struct {
     uint32_t KERNEL_SOCKET;
     uint32_t KERNEL_INTERRUPT;
-    uint16_t ENTRADAS_TLB;
+    uint32_t ENTRADAS_TLB;
     char* REEMPLAZO_TLB;
-    uint16_t RETARDO_NOOP;
+    uint32_t RETARDO_NOOP;
     char* IP_MEMORIA;
     char* PUERTO_MEMORIA;
     char* PUERTO_ESCUCHA_DISPATCH;
