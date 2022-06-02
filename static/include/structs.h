@@ -53,7 +53,7 @@ struct t_pcb
     // TODO: Tabla de paginas
     // Estos dos ultimos solo se usan cuando es SRT
     double est_rafaga_actual; // Esta en Milisegundos
-    //double siguiente_est;
+    double siguiente_est;
     void (*algoritmo_siguiente_estim)(t_pcb *self, time_t tiempoFinal, time_t tiempoInicial);
 };
 

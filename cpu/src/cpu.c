@@ -13,13 +13,8 @@ int main(int argc, char* argv[]) {
 
     int socketEscuchaInterrupt = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
     
-
-    
-
     struct sockaddr clienteDispatch;
     socklen_t lenCliD = sizeof(clienteDispatch);
-
-    
 
     aceptar_conexiones_cpu(socketEscuchaDispatch, clienteDispatch, lenCliD);
     log_info(cpuLogger, "CPU: Acepto la conexión de Dispatch");
@@ -29,9 +24,6 @@ int main(int argc, char* argv[]) {
 
     pthread_t atenderInterrupciones;
     pthread_create(&atenderInterrupciones, NULL, check_interrupt, NULL); 
-
-    /*struct sockaddr clienteInterrupt;
-    socklen_t lenCliInt = sizeof(clienteInterrupt);*/
 
     liberar_modulo_cpu(cpuLogger, cpuCfg);
 

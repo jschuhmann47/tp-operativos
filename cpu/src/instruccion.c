@@ -54,9 +54,7 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
             mandar_pcb_a_kernel(pcb,bytes,socketKernelDispatch);
             break;
         }
-        
     }
-    
 }
 
 

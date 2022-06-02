@@ -76,19 +76,27 @@ void iniciar_planificacion() {
 void* iniciar_corto_plazo(void* _) {
     for(;;) {
         sem_wait(&(pcbsReady->instanciasDisponibles)); //Llega un nuevo pcb a ready
-
-
         log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
 
-        /*if(algoritmo_srt_loaded()) {
-            interrupcion_a_cpu();//Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
-            getPcbDeCPU();
+        t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
+
+        /*double rafagaActual;
+        if(algoritmo_srt_loaded()) {
+            rafagaActual = pcbQuePasaAExec->est_rafaga_actual;
+        }
+
+        double rafagaSiguiente;
+        if(algoritmo_srt_loaded()) {
+            if(list_size(pcbsExec->lista) > 0){
+                interrupcion_a_cpu();//Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
+                t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
+                rafagaSiguiente = pcbQueMeDaCPU->est_rafaga_actual;
+                media_exponencial(rafagaActual, rafagaSiguiente);
+            }
 
             sem_wait(&(pcbsExec->instanciasDisponibles));
-            
         }*/
         //sem_wait(&(pcbsExec->instanciasDisponibles)); para mi va aca xq en fifo tmb tiene que esperar que no haya nada en exec TODO
-        t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
@@ -98,7 +106,7 @@ void* iniciar_corto_plazo(void* _) {
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
 
-        getPcbDeCPU();
+        t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
 
         //atender_peticiones_pcb(pcbQuePasaAExec);
     }
@@ -117,12 +125,12 @@ void* getPcbDeCPU(void) { //deberia haber un hilo con esto corriendo
 
     sem_wait(&(pcbsExec->instanciasDisponibles));
     
-    t_pcb* pcbQueMeDaCPU = traer_cpu_de_memoria();
-
+    t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
 }
 
-t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esperando que se la devuelva por el motivo que sea
-    
+t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando que se la devuelva por el motivo que sea
+    sem_wait(&(pcbsExec->instanciasDisponibles));
+
     t_pcb* pcb;
     void* buffer;
     log_info(kernelLogger, "Kernel: Recibiendo PCB de CPU");
@@ -150,37 +158,21 @@ t_pcb* traer_cpu_de_memoria(){ //una vez que manda una pcb a cpu, se queda esper
         log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
         sem_post(&(pcbsBlocked->instanciasDisponibles));
         atender_procesos_bloqueados(tiempoABloquearsePorIO);
-    }else{
-        if(ultimaInstruccion->indicador == EXIT_I){
-            agregar_pcb_a_cola(pcb, pcbsExit);
-            sem_post(&(pcbsExit->instanciasDisponibles));
-        }
     }
+    if(ultimaInstruccion->indicador == EXIT_I){
+        agregar_pcb_a_cola(pcb, pcbsExit);
+        sem_post(&(pcbsExit->instanciasDisponibles));
+    }
+    /*else{
+        cambiar_estado_pcb(pcb, READY);
+        agregar_pcb_a_cola(pcb, pcbsReady);
+        log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
+        sem_post(&(pcbsReady->instanciasDisponibles));
+    }*/
     
     //determinar_cola_pcb(pcb,tiempoABloquearsePorIO);
     
     return pcb;
-}
-
-void* determinar_cola_pcb(t_pcb* pcb, uint32_t tiempoABloquearsePorIO){
-    if(instruccion_actual_es(pcb,EXIT_I)){
-            //remover de cola no hace falta creo, xq no esta en ninguna, o esta en la de exec?
-            cambiar_estado_pcb(pcb, EXIT);
-            agregar_pcb_a_cola(pcb, pcbsExit);
-            log_transition("Corto Plazo", "EXEC", "EXIT", pcb->id);
-            sem_post(&(pcbsExit->instanciasDisponibles));
-        }
-    if(instruccion_actual_es(pcb,I_O)){ //no pisarse con el de medio plazo
-            cambiar_estado_pcb(pcb, BLOCKED);
-            agregar_pcb_a_cola(pcb, pcbsBlocked);
-            log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
-            sem_post(&(pcbsBlocked->instanciasDisponibles)); //quien maneja la cola de bloqueados?
-    }else{
-        cambiar_estado_pcb(pcb,READY);
-        agregar_pcb_a_cola(pcb, pcbsReady);
-        log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
-        sem_post(&(pcbsReady->instanciasDisponibles));
-    }
 }
 
 bool instruccion_actual_es(t_pcb* pcb, code_instruccion codOp){
@@ -209,9 +201,10 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
 }
 
 void interrupcion_a_cpu() {
+    conexion_de_interrupt(); // SETEA LA VARIABLE SOCKET_INTERRUPT DE ARRIBA
     log_info(kernelLogger, "Corto Plazo: Se interrumpe la CPU");
     
-    if(send(SOCKET_INTERRUPT, "interrupcion", sizeof("interrupcion"), 0) == -1) {
+    if(send(SOCKET_INTERRUPT, 1, sizeof(uint32_t), 0) == -1) {
         log_error(kernelLogger, "Error al interrumpir la CPU");
     }
     log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");
@@ -385,14 +378,14 @@ void* liberar_procesos_en_exit(void* _) {
         sem_wait(&(pcbsExit->instanciasDisponibles));
 
         t_pcb* pcbALiberar = get_and_remove_primer_pcb_de_cola(pcbsExit);
-
+        
         //TODO: Avisarle a Consola que finalizo su proceso. obtener el socket de esa consola en particular
         log_info(kernelLogger, "Kernel: Desconexión Proceso con ID %d", pcbALiberar->id);
         pcb_destroy(pcbALiberar);
 
         log_info(kernelLogger, "Largo Plazo: Se libera una instancia de Grado Multiprogramación");
         /* Aumenta el grado de multiprogramación al tener proceso en EXIT */
-        sem_post(&gradoMultiprog);  
+        sem_post(&gradoMultiprog);
 
         log_transition("Corto Plazo", "EXEC", "EXIT", pcbALiberar->id);
         
@@ -412,6 +405,7 @@ t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel
     self->instrucciones = instrucciones;
     self->programCounter = 0;
     self->est_rafaga_actual = kernelCfg->ESTIMACION_INICIAL;
+    self->siguiente_est = 0;
     if(algoritmo_srt_loaded()) {
         self->algoritmo_siguiente_estim = srt_actualizar_info_para_siguiente_estimacion;
     }
