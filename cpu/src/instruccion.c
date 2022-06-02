@@ -25,6 +25,7 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
             cpu_execute_con_operando(instruccionAEjecutar,operando);
 
         }else{
+            log_info(cpuLogger, "CPU: Ejecucion instruccion");
             cpu_execute(instruccionAEjecutar,pcb);
         }
         
@@ -39,9 +40,12 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
         }
         if (instruccionAEjecutar->indicador == I_O){
             log_info(cpuLogger, "CPU: Desalojo por instruccion I/O");
-            t_instruccion* instruccionActual = list_get(pcb->instrucciones, pcb->programCounter);
-            uint32_t tiempoABloquearPorIO = list_get(instruccionActual->parametros,0);
+            uint32_t* tiempoABloquearPorIO;
+            tiempoABloquearPorIO = list_get(instruccionAEjecutar->parametros,0); //esto falla
             calcularTiempoEnMs(pcb,start,end);
+            log_info(cpuLogger, "CPU: Tiempo IO %i",&tiempoABloquearPorIO);
+            log_info(cpuLogger, "CPU: Tiempo IO %i",*tiempoABloquearPorIO);
+            log_info(cpuLogger, "CPU: Tiempo IO %i",tiempoABloquearPorIO);
             mandar_pcb_a_kernel_con_io(pcb,bytes,socketKernelDispatch,tiempoABloquearPorIO);
             break;
         }
