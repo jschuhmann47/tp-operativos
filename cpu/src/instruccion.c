@@ -76,9 +76,11 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
     {
     case NO_OP:
         usleep(cpuCfg->RETARDO_NOOP);
+        log_info(cpuLogger, "CPU: Ejecute NO_OP");
         break;
     case I_O: 
         pcb->status=BLOCKED;
+        log_info(cpuLogger, "CPU: Ejecute I/O");
         break;
     case WRITE:
         /* code */
@@ -86,8 +88,9 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
     case READ:
         /* code */
         break;
-    case EXIT:
+    case EXIT_I:
         pcb->status=EXIT;
+        log_info(cpuLogger, "CPU: Ejecute EXIT");
         break;
 
     default:
