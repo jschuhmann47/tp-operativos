@@ -81,7 +81,7 @@ void* iniciar_corto_plazo(void* _) {
         if(algoritmo_srt_loaded()) {
             if(list_size(pcbsExec->lista) > 0){
                 log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
-                sem_wait(&(pcbsExec->instanciasDisponibles));
+                //sem_wait(&(pcbsExec->instanciasDisponibles));
                 interrupcion_a_cpu();
                 t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde
                 calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
@@ -204,6 +204,9 @@ void interrupcion_a_cpu() {
     
     if(send(SOCKET_INTERRUPT, 1, sizeof(uint32_t), 0) == -1) {
         log_error(kernelLogger, "Error al interrumpir la CPU");
+    }
+    else{
+       log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente"); 
     }
     log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");
 }

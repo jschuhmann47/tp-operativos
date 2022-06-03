@@ -188,8 +188,8 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
         memcpy(empaquetado + offset, &(instruccion->indicador), tmp_size = sizeof(code_instruccion));
         offset += tmp_size;
        
-        uint32_t* param1;
-        uint32_t* param2;
+        uint32_t* param1=malloc(sizeof(uint32_t));
+        uint32_t* param2=malloc(sizeof(uint32_t));
         switch (instruccion->indicador){
             case NO_OP:
                 continue;
