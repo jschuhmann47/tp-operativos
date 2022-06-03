@@ -64,7 +64,7 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
         buffer = malloc(tamanio_mensaje->tamanio);
         log_info(cpuLogger, "CPU: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
         if (recv(socketKernelDispatch, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
-            t_pcb *pcb = recibir_pcb(buffer);
+            t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
             log_info(cpuLogger, "CPU: Recibi el PCB con ID: %i", pcb->id);
             hacer_ciclo_de_instruccion(pcb, tamanio_mensaje, socketKernelDispatch);
             free(pcb);

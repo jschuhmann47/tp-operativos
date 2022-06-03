@@ -69,9 +69,9 @@ t_pcb* elegir_en_base_a_fifo(t_cola_planificacion* colaPlanificacion);
 // SRT
 t_pcb* srt_pcb_menor_estimacion_entre(t_pcb* unPcb, t_pcb* otroPcb);
 t_pcb* elegir_en_base_a_srt(t_cola_planificacion* colaPlanificacion);
-double get_diferencial_de_tiempo(time_t tiempoFinal, time_t tiempoInicial);
 double media_exponencial(double realAnterior, double estAnterior);
-void srt_actualizar_info_para_siguiente_estimacion(t_pcb* pcb, time_t tiempoFinal, time_t tiempoInicial);
-uint32_t calcular_tiempo();
+void calcular_nueva_estimacion_actual(t_pcb* pcb);
+
+
 
 #endif

@@ -78,24 +78,20 @@ void* iniciar_corto_plazo(void* _) {
         sem_wait(&(pcbsReady->instanciasDisponibles)); //Llega un nuevo pcb a ready
         log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
 
-        t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
-
-        /*double rafagaActual;
-        if(algoritmo_srt_loaded()) {
-            rafagaActual = pcbQuePasaAExec->est_rafaga_actual;
-        }
-
-        double rafagaSiguiente;
         if(algoritmo_srt_loaded()) {
             if(list_size(pcbsExec->lista) > 0){
-                interrupcion_a_cpu();//Hay que pedirle el PCB que esta EXEC, y ponerlo en la cola de pcbsReady... Si es que hay alguno
-                t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
-                rafagaSiguiente = pcbQueMeDaCPU->est_rafaga_actual;
-                media_exponencial(rafagaActual, rafagaSiguiente);
+                log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
+                sem_wait(&(pcbsExec->instanciasDisponibles));
+                interrupcion_a_cpu();
+                t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde
+                calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
             }
 
-            sem_wait(&(pcbsExec->instanciasDisponibles));
-        }*/
+            
+        }
+
+        t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
+
         //sem_wait(&(pcbsExec->instanciasDisponibles)); para mi va aca xq en fifo tmb tiene que esperar que no haya nada en exec TODO
 
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
@@ -107,6 +103,8 @@ void* iniciar_corto_plazo(void* _) {
         mandar_pcb_a_cpu(pcbQuePasaAExec);
 
         t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
+
+        calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
 
         //atender_peticiones_pcb(pcbQuePasaAExec);
     }
@@ -140,7 +138,7 @@ t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando
         buffer = malloc(tamanio_mensaje->tamanio);
         log_info(kernelLogger, "Kernel: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
         if (recv(SOCKET_DISPATCH, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
-            pcb = recibir_pcb(buffer);
+            pcb = recibir_pcb(buffer,tamanio_mensaje->tamanio);
             log_info(kernelLogger, "Kernel: Recibi el PCB con ID: %i", pcb->id);
         }
     }
@@ -397,7 +395,6 @@ void* liberar_procesos_en_exit(void* _) {
 /*---------------------------------------------- MANEJO DE PCBs ----------------------------------------------*/
 
 t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel_config* config) {
-    time_t tf,ti;
     t_pcb* self = malloc(sizeof(t_pcb));
     self->id = id;
     self->status = NEW;
@@ -405,10 +402,7 @@ t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel
     self->instrucciones = instrucciones;
     self->programCounter = 0;
     self->est_rafaga_actual = kernelCfg->ESTIMACION_INICIAL;
-    self->siguiente_est = 0;
-    if(algoritmo_srt_loaded()) {
-        self->algoritmo_siguiente_estim = srt_actualizar_info_para_siguiente_estimacion;
-    }
+    self->dur_ultima_rafaga = kernelCfg->ESTIMACION_INICIAL;
     return self;
 }
 
@@ -590,39 +584,17 @@ t_pcb* elegir_en_base_a_srt(t_cola_planificacion* colaPlanificacion) {
     return pcbMenorEstimacion;
 }
 
-double get_diferencial_de_tiempo(time_t tiempoFinal, time_t tiempoInicial) {
-    /* difftime - calculate time difference
-        The difftime() function returns the number of seconds elapsed
-        between time time1 and time time0, represented as a double.*/
-    double diferencialT = difftime(tiempoFinal, tiempoInicial);
-    return diferencialT;
-}
 
 double media_exponencial(double realAnterior, double estAnterior) {
     /* Est(n) = α . R(n-1) + (1 - α) . Est(n-1) */
     return kernelCfg->ALFA * realAnterior + (1 - kernelCfg->ALFA) * estAnterior;
 }
 
-void srt_actualizar_info_para_siguiente_estimacion(t_pcb* pcb, time_t tiempoFinal, time_t tiempoInicial) {
-    double realAnterior = get_diferencial_de_tiempo(tiempoFinal, tiempoInicial);
-    pcb->est_rafaga_actual = media_exponencial(realAnterior, pcb->est_rafaga_actual);
+
+void calcular_nueva_estimacion_actual(t_pcb* pcb){
+    pcb->est_rafaga_actual = media_exponencial(pcb->dur_ultima_rafaga, pcb->est_rafaga_actual);
 }
 
-uint32_t calcular_tiempo(){
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
-    //aca hacer lo que haya que hacer
-    int a=2; //ej
-    for (int i=0;i<1000000;i++){}//ej
-    
-    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-    
-    u_int32_t delta_us = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
-    
-    log_info(kernelLogger, "Prueba de timer %i", delta_us);
-
-    return delta_us;
-}
 
 /*---------------------------------------------- CONEXIONES ----------------------------------------------*/
 
