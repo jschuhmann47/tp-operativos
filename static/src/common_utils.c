@@ -152,6 +152,7 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
     }
     
     void *empaquetado = malloc(tamanioListaInstrucciones +
+                                sizeof(uint32_t) +
                                 sizeof(typeof(pcb->id)) + //id
                                 sizeof(t_status) +
                                 sizeof(typeof(pcb->tamanio)) +//tamanio
