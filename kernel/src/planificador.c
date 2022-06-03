@@ -105,7 +105,9 @@ void* iniciar_corto_plazo(void* _) {
         mandar_pcb_a_cpu(pcbQuePasaAExec);
 
         t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
-        remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
+        log_info(kernelLogger, "Cantidad elementos cola gamerb %i",pcbsExec->lista->elements_count);
+        remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec); //esto no encuentra la pcb y por ende no la saca y es lo que rompe
+        log_info(kernelLogger, "Cantidad elementos cola gamera %i",pcbsExec->lista->elements_count);
 
         log_info(kernelLogger, "Cantidad elementos cola exec3 %i",pcbsExec->lista->elements_count);
 
