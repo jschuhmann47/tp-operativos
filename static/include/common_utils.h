@@ -23,7 +23,7 @@ char *serializar_tamanio(t_mensaje_tamanio *mensaje_tamanio, uint32_t *bytes);
 void* serializar_pcb(t_pcb *pcb, uint32_t *bytes);
 t_mensaje_tamanio* deserializar_tamanio(char *buffer);
 uint32_t recibir_tamanio_mensaje(t_mensaje_tamanio *tamanio_mensaje, int socket);
-t_pcb* recibir_pcb(void* buffer);
+t_pcb* recibir_pcb(void* buffer,uint32_t bytes);
 
 //Utilities//
 int tamanioInstruccion(code_instruccion codOp);

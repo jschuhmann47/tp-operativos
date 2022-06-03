@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 void aceptar_conexiones_kernel(int socketEscucha, struct sockaddr cliente, socklen_t len) {
     log_info(kernelLogger, "Kernel: A la escucha de nuevas conexiones en puerto %d", socketEscucha);
     for(;;) {
-        kernelCfg->CONSOLA_SOCKET = accept(socketEscucha, &cliente, &len);
+        kernelCfg->CONSOLA_SOCKET = accept(socketEscucha, &cliente, &len); //esta mal
         if(kernelCfg->CONSOLA_SOCKET > 0) {
             log_info(kernelLogger, "Kernel: Acepto la conexión del socket: %d", kernelCfg->CONSOLA_SOCKET);
             crear_hilo_handler_conexion_entrante(kernelCfg->CONSOLA_SOCKET);

@@ -157,7 +157,8 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
                                 sizeof(typeof(pcb->tamanio)) +//tamanio
                                 sizeof(uint32_t) +//cantidadInstrucciones
                                 sizeof(typeof(pcb->programCounter)) +//PC
-                                sizeof(typeof(pcb->est_rafaga_actual))); //rafaga
+                                sizeof(typeof(pcb->est_rafaga_actual))+
+                                sizeof(typeof(pcb->dur_ultima_rafaga))); //rafaga
 
     uint32_t offset = 0, tmp_size = 0;
     
@@ -187,8 +188,8 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
         memcpy(empaquetado + offset, &(instruccion->indicador), tmp_size = sizeof(code_instruccion));
         offset += tmp_size;
        
-        uint32_t* param1;
-        uint32_t* param2;
+        uint32_t* param1=malloc(sizeof(uint32_t));
+        uint32_t* param2=malloc(sizeof(uint32_t));
         switch (instruccion->indicador){
             case NO_OP:
                 continue;
@@ -231,6 +232,10 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
     memcpy(empaquetado + offset, &(pcb->est_rafaga_actual), tmp_size);
     offset += tmp_size;
 
+    tmp_size = sizeof(pcb->dur_ultima_rafaga);
+    memcpy(empaquetado + offset, &(pcb->dur_ultima_rafaga), tmp_size);
+    offset += tmp_size;
+
     *bytes = offset;
     return empaquetado;
 }
@@ -260,7 +265,7 @@ t_mensaje_tamanio* deserializar_tamanio(char *buffer) {
     return header_message;
 }
 
-t_pcb* recibir_pcb(void* buffer)
+t_pcb* recibir_pcb(void* buffer,uint32_t bytes)
 {
     uint32_t offset = 0, tmp_len = 0;
     uint32_t tamanioListaInstrucciones;
@@ -268,7 +273,7 @@ t_pcb* recibir_pcb(void* buffer)
     memcpy(&tamanioListaInstrucciones, buffer + offset, tmp_len = sizeof(tamanioListaInstrucciones));
     offset += tmp_len;
 
-    t_pcb *pcb = malloc(sizeof(t_pcb));
+    t_pcb *pcb = malloc(bytes);
     pcb->instrucciones = list_create();
 
     memcpy(&pcb->id, buffer + offset, tmp_len = sizeof(typeof(pcb->id)));
@@ -338,6 +343,11 @@ t_pcb* recibir_pcb(void* buffer)
     offset += tmp_len;
 
     memcpy(&pcb->est_rafaga_actual, buffer + offset, tmp_len = sizeof(typeof(pcb->est_rafaga_actual)));
+    offset += tmp_len;
+
+    memcpy(&pcb->dur_ultima_rafaga, buffer + offset, tmp_len = sizeof(typeof(pcb->dur_ultima_rafaga)));
+
+    free(buffer); //ver si esto rompe o no
 
     return pcb;
 }

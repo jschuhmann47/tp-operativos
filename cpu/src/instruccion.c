@@ -62,7 +62,7 @@ void calcularTiempoEnMs(t_pcb* pcb,struct timespec start,struct timespec end){ /
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     uint32_t tiempoEnMs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
     log_info(cpuLogger, "El tiempo en ejecucion fue de %i ms", tiempoEnMs);
-    pcb->est_rafaga_actual=tiempoEnMs;
+    pcb->dur_ultima_rafaga=tiempoEnMs;
 }
 
 t_instruccion* cpu_fetch (t_pcb* pcb){
@@ -84,10 +84,10 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
     code_instruccion codOp = instruccion->indicador;
     switch (codOp)
     {
-    case NO_OP: //TODO
+    case NO_OP:
         usleep(cpuCfg->RETARDO_NOOP);
         break;
-    case I_O: //TODO
+    case I_O: 
         pcb->status=BLOCKED;
         break;
     case WRITE:
@@ -96,7 +96,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
     case READ:
         /* code */
         break;
-    case EXIT: //TODO
+    case EXIT:
         pcb->status=EXIT;
         break;
 
@@ -114,6 +114,7 @@ void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando){
 uint32_t cpu_fetch_operands(t_instruccion* instruccion){
     void* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
     //TODO, buscarlo en la memoria
+    return 1;
 }
 
 bool cpu_check_interrupcion(){

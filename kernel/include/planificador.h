@@ -18,7 +18,6 @@ void iniciar_planificacion();
 
 // Planificador Corto Plazo
 void* iniciar_corto_plazo(void* _);
-void* getPcbDeCPU(void);
 void* conexion_de_interrupt();
 void* conexion_de_dispatch();
 void interrupcion_a_cpu();
@@ -32,7 +31,6 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo);
 // Planificador Mediano Plazo
 void* iniciar_mediano_plazo(void* _);
 void* pasar_de_susready_a_ready(void* _);
-void* blocked_a_ready(t_pcb* pcb);
 void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb);
 void* contar_tiempo_bloqueado(t_pcb* pcb);
 void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo);
@@ -69,9 +67,9 @@ t_pcb* elegir_en_base_a_fifo(t_cola_planificacion* colaPlanificacion);
 // SRT
 t_pcb* srt_pcb_menor_estimacion_entre(t_pcb* unPcb, t_pcb* otroPcb);
 t_pcb* elegir_en_base_a_srt(t_cola_planificacion* colaPlanificacion);
-double get_diferencial_de_tiempo(time_t tiempoFinal, time_t tiempoInicial);
 double media_exponencial(double realAnterior, double estAnterior);
-void srt_actualizar_info_para_siguiente_estimacion(t_pcb* pcb, time_t tiempoFinal, time_t tiempoInicial);
-uint32_t calcular_tiempo();
+void calcular_nueva_estimacion_actual(t_pcb* pcb);
+
+
 
 #endif
