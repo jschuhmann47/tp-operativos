@@ -507,7 +507,8 @@ t_pcb* get_and_remove_primer_pcb_de_cola(t_cola_planificacion* cola) {
 
 int pcb_get_posicion(t_pcb* pcb, t_list* lista) {
     for (int posicion = 0; posicion < list_size(lista); posicion++) {
-        if (pcb == (t_pcb*) list_get(lista, posicion)) {
+        t_pcb* pcbTemp = list_get(lista, posicion);
+        if (pcb->id == pcbTemp->id) {
             return posicion;
         }
     }
