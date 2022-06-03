@@ -81,7 +81,6 @@ void* iniciar_corto_plazo(void* _) {
         if(algoritmo_srt_loaded()) {
             if(list_size(pcbsExec->lista) > 0){
                 log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
-                //sem_wait(&(pcbsExec->instanciasDisponibles));
                 interrupcion_a_cpu();
                 t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde
                 calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
@@ -92,8 +91,6 @@ void* iniciar_corto_plazo(void* _) {
 
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
-        //sem_wait(&(pcbsExec->instanciasDisponibles)); para mi va aca xq en fifo tmb tiene que esperar que no haya nada en exec TODO
-
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
         sem_post(&(pcbsExec->instanciasDisponibles));
@@ -102,11 +99,11 @@ void* iniciar_corto_plazo(void* _) {
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
 
+        sem_post(&(pcbsExec->instanciasDisponibles));
+
         t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
 
         calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
-
-        //atender_peticiones_pcb(pcbQuePasaAExec);
     }
     pthread_exit(NULL);
 }
@@ -142,7 +139,7 @@ t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando
             log_info(kernelLogger, "Kernel: Recibi el PCB con ID: %i", pcb->id);
         }
     }
-    uint32_t tiempoABloquearsePorIO; //como devolver esto
+    uint32_t tiempoABloquearsePorIO; 
     t_instruccion* ultimaInstruccion = list_get(pcb->instrucciones, (pcb->programCounter)-1);
     if(ultimaInstruccion->indicador == I_O){
         if(recv(SOCKET_DISPATCH,&tiempoABloquearsePorIO,sizeof(uint32_t),MSG_WAITALL)<0){
@@ -161,14 +158,12 @@ t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando
         agregar_pcb_a_cola(pcb, pcbsExit);
         sem_post(&(pcbsExit->instanciasDisponibles));
     }
-    /*else{
+    if(ultimaInstruccion->indicador == NO_OP || ultimaInstruccion->indicador == READ || ultimaInstruccion->indicador == WRITE || ultimaInstruccion->indicador == COPY){
         cambiar_estado_pcb(pcb, READY);
         agregar_pcb_a_cola(pcb, pcbsReady);
         log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
         sem_post(&(pcbsReady->instanciasDisponibles));
-    }*/
-    
-    //determinar_cola_pcb(pcb,tiempoABloquearsePorIO);
+    }
     
     return pcb;
 }
