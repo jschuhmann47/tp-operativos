@@ -79,7 +79,7 @@ void* iniciar_corto_plazo(void* _) {
     for(;;) {
         sem_wait(&(pcbsReady->instanciasDisponibles)); //Llega un nuevo pcb a ready
         log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
-
+        log_info(kernelLogger, "Cantidad elementos cola exec1 %i",pcbsExec->lista->elements_count);
         if(algoritmo_srt_loaded()) {
             if(list_size(pcbsExec->lista) > 0){
                 log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
@@ -87,11 +87,12 @@ void* iniciar_corto_plazo(void* _) {
                 t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde
                 remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
                 calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
+                log_info(kernelLogger, "Cantidad elementos cola exec dentro if %i",pcbsExec->lista->elements_count);
             }
 
             
         }
-
+        log_info(kernelLogger, "Cantidad elementos cola exec2 %i",pcbsExec->lista->elements_count);
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
         remover_pcb_de_cola(pcbQuePasaAExec,pcbsReady);
@@ -105,6 +106,8 @@ void* iniciar_corto_plazo(void* _) {
 
         t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
         remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
+
+        log_info(kernelLogger, "Cantidad elementos cola exec3 %i",pcbsExec->lista->elements_count);
 
         calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
     }
