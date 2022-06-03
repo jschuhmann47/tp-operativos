@@ -1,6 +1,6 @@
 #include "planificador.h"
 
-const char* INT_KEYWORD = "interrupcion";
+
 // TODO: PASAJES EXEC => BLOCKED | BLOCKED => READY | SUSBLOCKED => SUSREADY | EXEC => EXIT
 
 // Semaforos
@@ -69,7 +69,7 @@ void iniciar_planificacion() {
     pthread_detach(thread);
 
     /* Planificador mediano plazo */
-    pthread_create(&thread, NULL, iniciar_mediano_plazo, NULL); //esta al pedo este
+    pthread_create(&thread, NULL, pasar_de_susready_a_ready, NULL); 
     pthread_detach(thread); 
 
     /* Planificador corto plazo */
@@ -258,7 +258,6 @@ void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a
     usleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO);
     if(pcb->status==BLOCKED){
         //enviar_suspension_de_pcb_a_memoria(pcb);
-        sem_wait(&(pcbsBlocked->instanciasDisponibles));
         cambiar_estado_pcb(pcb, SUSBLOCKED);
         log_info(kernelLogger, "Mediano Plazo: Se libera una instancia de Grado Multiprogramación");
         log_transition("Mediano Plazo", "BLOCKED", "SUSP/BLOCKED", pcb->id);
@@ -290,7 +289,7 @@ void enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) { //no esta testeada
     
     t_mensaje_tamanio* mensaje = malloc(sizeof(t_mensaje_tamanio));
     uint32_t bytes;
-    void* mensaje = serializar_pcb(pcb,&bytes);
+    serializar_pcb(pcb,&bytes);
     mensaje->tamanio=bytes;
 
     enviar_tamanio_mensaje(mensaje, memoria_fd);
