@@ -79,20 +79,16 @@ void* iniciar_corto_plazo(void* _) {
     for(;;) {
         sem_wait(&(pcbsReady->instanciasDisponibles)); //Llega un nuevo pcb a ready
         log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
-        log_info(kernelLogger, "Cantidad elementos cola exec1 %i",pcbsExec->lista->elements_count);
+        
         if(algoritmo_srt_loaded()) {
             if(list_size(pcbsExec->lista) > 0){
                 log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
                 interrupcion_a_cpu();
                 t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde
-                remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
-                calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
-                log_info(kernelLogger, "Cantidad elementos cola exec dentro if %i",pcbsExec->lista->elements_count);
+                
             }
-
-            
         }
-        log_info(kernelLogger, "Cantidad elementos cola exec2 %i",pcbsExec->lista->elements_count);
+        
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
         remover_pcb_de_cola(pcbQuePasaAExec,pcbsReady);
@@ -105,11 +101,9 @@ void* iniciar_corto_plazo(void* _) {
         mandar_pcb_a_cpu(pcbQuePasaAExec);
 
         t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
-        log_info(kernelLogger, "Cantidad elementos cola gamerb %i",pcbsExec->lista->elements_count);
-        remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec); //esto no encuentra la pcb y por ende no la saca y es lo que rompe
-        log_info(kernelLogger, "Cantidad elementos cola gamera %i",pcbsExec->lista->elements_count);
-
-        log_info(kernelLogger, "Cantidad elementos cola exec3 %i",pcbsExec->lista->elements_count);
+        
+        remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
+        
 
         calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
     }
@@ -137,6 +131,8 @@ t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando
     uint32_t tiempoABloquearsePorIO; 
     t_instruccion* ultimaInstruccion = list_get(pcb->instrucciones, (pcb->programCounter)-1);
     
+    remover_pcb_de_cola(pcb, pcbsExec);
+    calcular_nueva_estimacion_actual(pcb);
     
     if(ultimaInstruccion->indicador == I_O){
         if(recv(SOCKET_DISPATCH,&tiempoABloquearsePorIO,sizeof(uint32_t),MSG_WAITALL)<0){
