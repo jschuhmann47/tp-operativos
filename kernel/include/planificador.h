@@ -31,7 +31,7 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo);
 // Planificador Mediano Plazo
 void* iniciar_mediano_plazo(void* _);
 void* pasar_de_susready_a_ready(void* _);
-void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb);
+void enviar_suspension_de_pcb_a_memoria(t_pcb* pcb);
 void* contar_tiempo_bloqueado(t_pcb* pcb);
 void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo);
 

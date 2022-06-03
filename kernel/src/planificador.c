@@ -21,7 +21,7 @@ t_cola_planificacion* pcbsReady;
 t_cola_planificacion* pcbsExec;
 t_cola_planificacion* pcbsBlocked;
 t_cola_planificacion* pcbsSusReady;
-t_cola_planificacion* pcbsSusBlocked;
+//t_cola_planificacion* pcbsSusBlocked;
 t_cola_planificacion* pcbsExit;
 
 //Socket para dispatch
@@ -30,10 +30,17 @@ int SOCKET_DISPATCH;
 //Socket para interrupt
 int SOCKET_INTERRUPT;
 
-void iniciar_planificacion() {
+int memoria_fd;
 
+void iniciar_planificacion() {
+    //Conexiones
     conexion_de_dispatch();
     conexion_de_interrupt();
+    // int memoria_fd=conectar_a_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_MEMORIA);
+    // if (memoria_fd == -1){
+    //     log_error(kernelCfg, "Kernel: No se pudo establecer conexión con Memoria. Valor conexión %d", memoria_fd);
+    //     return -1;
+    // } //comento para que no explote ahora 
 
     nextId = 1;
     /* Inicializacion de semaforos */
@@ -50,7 +57,7 @@ void iniciar_planificacion() {
     pcbsExec = cola_planificacion_create(0);
     pcbsBlocked = cola_planificacion_create(0);
     pcbsSusReady = cola_planificacion_create(0);
-    pcbsSusBlocked = cola_planificacion_create(0); //esta la volamos
+    //pcbsSusBlocked = cola_planificacion_create(0); //esta la volamos
     pcbsExit = cola_planificacion_create(0);
     pthread_mutex_init(&mutexId, NULL);
 
@@ -62,15 +69,12 @@ void iniciar_planificacion() {
     pthread_detach(thread);
 
     /* Planificador mediano plazo */
-    pthread_create(&thread, NULL, iniciar_mediano_plazo, NULL);
+    pthread_create(&thread, NULL, iniciar_mediano_plazo, NULL); //esta al pedo este
     pthread_detach(thread); 
 
     /* Planificador corto plazo */
     pthread_create(&thread, NULL, iniciar_corto_plazo, NULL);
     pthread_detach(thread);
-
-    /*pthread_t contarTiempo;
-    pthread_create(&contarTiempo, NULL, atender_procesos_bloqueados, tiempoBloqueado);*/
 }
 
 /*---------------------------------------------- PLANIFICADOR CORTO PLAZO ----------------------------------------------*/
@@ -84,8 +88,7 @@ void* iniciar_corto_plazo(void* _) {
             if(list_size(pcbsExec->lista) > 0){
                 log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
                 interrupcion_a_cpu();
-                t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde
-                
+                t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde, la saca de la cola de exec y calcula nueva rafaga
             }
         }
         
@@ -112,7 +115,7 @@ void* iniciar_corto_plazo(void* _) {
 
 
 
-t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando que se la devuelva por el motivo que sea
+t_pcb* traer_pcb_de_cpu(){
     
     sem_wait(&(pcbsExec->instanciasDisponibles));
     t_pcb* pcb;
@@ -135,7 +138,7 @@ t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando
     calcular_nueva_estimacion_actual(pcb);
     
     if(ultimaInstruccion->indicador == I_O){
-        if(recv(SOCKET_DISPATCH,&tiempoABloquearsePorIO,sizeof(uint32_t),MSG_WAITALL)<0){
+        if(recv(SOCKET_DISPATCH,&tiempoABloquearsePorIO,sizeof(uint32_t),MSG_WAITALL) < 0){
             log_error(kernelLogger, "Kernel: Error al recibir el mensaje de tiempo a bloquearse por IO");
         }
         log_info(kernelLogger, "Kernel: Recibi el tiempo a bloquearse por IO: %i", tiempoABloquearsePorIO);
@@ -171,22 +174,23 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
     log_info(kernelLogger, "Corto Plazo: Se manda el PCB %i a la CPU", pcb->id);
 
     void* pcbAMandar = serializar_pcb(pcb, &bytes);
-    //conexion_de_dispatch(); //setea la variable SOCKET_DISPATCH de arriba de todo 
 
     t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
     tamanio_mensaje->tamanio = bytes;
     
     enviar_tamanio_mensaje(tamanio_mensaje, SOCKET_DISPATCH); //Enviamos primero el tamaño de mensaje, para saber que recibir.
 
-    send(SOCKET_DISPATCH, pcbAMandar, bytes, 0); //Enviamos el mensaje con el PCB entero y el tamaño.
+    if(send(SOCKET_DISPATCH, pcbAMandar, bytes, 0)>0){
+        log_info(kernelLogger, "Corto Plazo: Se mando el PCB %i a la CPU correctamente", pcb->id);
+    } //Enviamos el mensaje con el PCB entero y el tamaño.
 
-    log_info(kernelLogger, "Corto Plazo: Se mando el PCB %i a la CPU correctamente", pcb->id);
+    
     free(pcbAMandar);
     free(tamanio_mensaje);
 }
 
 void interrupcion_a_cpu() {
-    //conexion_de_interrupt(); // SETEA LA VARIABLE SOCKET_INTERRUPT DE ARRIBA
+    
     log_info(kernelLogger, "Corto Plazo: Se interrumpe la CPU");
     uint32_t mensaje = 1;
     
@@ -228,26 +232,26 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
 
 /*---------------------------------------------- PLANIFICADOR MEDIANO PLAZO ----------------------------------------------*/
 
-void* iniciar_mediano_plazo(void* _) {
-    pthread_t th;
-    pthread_create(&th, NULL, pasar_de_susready_a_ready, NULL); 
-    pthread_detach(th);
-    //pthread_create(&th, NULL, recibir_pcb_bloqueado, NULL);
-    //pthread_detach(th);
-    for(;;) {
+void* iniciar_mediano_plazo(void* _) { //esto no hace nada
+    // pthread_t th;
+    // pthread_create(&th, NULL, pasar_de_susready_a_ready, NULL); 
+    // pthread_detach(th);
+    // //pthread_create(&th, NULL, recibir_pcb_bloqueado, NULL);
+    // //pthread_detach(th);
+    // for(;;) {
       
-        sem_wait(&hayPCBsParaPasarASusBlocked); // TODO: Va a estar esperando por que le hagan el post
-        t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked); //tiene que sacar segun el tiempo de configuracion, usar usleep
-        //enviar_suspension_de_pcb_a_memoria(pcbASuspender);
-        pthread_t contarTiempoBloqueado;
-        pthread_create(&contarTiempoBloqueado, NULL, contar_tiempo_bloqueado, pcbASuspender);
+    //     sem_wait(&hayPCBsParaPasarASusBlocked); // TODO: Va a estar esperando por que le hagan el post
+    //     t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked); //tiene que sacar segun el tiempo de configuracion, usar usleep
+    //     //enviar_suspension_de_pcb_a_memoria(pcbASuspender);
+    //     pthread_t contarTiempoBloqueado;
+    //     pthread_create(&contarTiempoBloqueado, NULL, contar_tiempo_bloqueado, pcbASuspender);
                                  
-        sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for
-        //TODO: Aca pasar ya de SUSBLOCKED => SUSREADY ??? Un hilo?
-        //dice esto: La transición (SUSPENDED-BLOCKED -> SUSPENDED-READY), al ser una transición que va a darse al finalizar una entrada/salida, 
-        //no necesariamente forma parte del planificador de Mediano Plazo.
-    }
-    pthread_exit(NULL);
+    //     sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for
+    //     //TODO: Aca pasar ya de SUSBLOCKED => SUSREADY ??? Un hilo?
+    //     //dice esto: La transición (SUSPENDED-BLOCKED -> SUSPENDED-READY), al ser una transición que va a darse al finalizar una entrada/salida, 
+    //     //no necesariamente forma parte del planificador de Mediano Plazo.
+    // }
+    // pthread_exit(NULL);
 }
 
 void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a suspender siempre
@@ -280,39 +284,31 @@ void* pasar_de_susready_a_ready(void* _) {
 }
 
 
-
-/*void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
+void enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) { //no esta testeada
     //se enviará un mensaje a Memoria con la información necesaria y se esperará la confirmación del mismo.
     //Una vez recibo la confirmacion
-    int memoria_fd=conectar_a_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_MEMORIA);
-    if (memoria_fd == -1)
-    {
-        log_error(kernelCfg, "Kernel: No se pudo establecer conexión con Memoria. Valor conexión %d", memoria_fd);//warning de kernelCfg
-        return -1;
-    }
-    void* mensaje = serializar_pcb(pcb); //TODO
+    
+    t_mensaje_tamanio* mensaje = malloc(sizeof(t_mensaje_tamanio));
+    uint32_t bytes;
+    void* mensaje = serializar_pcb(pcb,&bytes);
+    mensaje->tamanio=bytes;
+
+    enviar_tamanio_mensaje(mensaje, memoria_fd);
+    
     if(send(memoria_fd, mensaje, sizeof(t_pcb), 0) == -1) {
         log_error(kernelCfg, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", memoria_fd);
         return -1;
     }
     log_info(kernelLogger,"Kernel: Enviada PCB a Memoria");
     sem_post(&suspensionConcluida); //creo que este va un poco despues
-}*/
+}
 
-/*void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo){ //el tiempo es el que llega por parametro de la instruccion
-    usleep(tiempo);
-    if(pcb->status==BLOCKED){
-        blocked_a_ready(pcb);
-    }
-    if(pcb->status==SUSBLOCKED){
-        //susp_a_ready(pcb);
-        remover_pcb_de_cola(pcb, pcbsBlocked); //esto hace el wait del semaforo de instancias? 
-        cambiar_estado_pcb(pcb, SUSREADY);
-        agregar_pcb_a_cola(pcb,pcbsSusReady);
-        
-        sem_post(&(pcbsSusReady->instanciasDisponibles));
-    }
-}*/
+t_pcb* traer_pcb_de_memoria(){ //similar a traer_pcb_de_cpu pero con algunas cosas distintas
+    //TODO
+    t_pcb* pcb;
+    return pcb; 
+}
+
 
 /*---------------------------------------------- PLANIFICADOR LARGO PLAZO ----------------------------------------------*/
 

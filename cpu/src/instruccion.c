@@ -14,18 +14,13 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
 
     while(1){ //CHEQUEAR QUE SEA EXIT, INTERRUPCION Y I/O
         t_instruccion* instruccionAEjecutar = cpu_fetch(pcb);
-        log_info(cpuLogger, "CPU: Ejecuté fetch");
         bool necesitaOperandos = cpu_decode(instruccionAEjecutar);
-        log_info(cpuLogger, "CPU: Ejecuté decode");
-        // int operandoIO = 0;
-        // operandoIO = 10;
         
         if(necesitaOperandos){ 
             uint32_t operando = cpu_fetch_operands(instruccionAEjecutar); 
             cpu_execute_con_operando(instruccionAEjecutar,operando);
 
         }else{
-            log_info(cpuLogger, "CPU: Ejecucion instruccion");
             cpu_execute(instruccionAEjecutar,pcb);
         }
         
@@ -43,7 +38,6 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
             uint32_t* tiempoABloquearPorIO=malloc(sizeof(uint32_t));
             tiempoABloquearPorIO = list_get(instruccionAEjecutar->parametros,0);
             calcularTiempoEnMs(pcb,start,end);
-            log_info(cpuLogger, "CPU: Tiempo IO %ld",*tiempoABloquearPorIO);
             mandar_pcb_a_kernel_con_io(pcb,bytes,socketKernelDispatch,*tiempoABloquearPorIO);
             free(tiempoABloquearPorIO);
             break;
@@ -66,14 +60,10 @@ void calcularTiempoEnMs(t_pcb* pcb,struct timespec start,struct timespec end){ /
 }
 
 t_instruccion* cpu_fetch (t_pcb* pcb){
-    log_info(cpuLogger, "CPU: Ejecutando fetch");
-    //devuelve la instruccion de indice programCounter
     return list_get(pcb->instrucciones,pcb->programCounter); 
 }
 
 bool cpu_decode(t_instruccion* instruccion){
-    
-    log_info(cpuLogger, "CPU: Ejecutando decode");
     if(instruccion->indicador == COPY){
         return true;
     }

@@ -18,7 +18,9 @@ int main(int argc, char* argv[]) {
     struct sockaddr clienteDispatch;
     socklen_t lenCliD = sizeof(clienteDispatch);
 
-    struct conexion_cpu* conexionDispatch = malloc(sizeof(conexion_cpu)),*conexionInterrupt= malloc(sizeof(conexion_cpu));
+    struct conexion_cpu* conexionDispatch = malloc(sizeof(conexion_cpu));
+    struct conexion_cpu* conexionInterrupt= malloc(sizeof(conexion_cpu));
+
     conexionDispatch->socket=socketEscuchaDispatch;
     conexionDispatch->sockAddr=clienteDispatch;
     conexionDispatch->sockrAddrLen=lenCliD;
@@ -30,20 +32,8 @@ int main(int argc, char* argv[]) {
     pthread_t atenderDispatch;
     pthread_create(&atenderDispatch, NULL, aceptar_conexiones_cpu, conexionDispatch);
     
-
     pthread_t atenderInterrupcion;
     pthread_create(&atenderInterrupcion, NULL, aceptar_conexiones_cpu_interrupcion, conexionInterrupt);
-    
-
-    // aceptar_conexiones_cpu(socketEscuchaDispatch, clienteDispatch, lenCliD); //HILO
-    // log_info(cpuLogger, "CPU: Acepto la conexión de Dispatch");
-
-    // aceptar_conexiones_cpu_interrupcion(socketEscuchaInterrupt, clienteDispatch, lenCliD); //HILO
-    // log_info(cpuLogger, "CPU: Acepto la conexión de Interrpucion");
-
-    // pthread_t atenderInterrupciones;
-    // pthread_create(&atenderInterrupciones, NULL, check_interrupt, NULL);
-    // pthread_detach(atenderInterrupciones);
 
     pthread_join(atenderDispatch, NULL);
     pthread_join(atenderInterrupcion, NULL);
@@ -65,6 +55,7 @@ void aceptar_conexiones_cpu(struct conexion_cpu* conexion) {
         }
     }
 }
+
 
 void aceptar_conexiones_cpu_interrupcion(struct conexion_cpu* conexion) {
     log_info(cpuLogger, "CPU: A la escucha de nuevas conexiones en puerto %d", conexion->socket);
@@ -99,14 +90,13 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
 }
 
 void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelDispatch){
-    log_info(cpuLogger, "CPU: Mando el PCB a Kernel"); 
+    log_info(cpuLogger, "CPU: Mandando el PCB a Kernel"); 
     uint32_t bytesPcb=0;
     void* buffer = serializar_pcb(pcb,&bytesPcb);
     bytes->tamanio=bytesPcb;
     if (enviar_tamanio_mensaje(bytes, socketKernelDispatch)){
         log_info(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
         if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
-            log_info(cpuLogger, "CPU: Mande el PCB a Kernel");
             log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
             free(buffer);
             //free(pcb);-> creo que no alcanza, hay q liberar la lista de instrucciones tmb
