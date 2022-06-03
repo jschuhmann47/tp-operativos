@@ -1,10 +1,6 @@
 #include "cpu.h" //"../include/cpu.h"
 
-struct conexion_cpu{
-    int socket;
-    struct sockaddr sockAddr;
-    socklen_t sockrAddrLen;
-}conexion_cpu;
+
 
 int main(int argc, char* argv[]) {
     cpuCfg = cpu_cfg_create();
@@ -22,7 +18,7 @@ int main(int argc, char* argv[]) {
     struct sockaddr clienteDispatch;
     socklen_t lenCliD = sizeof(clienteDispatch);
 
-    struct conexion_cpu* conexionDispatch,*conexionInterrupt;
+    struct conexion_cpu* conexionDispatch = malloc(sizeof(conexion_cpu)),*conexionInterrupt= malloc(sizeof(conexion_cpu));
     conexionDispatch->socket=socketEscuchaDispatch;
     conexionDispatch->sockAddr=clienteDispatch;
     conexionDispatch->sockrAddrLen=lenCliD;
@@ -36,7 +32,7 @@ int main(int argc, char* argv[]) {
     
 
     pthread_t atenderInterrupcion;
-    pthread_create(&atenderInterrupcion, NULL, aceptar_conexiones_cpu, conexionInterrupt);
+    pthread_create(&atenderInterrupcion, NULL, aceptar_conexiones_cpu_interrupcion, conexionInterrupt);
     
 
     // aceptar_conexiones_cpu(socketEscuchaDispatch, clienteDispatch, lenCliD); //HILO
@@ -70,10 +66,10 @@ void aceptar_conexiones_cpu(struct conexion_cpu* conexion) {
     }
 }
 
-void aceptar_conexiones_cpu_interrupcion(int socketEscucha, struct sockaddr cliente, socklen_t len) {
-    log_info(cpuLogger, "CPU: A la escucha de nuevas conexiones en puerto %d", socketEscucha);
+void aceptar_conexiones_cpu_interrupcion(struct conexion_cpu* conexion) {
+    log_info(cpuLogger, "CPU: A la escucha de nuevas conexiones en puerto %d", conexion->socket);
     for(;;) {
-        cpuCfg->KERNEL_INTERRUPT = accept(socketEscucha, &cliente, &len);
+        cpuCfg->KERNEL_INTERRUPT = accept(conexion->socket, &(conexion->sockAddr), &(conexion->sockrAddrLen));
         if(cpuCfg->KERNEL_INTERRUPT > 0) {
             log_info(cpuLogger, "CPU: Acepto la conexión del socket: %d", cpuCfg->KERNEL_INTERRUPT);
             check_interrupt();
@@ -84,19 +80,22 @@ void aceptar_conexiones_cpu_interrupcion(int socketEscucha, struct sockaddr clie
 }
 
 void recibir_pcb_de_kernel(int socketKernelDispatch){
-    void* buffer;
-    log_info(cpuLogger, "CPU: Recibiendo PCB de Kernel");
-    t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
-    if (recibir_tamanio_mensaje(tamanio_mensaje, socketKernelDispatch)){
-        buffer = malloc(tamanio_mensaje->tamanio);
-        log_info(cpuLogger, "CPU: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
-        if (recv(socketKernelDispatch, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
-            t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
-            log_info(cpuLogger, "CPU: Recibi el PCB con ID: %i", pcb->id);
-            hacer_ciclo_de_instruccion(pcb, tamanio_mensaje, socketKernelDispatch);
-            free(pcb);
-        }
+    while(1){
+        void* buffer;
+        log_info(cpuLogger, "CPU: Esperando PCB de Kernel");
+        t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
+        if (recibir_tamanio_mensaje(tamanio_mensaje, socketKernelDispatch)){
+            buffer = malloc(tamanio_mensaje->tamanio);
+            log_info(cpuLogger, "CPU: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
+            if (recv(socketKernelDispatch, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
+                t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
+                log_info(cpuLogger, "CPU: Recibi el PCB con ID: %i", pcb->id);
+                hacer_ciclo_de_instruccion(pcb, tamanio_mensaje, socketKernelDispatch);
+                free(pcb);
+            }
+        }  
     }
+   
 }
 
 void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelDispatch){

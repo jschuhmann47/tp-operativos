@@ -32,6 +32,8 @@ int SOCKET_INTERRUPT;
 
 void iniciar_planificacion() {
 
+    conexion_de_dispatch();
+    conexion_de_interrupt();
 
     nextId = 1;
     /* Inicializacion de semaforos */
@@ -83,6 +85,7 @@ void* iniciar_corto_plazo(void* _) {
                 log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
                 interrupcion_a_cpu();
                 t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde
+                remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
                 calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
             }
 
@@ -91,6 +94,7 @@ void* iniciar_corto_plazo(void* _) {
 
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
+        remover_pcb_de_cola(pcbQuePasaAExec,pcbsReady);
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
         sem_post(&(pcbsExec->instanciasDisponibles));
@@ -99,33 +103,19 @@ void* iniciar_corto_plazo(void* _) {
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
 
-        sem_post(&(pcbsExec->instanciasDisponibles));
-
         t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
+        remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
 
         calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
     }
     pthread_exit(NULL);
 }
 
-void* getPcbDeCPU(void) { //deberia haber un hilo con esto corriendo
 
-    /*pthread_t th1;
-    pthread_create(&th1, NULL, conexion_de_interrupt, NULL);
-    pthread_detach(th1);*/
-
-    /*pthread_t th2;
-    pthread_create(&th2, NULL, conexion_de_dispatch, NULL);
-    pthread_detach(th2);*/
-
-    sem_wait(&(pcbsExec->instanciasDisponibles));
-    
-    t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
-}
 
 t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando que se la devuelva por el motivo que sea
+    
     sem_wait(&(pcbsExec->instanciasDisponibles));
-
     t_pcb* pcb;
     void* buffer;
     log_info(kernelLogger, "Kernel: Recibiendo PCB de CPU");
@@ -141,13 +131,13 @@ t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando
     }
     uint32_t tiempoABloquearsePorIO; 
     t_instruccion* ultimaInstruccion = list_get(pcb->instrucciones, (pcb->programCounter)-1);
+    
+    
     if(ultimaInstruccion->indicador == I_O){
         if(recv(SOCKET_DISPATCH,&tiempoABloquearsePorIO,sizeof(uint32_t),MSG_WAITALL)<0){
             log_error(kernelLogger, "Kernel: Error al recibir el mensaje de tiempo a bloquearse por IO");
         }
         log_info(kernelLogger, "Kernel: Recibi el tiempo a bloquearse por IO: %i", tiempoABloquearsePorIO);
-        /*agregar_pcb_a_cola(pcb, pcbsExec);
-        remover_pcb_de_cola(pcb, pcbsExec);*/
         cambiar_estado_pcb(pcb, BLOCKED);
         agregar_pcb_a_cola(pcb, pcbsBlocked);
         log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
@@ -155,6 +145,7 @@ t_pcb* traer_pcb_de_cpu(){ //una vez que manda una pcb a cpu, se queda esperando
         atender_procesos_bloqueados(tiempoABloquearsePorIO);
     }
     if(ultimaInstruccion->indicador == EXIT_I){
+        cambiar_estado_pcb(pcb, EXIT);
         agregar_pcb_a_cola(pcb, pcbsExit);
         sem_post(&(pcbsExit->instanciasDisponibles));
     }
@@ -179,7 +170,7 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
     log_info(kernelLogger, "Corto Plazo: Se manda el PCB %i a la CPU", pcb->id);
 
     void* pcbAMandar = serializar_pcb(pcb, &bytes);
-    conexion_de_dispatch(); //setea la variable SOCKET_DISPATCH de arriba de todo 
+    //conexion_de_dispatch(); //setea la variable SOCKET_DISPATCH de arriba de todo 
 
     t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
     tamanio_mensaje->tamanio = bytes;
@@ -194,16 +185,16 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
 }
 
 void interrupcion_a_cpu() {
-    conexion_de_interrupt(); // SETEA LA VARIABLE SOCKET_INTERRUPT DE ARRIBA
+    //conexion_de_interrupt(); // SETEA LA VARIABLE SOCKET_INTERRUPT DE ARRIBA
     log_info(kernelLogger, "Corto Plazo: Se interrumpe la CPU");
+    uint32_t mensaje = 1;
     
-    if(send(SOCKET_INTERRUPT, 1, sizeof(uint32_t), 0) == -1) {
+    if(send(SOCKET_INTERRUPT, &mensaje, sizeof(uint32_t), 0) == -1) {
         log_error(kernelLogger, "Error al interrumpir la CPU");
     }
     else{
        log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente"); 
     }
-    log_info(kernelLogger, "Corto Plazo: Se interrumpió la CPU correctamente");
 }
 
 void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
@@ -218,6 +209,7 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
         
     usleep(tiempoBloqueadoPorIo); //aca tiene que estar esta variable que te manda la cpu
     if(pcbABloquear->status==BLOCKED){ //chequea que no lo hayan suspendido
+        remover_pcb_de_cola(pcbABloquear, pcbsBlocked);
         cambiar_estado_pcb(pcbABloquear, READY);
         agregar_pcb_a_cola(pcbABloquear, pcbsReady);
         log_transition("Corto Plazo", "BLOCKED", "READY", pcbABloquear->id);
@@ -286,12 +278,7 @@ void* pasar_de_susready_a_ready(void* _) {
     pthread_exit(NULL);
 }
 
-void* blocked_a_ready(t_pcb* pcb) {
-    remover_pcb_de_cola(pcb, pcbsBlocked);
-    cambiar_estado_pcb(pcb, READY);
-    agregar_pcb_a_cola(pcb, pcbsReady);
-    sem_post(&(pcbsReady->instanciasDisponibles));
-}
+
 
 /*void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
     //se enviará un mensaje a Memoria con la información necesaria y se esperará la confirmación del mismo.
@@ -600,7 +587,7 @@ void calcular_nueva_estimacion_actual(t_pcb* pcb){
 void* conexion_de_interrupt() {
     log_info(kernelLogger, "Hilo interrupt inicializado");
 
-    int SOCKET_INTERRUPT = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_INTERRUPT);
+    SOCKET_INTERRUPT = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_INTERRUPT);
     log_info(kernelLogger, "Kernel: Conectando a CPU");
 
     if (SOCKET_INTERRUPT == -1)

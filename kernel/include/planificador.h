@@ -18,7 +18,6 @@ void iniciar_planificacion();
 
 // Planificador Corto Plazo
 void* iniciar_corto_plazo(void* _);
-void* getPcbDeCPU(void);
 void* conexion_de_interrupt();
 void* conexion_de_dispatch();
 void interrupcion_a_cpu();
@@ -32,7 +31,6 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo);
 // Planificador Mediano Plazo
 void* iniciar_mediano_plazo(void* _);
 void* pasar_de_susready_a_ready(void* _);
-void* blocked_a_ready(t_pcb* pcb);
 void* enviar_suspension_de_pcb_a_memoria(t_pcb* pcb);
 void* contar_tiempo_bloqueado(t_pcb* pcb);
 void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo);
