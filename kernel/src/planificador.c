@@ -94,7 +94,6 @@ void* iniciar_corto_plazo(void* _) {
         
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
-        remover_pcb_de_cola(pcbQuePasaAExec,pcbsReady);
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
         sem_post(&(pcbsExec->instanciasDisponibles));
@@ -105,10 +104,8 @@ void* iniciar_corto_plazo(void* _) {
 
         t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
         
-        remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
+        //remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
         
-
-        calcular_nueva_estimacion_actual(pcbQueMeDaCPU);
     }
     pthread_exit(NULL);
 }
@@ -133,6 +130,8 @@ t_pcb* traer_pcb_de_cpu(){
     }
     uint32_t tiempoABloquearsePorIO; 
     t_instruccion* ultimaInstruccion = list_get(pcb->instrucciones, (pcb->programCounter)-1);
+    code_instruccion instruccion = ultimaInstruccion->indicador;
+    log_info(kernelLogger, "Kernel: Instruccion: %i", instruccion);
     
     remover_pcb_de_cola(pcb, pcbsExec);
     calcular_nueva_estimacion_actual(pcb);
@@ -153,7 +152,7 @@ t_pcb* traer_pcb_de_cpu(){
         agregar_pcb_a_cola(pcb, pcbsExit);
         sem_post(&(pcbsExit->instanciasDisponibles));
     }
-    if(ultimaInstruccion->indicador == NO_OP || ultimaInstruccion->indicador == READ || ultimaInstruccion->indicador == WRITE || ultimaInstruccion->indicador == COPY){
+    if(!ultimaInstruccion->indicador == I_O && !ultimaInstruccion->indicador == EXIT_I){
         cambiar_estado_pcb(pcb, READY);
         agregar_pcb_a_cola(pcb, pcbsReady);
         log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
@@ -184,7 +183,6 @@ void mandar_pcb_a_cpu(t_pcb* pcb) {
         log_info(kernelLogger, "Corto Plazo: Se mando el PCB %i a la CPU correctamente", pcb->id);
     } //Enviamos el mensaje con el PCB entero y el tamaño.
 
-    
     free(pcbAMandar);
     free(tamanio_mensaje);
 }
@@ -214,14 +212,14 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
         
     usleep(tiempoBloqueadoPorIo); //aca tiene que estar esta variable que te manda la cpu
     if(pcbABloquear->status==BLOCKED){ //chequea que no lo hayan suspendido
-        remover_pcb_de_cola(pcbABloquear, pcbsBlocked);
+        //remover_pcb_de_cola(pcbABloquear, pcbsBlocked);
         cambiar_estado_pcb(pcbABloquear, READY);
         agregar_pcb_a_cola(pcbABloquear, pcbsReady);
         log_transition("Corto Plazo", "BLOCKED", "READY", pcbABloquear->id);
         sem_post(&(pcbsReady->instanciasDisponibles));
     }
     if(pcbABloquear->status == SUSBLOCKED){
-        remover_pcb_de_cola(pcbABloquear, pcbsBlocked);
+        //remover_pcb_de_cola(pcbABloquear, pcbsBlocked);
         cambiar_estado_pcb(pcbABloquear, SUSREADY);
         agregar_pcb_a_cola(pcbABloquear, pcbsSusReady);
         log_transition("Kernel:", "SUSBLOCKED", "SUSREADY", pcbABloquear->id);
@@ -271,6 +269,7 @@ void* pasar_de_susready_a_ready(void* _) {
     log_info(kernelLogger, "Mediano Plazo: Hilo pasar de SUSP/READY->READY inicializado");
     for(;;) {
         sem_wait(&(pcbsSusReady->instanciasDisponibles));
+        sem_wait(&gradoMultiprog);
         t_pcb* pcbQuePasaAReady = get_and_remove_primer_pcb_de_cola(pcbsSusReady);
         cambiar_estado_pcb(pcbQuePasaAReady, READY);
         agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
@@ -364,11 +363,12 @@ void* liberar_procesos_en_exit(void* _) {
 
         log_info(kernelLogger, "Largo Plazo: Se libera una instancia de Grado Multiprogramación");
         /* Aumenta el grado de multiprogramación al tener proceso en EXIT */
-        sem_post(&gradoMultiprog);
 
         log_transition("Corto Plazo", "EXEC", "EXIT", pcbALiberar->id);
         
         enviar_finalizacion_consola("Finish", kernelCfg->CONSOLA_SOCKET);
+
+        sem_post(&gradoMultiprog);
     }
     pthread_exit(NULL);
 }
@@ -396,8 +396,8 @@ void pcb_destroy(t_pcb *pcb) {
 }
 
 void destruir_instruccion(t_instruccion* instruccion) {
-    //free(instruccion->parametros...);
-    //TODO
+    list_destroy_and_destroy_elements(instruccion->parametros, free);
+    free(instruccion);
 }
 
 void cambiar_estado_pcb(t_pcb* pcb, t_status nuevoEstado) {

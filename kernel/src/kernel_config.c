@@ -101,8 +101,8 @@ t_list* convertir_instruccion(char* buffer)
             char *instruccionConPipe = string_substring(descript[i], 1, (string_length(descript[i]) - 2));
             char** pseudoInstruccion = string_split(instruccionConPipe, "|");
             char* instruccionSinPipe = pseudoInstruccion[0];
-            char* primerParametroSinPipe = pseudoInstruccion[1];
-            char* segundoParametroSinPipe = pseudoInstruccion[2];
+            char* primerParametroSinPipe;
+            char* segundoParametroSinPipe;
 
             code_instruccion cod_op = getCodeIntruccion(instruccionSinPipe);
             uint32_t* param1=malloc(sizeof(uint32_t));
@@ -118,12 +118,15 @@ t_list* convertir_instruccion(char* buffer)
                 case I_O:
                     free(param2);   
                     instruccion->indicador = I_O;
+                    primerParametroSinPipe = pseudoInstruccion[1];
                     *param1=atoi(primerParametroSinPipe);
                     list_add(instruccion->parametros, param1);
                     list_add(instrucciones, instruccion);
                     break;
                 case WRITE:
                     instruccion->indicador = WRITE;
+                    primerParametroSinPipe = pseudoInstruccion[1];
+                    segundoParametroSinPipe = pseudoInstruccion[2];
                     *param1=atoi(primerParametroSinPipe);
                     list_add(instruccion->parametros,&param1);
                     *param2=atoi(segundoParametroSinPipe);
@@ -132,15 +135,18 @@ t_list* convertir_instruccion(char* buffer)
                     break;
                 case COPY:
                     instruccion->indicador = COPY;
+                    primerParametroSinPipe = pseudoInstruccion[1];
+                    segundoParametroSinPipe = pseudoInstruccion[2];
                     *param1=atoi(primerParametroSinPipe);
                     list_add(instruccion->parametros,&param1);
                     *param2=atoi(segundoParametroSinPipe);
                     list_add(instruccion->parametros, param2);
-                    list_add(instrucciones, instruccion);;
+                    list_add(instrucciones, instruccion);
                     break;
                 case READ:
                     free(param2);
                     instruccion->indicador = READ;
+                    primerParametroSinPipe = pseudoInstruccion[1];
                     *param1=atoi(primerParametroSinPipe);
                     list_add(instruccion->parametros, param1);
                     list_add(instrucciones, instruccion);
