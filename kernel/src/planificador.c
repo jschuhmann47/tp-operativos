@@ -12,6 +12,7 @@ sem_t suspensionConcluida;
 pthread_mutex_t mutexId;
 sem_t pcbsEnExit;
 pthread_mutex_t suspensionDePCB;
+pthread_mutex_t colaDeIO;
 
 //ID para el PCB
 static uint32_t nextId;
@@ -204,12 +205,13 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
     log_info(kernelLogger, "Corto Plazo: Se atienden procesos bloqueados inicializado");
     
     sem_wait(&(pcbsBlocked->instanciasDisponibles));
+    pthread_mutex_lock(&colaDeIO);
     t_pcb* pcbABloquear = get_and_remove_primer_pcb_de_cola(pcbsBlocked); //algun tipo de semaforo porque esta corriendo el hilo de contar_tiempo_bloqueado a la vez?
     log_info(kernelLogger, "Corto Plazo: Se bloquea el proceso %d", pcbABloquear->id);
     pthread_t contarTiempo;
     pthread_create(&contarTiempo,NULL,contar_tiempo_bloqueado,pcbABloquear);
     pthread_detach(contarTiempo);
-        
+    
     usleep(tiempoBloqueadoPorIo);
     pthread_mutex_lock(&suspensionDePCB);
     if(pcbABloquear->status==BLOCKED){ //chequea que no lo hayan suspendido
@@ -227,6 +229,7 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
         sem_post(&(pcbsSusReady->instanciasDisponibles));
     }
     pthread_mutex_unlock(&suspensionDePCB);
+    pthread_mutex_unlock(&colaDeIO);
 }
 
 
