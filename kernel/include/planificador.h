@@ -46,7 +46,7 @@ void destruir_instruccion(t_instruccion* instruccion);
 void cambiar_estado_pcb(t_pcb* pcb, t_status nuevoEstado);
 int get_grado_multiprog_actual(void);
 void log_transition(const char* entityName, const char* prev, const char* post, int pid);
-void agregar_pcb_en_cola_new();
+void agregar_pcb_en_cola_new(int socket);
 uint32_t get_siguiente_id();
 
 // Manejo de colas

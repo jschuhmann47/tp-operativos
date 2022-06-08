@@ -11,6 +11,7 @@ sem_t transicionarSusReadyAready;
 sem_t suspensionConcluida;
 pthread_mutex_t mutexId;
 sem_t pcbsEnExit;
+pthread_mutex_t suspensionDePCB;
 
 //ID para el PCB
 static uint32_t nextId;
@@ -57,7 +58,6 @@ void iniciar_planificacion() {
     pcbsExec = cola_planificacion_create(0);
     pcbsBlocked = cola_planificacion_create(0);
     pcbsSusReady = cola_planificacion_create(0);
-    //pcbsSusBlocked = cola_planificacion_create(0); //esta la volamos
     pcbsExit = cola_planificacion_create(0);
     pthread_mutex_init(&mutexId, NULL);
 
@@ -88,7 +88,7 @@ void* iniciar_corto_plazo(void* _) {
             if(list_size(pcbsExec->lista) > 0){
                 log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
                 interrupcion_a_cpu();
-                t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde, la saca de la cola de exec y calcula nueva rafaga
+                traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde, la saca de la cola de exec y calcula nueva rafaga
             }
         }
         
@@ -102,9 +102,9 @@ void* iniciar_corto_plazo(void* _) {
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
 
-        t_pcb* pcbQueMeDaCPU = traer_pcb_de_cpu();
+        traer_pcb_de_cpu();
         
-        //remover_pcb_de_cola(pcbQueMeDaCPU, pcbsExec);
+    
         
     }
     pthread_exit(NULL);
@@ -152,7 +152,7 @@ t_pcb* traer_pcb_de_cpu(){
         agregar_pcb_a_cola(pcb, pcbsExit);
         sem_post(&(pcbsExit->instanciasDisponibles));
     }
-    if(!ultimaInstruccion->indicador == I_O && !ultimaInstruccion->indicador == EXIT_I){
+    if(ultimaInstruccion->indicador != I_O && ultimaInstruccion->indicador != EXIT_I){
         cambiar_estado_pcb(pcb, READY);
         agregar_pcb_a_cola(pcb, pcbsReady);
         log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
@@ -210,7 +210,8 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
     pthread_create(&contarTiempo,NULL,contar_tiempo_bloqueado,pcbABloquear);
     pthread_detach(contarTiempo);
         
-    usleep(tiempoBloqueadoPorIo); //aca tiene que estar esta variable que te manda la cpu
+    usleep(tiempoBloqueadoPorIo);
+    pthread_mutex_lock(&suspensionDePCB);
     if(pcbABloquear->status==BLOCKED){ //chequea que no lo hayan suspendido
         //remover_pcb_de_cola(pcbABloquear, pcbsBlocked);
         cambiar_estado_pcb(pcbABloquear, READY);
@@ -225,6 +226,7 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
         log_transition("Kernel:", "SUSBLOCKED", "SUSREADY", pcbABloquear->id);
         sem_post(&(pcbsSusReady->instanciasDisponibles));
     }
+    pthread_mutex_unlock(&suspensionDePCB);
 }
 
 
@@ -254,6 +256,7 @@ void* iniciar_mediano_plazo(void* _) { //esto no hace nada
 
 void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a suspender siempre
     usleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO);
+    pthread_mutex_lock(&suspensionDePCB);
     if(pcb->status==BLOCKED){
         //enviar_suspension_de_pcb_a_memoria(pcb);
         cambiar_estado_pcb(pcb, SUSBLOCKED);
@@ -262,6 +265,7 @@ void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a
         /* Aumenta el grado de multiprogramción al suspender a un proceso */  
         sem_post(&gradoMultiprog); 
     }
+    pthread_mutex_unlock(&suspensionDePCB);
     pthread_exit(NULL);
 }
 
@@ -294,8 +298,8 @@ void enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) { //no esta testeada
     enviar_tamanio_mensaje(mensaje, memoria_fd);
     
     if(send(memoria_fd, mensaje, sizeof(t_pcb), 0) == -1) {
-        log_error(kernelCfg, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", memoria_fd);
-        return -1;
+        log_error(kernelLogger, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", memoria_fd);
+        //return -1;
     }
     log_info(kernelLogger,"Kernel: Enviada PCB a Memoria");
     sem_post(&suspensionConcluida); //creo que este va un poco despues
@@ -359,12 +363,13 @@ void* liberar_procesos_en_exit(void* _) {
         
         //TODO: Avisarle a Consola que finalizo su proceso. obtener el socket de esa consola en particular
         log_info(kernelLogger, "Kernel: Desconexión Proceso con ID %d", pcbALiberar->id);
-        pcb_destroy(pcbALiberar);
+        log_transition("Corto Plazo", "EXEC", "EXIT", pcbALiberar->id);
+        
 
         log_info(kernelLogger, "Largo Plazo: Se libera una instancia de Grado Multiprogramación");
         /* Aumenta el grado de multiprogramación al tener proceso en EXIT */
 
-        log_transition("Corto Plazo", "EXEC", "EXIT", pcbALiberar->id);
+        pcb_destroy(pcbALiberar);
         
         enviar_finalizacion_consola("Finish", kernelCfg->CONSOLA_SOCKET);
 
@@ -390,13 +395,12 @@ t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel
 void pcb_destroy(t_pcb *pcb) {
     // Realiza los free correspondientes
     //las variables no se si hacen falta free, las instrucciones seguro
-
     list_destroy_and_destroy_elements(pcb->instrucciones, (void*)destruir_instruccion);
     free(pcb);
 }
 
 void destruir_instruccion(t_instruccion* instruccion) {
-    list_destroy_and_destroy_elements(instruccion->parametros, free);
+    list_destroy_and_destroy_elements(instruccion->parametros, (void*)free);
     free(instruccion);
 }
 
@@ -417,7 +421,7 @@ void log_transition(const char* entityName, const char* prev, const char* post, 
 }
 
 
-void agregar_pcb_en_cola_new()
+void agregar_pcb_en_cola_new(int socket)
 {
     char* mensaje;
     t_list* instrucciones;
@@ -426,22 +430,20 @@ void agregar_pcb_en_cola_new()
     sem_t recibirInstruccion;
     sem_init(&recibirInstruccion, 0, 0);
     while (1) {
-        op_code cod_op = recibir_operacion(kernelCfg->CONSOLA_SOCKET);
+        op_code cod_op = recibir_operacion(socket);
         switch (cod_op) {
             case MENSAJE:
-                mensaje = recibir_mensaje(kernelCfg->CONSOLA_SOCKET);
+                mensaje = recibir_mensaje(socket);
                 tamanio = atoi(mensaje);
                 log_info(kernelLogger, "Me llego el mensaje %i", tamanio);
                 continue;
             case INSTRUCCION:
-                instrucciones = recibir_instrucciones(kernelCfg->CONSOLA_SOCKET);
+                instrucciones = recibir_instrucciones(socket);
                 sem_post(&recibirInstruccion);
                 break;
-            case -1:
+            default:
                 sem_wait(&pcbsEnExit);
 			    log_error(kernelLogger, "Se desconecto la Consola");
-			    return EXIT_FAILURE;
-            default:
                 break;
         }
 
@@ -562,6 +564,12 @@ t_pcb* srt_pcb_menor_estimacion_entre(t_pcb* unPcb, t_pcb* otroPcb) {
 t_pcb* elegir_en_base_a_srt(t_cola_planificacion* colaPlanificacion) {
     pthread_mutex_lock(&(colaPlanificacion->mutex));
     t_pcb* pcbMenorEstimacion = (t_pcb*) list_get_minimum(colaPlanificacion->lista, (void*) srt_pcb_menor_estimacion_entre);
+    int posicion = pcb_get_posicion(pcbMenorEstimacion, colaPlanificacion->lista);
+    if(posicion != -1) {
+        list_remove(colaPlanificacion->lista, posicion);
+    } else {
+        log_error(kernelLogger, "Kernel: No existe tal elemento en la cola");
+    }
     pthread_mutex_unlock(&(colaPlanificacion->mutex));
     return pcbMenorEstimacion;
 }
@@ -589,8 +597,8 @@ void* conexion_de_interrupt() {
 
     if (SOCKET_INTERRUPT == -1)
     {
-        log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
-        return -1;
+        log_error(kernelCfg, "Kernel: No se pudo establecer conexión con CPU. Valor conexión %d", SOCKET_INTERRUPT);
+        //return -1;
     }
     
 
@@ -607,8 +615,8 @@ void* conexion_de_dispatch() {
 
     if (SOCKET_DISPATCH == -1)
     {
-        log_error(kernelCfg, "Consola: No se pudo establecer conexión con CPU. Valor conexión %d", kernelCfg);
-        return -1;
+        log_error(kernelCfg, "Kernel: No se pudo establecer conexión con CPU. Valor conexión %d", SOCKET_DISPATCH);
+        //return -1;
     }
     // CASO 1: Envio de PCB a CPU
     // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt

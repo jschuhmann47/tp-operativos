@@ -5,7 +5,7 @@ int main(int argc, char* argv[]) {
     kernelLogger = log_create(KERNEL_LOG_DEST, KERNEL_MODULE_NAME, true, LOG_LEVEL_INFO);
     cargar_configuracion(KERNEL_MODULE_NAME, kernelCfg, KERNEL_CFG_PATH, kernelLogger, kernel_config_initialize);
 
-    int socketEscucha = iniciar_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_ESCUCHA);
+    int socketEscucha = iniciar_servidor(kernelCfg->IP_KERNEL, kernelCfg->PUERTO_ESCUCHA);
     
     //log_info(kernelLogger, "Kernel: Modo de ejecución %s", EXEC_MODE);
     struct sockaddr cliente;

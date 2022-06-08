@@ -5,10 +5,7 @@ pthread_mutex_t mutex_cpu;
 
 void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKernelDispatch){
     log_info(cpuLogger, "CPU: Ejecutando instruccion");
-    bool salirPorExit = false;
-    bool salirPorIO = false;
-    bool salirPorInterrupcion = false;
-
+   
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
@@ -25,7 +22,7 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
         }
         
         pcb->programCounter++;
-        salirPorInterrupcion = cpu_check_interrupcion();
+        bool salirPorInterrupcion = cpu_check_interrupcion();
 
         if(instruccionAEjecutar->indicador == EXIT_I){
             log_info(cpuLogger, "CPU: Desalojo por instruccion EXIT");

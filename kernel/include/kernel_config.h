@@ -22,6 +22,7 @@ typedef struct {
     char* IP_MEMORIA;
     char* PUERTO_MEMORIA;
     char* IP_CPU;
+    char* IP_KERNEL;
     char* PUERTO_CPU_DISPATCH;
     char* PUERTO_CPU_INTERRUPT;
     char* PUERTO_ESCUCHA;

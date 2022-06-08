@@ -6,6 +6,7 @@ t_kernel_config* kernel_cfg_create(void) {
     newKernelCfg->IP_MEMORIA = NULL;
     newKernelCfg->PUERTO_MEMORIA = NULL;
     newKernelCfg->IP_CPU = NULL;
+    newKernelCfg->IP_KERNEL = NULL;
     newKernelCfg->PUERTO_CPU_DISPATCH = NULL;
     newKernelCfg->PUERTO_CPU_INTERRUPT = NULL;
     newKernelCfg->PUERTO_ESCUCHA = NULL;
@@ -22,6 +23,7 @@ void kernel_config_initialize(void* kernelCfg, t_config* config) {
     cfg->IP_MEMORIA = strdup(config_get_string_value(config, "IP_MEMORIA"));
     cfg->PUERTO_MEMORIA = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
     cfg->IP_CPU = strdup(config_get_string_value(config, "IP_CPU"));
+    cfg->IP_KERNEL = strdup(config_get_string_value(config, "IP_KERNEL"));
     cfg->PUERTO_CPU_DISPATCH = strdup(config_get_string_value(config, "PUERTO_CPU_DISPATCH"));
     cfg->PUERTO_CPU_INTERRUPT = strdup(config_get_string_value(config, "PUERTO_CPU_INTERRUPT"));
     cfg->PUERTO_ESCUCHA = strdup(config_get_string_value(config, "PUERTO_ESCUCHA"));
@@ -38,6 +40,7 @@ void liberar_modulo_kernel(t_log* kernelLogger, t_kernel_config* kernelCfg) {
     free(kernelCfg->IP_MEMORIA);
     free(kernelCfg->PUERTO_MEMORIA);
     free(kernelCfg->IP_CPU);
+    free(kernelCfg->IP_KERNEL);
     free(kernelCfg->PUERTO_CPU_DISPATCH);
     free(kernelCfg->PUERTO_CPU_INTERRUPT);
     free(kernelCfg->PUERTO_ESCUCHA);
