@@ -1,25 +1,30 @@
 #include "cpu.h" //"../include/cpu.h"
 
-
+int SOCKET_MEMORIA;
 
 int main(int argc, char* argv[]) {
     cpuCfg = cpu_cfg_create();
     cpuLogger = log_create(CPU_LOG_DEST, CPU_MODULE_NAME, true, LOG_LEVEL_INFO);
     cargar_configuracion(CPU_MODULE_NAME, cpuCfg, CPU_CFG_PATH, cpuLogger, cpu_config_initialize);
 
-    log_info(cpuLogger, "Valor de PUERTO_ESCUCHA_DISPATCH %s", cpuCfg->PUERTO_ESCUCHA_DISPATCH);
-    log_info(cpuLogger, "Valor de PUERTO_ESCUCHA_INTERRUPT %s", cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
+    int socketEscuchaDispatch = iniciar_servidor(cpuCfg->IP_CPU, cpuCfg->PUERTO_ESCUCHA_DISPATCH);
 
-
-    int socketEscuchaDispatch = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_DISPATCH);
-
-    int socketEscuchaInterrupt = iniciar_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
+    int socketEscuchaInterrupt = iniciar_servidor(cpuCfg->IP_CPU, cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
     
+    SOCKET_MEMORIA = conectar_a_servidor(cpuCfg->IP_MEMORIA, cpuCfg->PUERTO_MEMORIA);
+    log_info(cpuLogger, "CPU: Conectando a Memoria");
+
+    if (SOCKET_MEMORIA == -1)
+    {
+        log_error(cpuCfg, "CPU: No se pudo establecer conexión con Memoria. Valor conexión %d", SOCKET_MEMORIA);
+        return -1;
+    }
+
     struct sockaddr clienteDispatch;
     socklen_t lenCliD = sizeof(clienteDispatch);
 
-    struct conexion_cpu* conexionDispatch = malloc(sizeof(conexion_cpu));
-    struct conexion_cpu* conexionInterrupt= malloc(sizeof(conexion_cpu));
+    conexion* conexionDispatch = malloc(sizeof(conexion));
+    conexion* conexionInterrupt= malloc(sizeof(conexion));
 
     conexionDispatch->socket=socketEscuchaDispatch;
     conexionDispatch->sockAddr=clienteDispatch;
@@ -43,7 +48,7 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-void aceptar_conexiones_cpu(struct conexion_cpu* conexion) {
+void aceptar_conexiones_cpu(conexion* conexion) {
     log_info(cpuLogger, "CPU: A la escucha de nuevas conexiones en puerto %d", conexion->socket);
     for(;;) {
         cpuCfg->KERNEL_SOCKET = accept(conexion->socket, &(conexion->sockAddr), &(conexion->sockrAddrLen));
@@ -57,7 +62,7 @@ void aceptar_conexiones_cpu(struct conexion_cpu* conexion) {
 }
 
 
-void aceptar_conexiones_cpu_interrupcion(struct conexion_cpu* conexion) {
+void aceptar_conexiones_cpu_interrupcion(conexion* conexion) {
     log_info(cpuLogger, "CPU: A la escucha de nuevas conexiones en puerto %d", conexion->socket);
     for(;;) {
         cpuCfg->KERNEL_INTERRUPT = accept(conexion->socket, &(conexion->sockAddr), &(conexion->sockrAddrLen));
@@ -81,7 +86,7 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
             if (recv(socketKernelDispatch, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
                 t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
                 log_info(cpuLogger, "CPU: Recibi el PCB con ID: %i", pcb->id);
-                hacer_ciclo_de_instruccion(pcb, tamanio_mensaje, socketKernelDispatch);
+                hacer_ciclo_de_instruccion(pcb, tamanio_mensaje, socketKernelDispatch, SOCKET_MEMORIA);
                 free(pcb);
             }
         }  

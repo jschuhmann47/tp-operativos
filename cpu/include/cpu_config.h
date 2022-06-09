@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "structs.h"
 
 #include <commons/config.h>
 #include <commons/log.h>
@@ -17,6 +18,7 @@ typedef struct {
     char* REEMPLAZO_TLB;
     uint32_t RETARDO_NOOP;
     char* IP_MEMORIA;
+    char* IP_CPU;
     char* PUERTO_MEMORIA;
     char* PUERTO_ESCUCHA_DISPATCH;
     char* PUERTO_ESCUCHA_INTERRUPT;

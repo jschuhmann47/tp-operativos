@@ -3,7 +3,7 @@
 pthread_mutex_t mutex_cpu;
 
 
-void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKernelDispatch){
+void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKernelDispatch, int socket_memoria){
     log_info(cpuLogger, "CPU: Ejecutando instruccion");
    
     struct timespec start, end;
@@ -18,7 +18,7 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
             cpu_execute_con_operando(instruccionAEjecutar,operando);
 
         }else{
-            cpu_execute(instruccionAEjecutar,pcb);
+            cpu_execute(instruccionAEjecutar,pcb,socket_memoria);
         }
         
         pcb->programCounter++;
@@ -67,7 +67,7 @@ bool cpu_decode(t_instruccion* instruccion){
     return false;
 }
 
-void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
+void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     code_instruccion codOp = instruccion->indicador;
     switch (codOp)
     {
@@ -80,16 +80,27 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb /*int operando*/){
         log_info(cpuLogger, "CPU: Ejecute I/O");
         break;
     case WRITE:
-        /* code */
+        ;
+        uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
+        uint32_t* valor = list_get(instruccion->parametros, 1);
+        log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
+        log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
+        if(send(socket_memoria, direccionLogicaW, sizeof(uint32_t), 0)){
+            log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
+        }
         break;
     case READ:
-        /* code */
+        ;
+        uint32_t* direccionLogicaR = list_get(instruccion->parametros, 0);
+        log_info(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
+        if(send(socket_memoria, direccionLogicaR, sizeof(uint32_t), 0)){
+            log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
+        }
         break;
     case EXIT_I:
         pcb->status=EXIT;
         log_info(cpuLogger, "CPU: Ejecute EXIT");
         break;
-
     default:
         break;
     }
@@ -104,6 +115,10 @@ void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando){
 uint32_t cpu_fetch_operands(t_instruccion* instruccion){
     void* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
     //TODO, buscarlo en la memoria
+    uint32_t* direccionLogicaC = list_get(instruccion->parametros, 0);
+    uint32_t* valor = list_get(instruccion->parametros, 1);
+    log_info(cpuLogger, "CPU: Ejecute COPY: %i ", *direccionLogicaC);
+    log_info(cpuLogger, "CPU: Ejecute COPY: %i ", *valor);
     return 1;
 }
 

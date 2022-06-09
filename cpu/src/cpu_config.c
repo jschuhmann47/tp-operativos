@@ -7,6 +7,7 @@ t_cpu_config* cpu_cfg_create(void) {
     newcpuCfg->REEMPLAZO_TLB = NULL;
     newcpuCfg->RETARDO_NOOP = 0;
     newcpuCfg->IP_MEMORIA = NULL;
+    newcpuCfg->IP_CPU = NULL;
     newcpuCfg->PUERTO_MEMORIA = NULL;
     newcpuCfg->PUERTO_ESCUCHA_DISPATCH = NULL;
     newcpuCfg->PUERTO_ESCUCHA_INTERRUPT = NULL;
@@ -19,6 +20,7 @@ void cpu_config_initialize(void* cpuCfg, t_config* config) {
     cfg->REEMPLAZO_TLB = strdup(config_get_string_value(config, "REEMPLAZO_TLB"));
     cfg->RETARDO_NOOP = config_get_int_value(config, "RETARDO_NOOP");
     cfg->IP_MEMORIA = strdup(config_get_string_value(config, "IP_MEMORIA"));
+    cfg->IP_CPU = strdup(config_get_string_value(config, "IP_CPU"));
     cfg->PUERTO_MEMORIA = strdup(config_get_string_value(config, "PUERTO_MEMORIA"));
     cfg->PUERTO_ESCUCHA_DISPATCH = strdup(config_get_string_value(config, "PUERTO_ESCUCHA_DISPATCH"));
     cfg->PUERTO_ESCUCHA_INTERRUPT = strdup(config_get_string_value(config, "PUERTO_ESCUCHA_INTERRUPT"));
@@ -29,6 +31,7 @@ void liberar_modulo_cpu(t_log* cpuLogger, t_cpu_config* cpuCfg) {
     close(cpuCfg->KERNEL_SOCKET);
     free(cpuCfg->REEMPLAZO_TLB);
     free(cpuCfg->IP_MEMORIA);
+    free(cpuCfg->IP_CPU);
     free(cpuCfg->PUERTO_MEMORIA);
     free(cpuCfg->PUERTO_ESCUCHA_DISPATCH);
     free(cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
