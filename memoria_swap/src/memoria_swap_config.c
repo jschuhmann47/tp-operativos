@@ -3,7 +3,7 @@
 t_memoria_swap_config *memoria_swap_cfg_create(void)
 {
     t_memoria_swap_config *newmemoria_swapCfg = malloc(sizeof(t_memoria_swap_config));
-    newmemoria_swapCfg->PUERTO_ESCUCHA = DISCONNECTED;
+    newmemoria_swapCfg->PUERTO_ESCUCHA = 0;
     newmemoria_swapCfg->IP_ESCUCHA = NULL;
     newmemoria_swapCfg->TAM_MEMORIA = 0;
     newmemoria_swapCfg->TAM_PAGINA = 0;
@@ -21,7 +21,6 @@ void memoria_swap_config_initialize(void *memoria_swapCfg, t_config *config)
 {
 
     t_memoria_swap_config *cfg = (t_memoria_swap_config *)memoria_swapCfg;
-    int valor = config_get_int_value(config, "PUERTO_ESCUCHA");
     cfg->PUERTO_ESCUCHA = config_get_int_value(config, "PUERTO_ESCUCHA");
     cfg->IP_ESCUCHA = config_get_string_value(config, "IP_ESCUCHA");
     cfg->TAM_MEMORIA = config_get_int_value(config, "TAM_MEMORIA");
@@ -47,12 +46,12 @@ void liberar_modulo_memoria_swap(t_log *memoria_swapLogger, t_memoria_swap_confi
 
 int aceptarClienteMemoria(int fd_socket)
 {
-    struct sockaddr_in unCliente;
+    struct sockaddr_in *unCliente;
     memset(&unCliente, 0, sizeof(unCliente));
     unsigned int addres_size = sizeof(unCliente);
 
     int fd_Cliente = accept(fd_socket, (struct sockaddr *)&unCliente, &addres_size);
-    if (fd_Cliente == ERROR)
+    if (fd_Cliente == -1)
     {
         log_error(memoria_swapLogger, "El servidor no pudo aceptar la conexión entrante \n");
     }
