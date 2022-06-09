@@ -3,8 +3,10 @@
 t_memoria_swap_config *memoria_swap_cfg_create(void)
 {
     t_memoria_swap_config *newmemoria_swapCfg = malloc(sizeof(t_memoria_swap_config));
-    newmemoria_swapCfg->PUERTO_ESCUCHA = 0;
-    newmemoria_swapCfg->IP_ESCUCHA = NULL;
+    newmemoria_swapCfg->CPU_SOCKET = 0;
+    newmemoria_swapCfg->KERNEL_SOCKET = 0;
+    newmemoria_swapCfg->PUERTO_ESCUCHA = NULL;
+    newmemoria_swapCfg->IP_MEMORIA = NULL;
     newmemoria_swapCfg->TAM_MEMORIA = 0;
     newmemoria_swapCfg->TAM_PAGINA = 0;
     newmemoria_swapCfg->PAGINAS_POR_TABLA = 0;
@@ -21,8 +23,8 @@ void memoria_swap_config_initialize(void *memoria_swapCfg, t_config *config)
 {
 
     t_memoria_swap_config *cfg = (t_memoria_swap_config *)memoria_swapCfg;
-    cfg->PUERTO_ESCUCHA = config_get_int_value(config, "PUERTO_ESCUCHA");
-    cfg->IP_ESCUCHA = config_get_string_value(config, "IP_ESCUCHA");
+    cfg->PUERTO_ESCUCHA = strdup(config_get_string_value(config, "PUERTO_ESCUCHA"));
+    cfg->IP_MEMORIA = strdup(config_get_string_value(config, "IP_MEMORIA"));
     cfg->TAM_MEMORIA = config_get_int_value(config, "TAM_MEMORIA");
     cfg->TAM_PAGINA = config_get_int_value(config, "TAM_PAGINA");
     cfg->PAGINAS_POR_TABLA = config_get_int_value(config, "PAGINAS_POR_TABLA");
@@ -36,6 +38,8 @@ void memoria_swap_config_initialize(void *memoria_swapCfg, t_config *config)
 void liberar_modulo_memoria_swap(t_log *memoria_swapLogger, t_memoria_swap_config *memoria_swapCfg)
 {
     log_destroy(memoria_swapLogger);
+    close(memoria_swapCfg->CPU_SOCKET);
+    close(memoria_swapCfg->KERNEL_SOCKET);
     free(memoria_swapCfg->ALGORITMO_REEMPLAZO);
     free(memoria_swapCfg->PATH_SWAP);
     free(memoria_swapCfg);

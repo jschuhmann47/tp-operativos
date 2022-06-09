@@ -12,7 +12,7 @@ void generar_archivo(uint32_t pid, char *contenido)
     string_append(&path, memoria_swapCfg->PATH_SWAP);
     string_append(&path, string_itoa(pid));
     string_append(&path, ".swap");
-    FILE *archivo = fopen(memoria_swapCfg->PATH_SWAP, "a+"); //a+: append y read
+    FILE *archivo = fopen(path, "a+"); //a+: append y read
     
     //escribir lo que haya que escribir
     

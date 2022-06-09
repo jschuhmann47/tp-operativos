@@ -15,4 +15,8 @@ t_log* memoria_swapLogger;
 t_memoria_swap_config* memoria_swapCfg;
 void* MEMORIA_PRINCIPAL;
 
+void* crear_espacio_de_memoria();
+void aceptar_conexiones_memoria(conexion* conexion);
+void recibir_instrucciones_cpu(int socket_memoria);
+
 #endif

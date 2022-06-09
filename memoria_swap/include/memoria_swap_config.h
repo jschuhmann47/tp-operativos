@@ -9,12 +9,13 @@
 #include <commons/config.h>
 #include <commons/log.h>
 #include <commons/string.h>
-#include "./sockets.h"
 
 typedef struct
-{
-    int PUERTO_ESCUCHA;
-    char* IP_ESCUCHA;
+{   
+    uint32_t KERNEL_SOCKET;
+    uint32_t CPU_SOCKET;
+    char* IP_MEMORIA;
+    char* PUERTO_ESCUCHA;
     uint32_t TAM_MEMORIA;
     uint32_t TAM_PAGINA;
     uint32_t PAGINAS_POR_TABLA;

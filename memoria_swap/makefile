@@ -81,7 +81,7 @@ help:
 
 # Build project
 $(BINARY): $(DIRECTORIES) $(OBJECTS)
-	@$(CC) $(INCLUDES) $(CFLAGS) ./include/sockets.h -o "$@" $(OBJECTS) $(LINKS)
+	@$(CC) $(INCLUDES) $(CFLAGS) -o "$@" $(OBJECTS) $(LINKS)
 
 # Create directories for objects
 $(DIRECTORIES):
