@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdint.h>
+#include <string.h>
+#include "conexiones.h"
 
 #include <commons/collections/list.h>
 
@@ -72,5 +74,13 @@ typedef struct{
 	uint32_t size;
 	void* stream;
 } t_buffer;
+
+typedef struct
+{
+    int socket;
+    struct sockaddr sockAddr;
+    socklen_t sockrAddrLen;
+} conexion;
+
 #endif
 

@@ -121,6 +121,17 @@ int sizeArray(void **array)
     return cantidad;
 }
 
+uint32_t string_to_uint(char* string){
+    uint32_t result = 0;
+    int len = strlen(string);
+
+    for(int i=0; i<len; i++){
+        result = result * 10 + ( string[i] - '0' );
+    }
+
+    return result;
+}
+
 
 uint32_t enviar_tamanio_mensaje(t_mensaje_tamanio *msjeTamanio, int socket) 
 {
@@ -369,10 +380,10 @@ int tamanioInstruccion(code_instruccion codOp){
 			return sizeof(uint32_t)+sizeof(code_instruccion);
 			break;
 		case WRITE:
-			return sizeof(uint32_t)*2+sizeof(code_instruccion);
+			return (sizeof(uint32_t)*2)+sizeof(code_instruccion);
 			break;
 		case COPY:
-			return sizeof(uint32_t)*2+sizeof(code_instruccion);
+			return (sizeof(uint32_t)*2)+sizeof(code_instruccion);
 			break;
         case READ:
 			return sizeof(uint32_t)+sizeof(code_instruccion);
