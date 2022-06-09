@@ -1,3 +1,5 @@
+/*
+
 #include "sockets.h" //Header de sockets
   
 int crearSocket(){
@@ -13,10 +15,10 @@ int crearSocket(){
 
 
 //Funciones del SERVIDOR 
-/* Creamos un Socket Servidor de escucha.
- * Retorna ERROR si el puerto ya estaba en uso, si el bind no funcionó
- *  o si el Listen no funcionó.
- */
+/ Creamos un Socket Servidor de escucha.
+ Retorna ERROR si el puerto ya estaba en uso, si el bind no funcionó
+   o si el Listen no funcionó.
+ /
 int crearSocketServidor(int puerto, t_log* logger)	{
     struct sockaddr_in miDireccionServidor;
     int socketDeEscucha = crearSocket(logger);
@@ -55,7 +57,7 @@ int crearSocketServidor(int puerto, t_log* logger)	{
 void escucharSocketsEn(int fd_socket ,t_log* logger){
 
 	int valorListen;
-	valorListen = listen(fd_socket, SOMAXCONN);/*Le podríamos poner al listen SOMAXCONN como segundo parámetro, y significaría el máximo tamaño de la cola*/
+	valorListen = listen(fd_socket, SOMAXCONN);/Le podríamos poner al listen SOMAXCONN como segundo parámetro, y significaría el máximo tamaño de la cola/
 	if(valorListen == ERROR) {
 		puts("El servidor no pudo recibir escuchar conexiones de clientes.\n");
 	} else	{
@@ -76,11 +78,11 @@ int crearSocketEscucha (int puerto, t_log* logger) {
 }
 
 
-/**
+/*
  ***Crea socket para conexion con servidor y se conecta***
  *  pasados por parametro.
  * Retorna ERROR si no se pudo conectar con el servidor.
- **/
+ /
 int crearSocketCliente(char *ipServidor, int puerto, t_log* logger) {
 
     int cliente;
@@ -103,3 +105,6 @@ int crearSocketCliente(char *ipServidor, int puerto, t_log* logger) {
         return cliente;
     }
 }
+
+
+*/

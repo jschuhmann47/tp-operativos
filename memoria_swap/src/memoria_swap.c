@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
     //iniciar_servidor
 
-    int socket_servidor = crearSocketEscucha(memoria_swapCfg->PUERTO_ESCUCHA, memoria_swapLogger);
+    int socket_servidor = iniciar_servidor(memoria_swapCfg->IP_ESCUCHA, memoria_swapCfg->PUERTO_ESCUCHA);
     if (socket_servidor > 0)
     {
         int cliente = 0;
@@ -33,4 +33,20 @@ int main(int argc, char *argv[])
     liberar_modulo_memoria_swap(memoria_swapLogger, memoria_swapCfg);
 
     return EXIT_SUCCESS;
+}
+
+
+
+void* crear_espacio_de_memoria(){
+    return malloc(memoria_swapCfg->TAM_MEMORIA);
+}
+
+void escribir_en_memoria(void* memoria, void* contenido, int offset, int size){ //esta funcion no valida si se pueda escribir
+    memcpy(memoria + offset, contenido, size);
+}
+
+void* leer_de_memoria(void* memoria, int offset, int size){ //no valida nada
+    void* contenido = malloc(size);
+    memcpy(contenido, memoria + offset, size);
+    return contenido;
 }

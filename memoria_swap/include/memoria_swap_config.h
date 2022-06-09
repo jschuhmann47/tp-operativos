@@ -14,6 +14,7 @@
 typedef struct
 {
     int PUERTO_ESCUCHA;
+    char* IP_ESCUCHA;
     uint32_t TAM_MEMORIA;
     uint32_t TAM_PAGINA;
     uint32_t PAGINAS_POR_TABLA;

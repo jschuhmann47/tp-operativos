@@ -5,8 +5,7 @@
 
 #include "memoria_swap_config.h"
 #include "common_utils.h"
-#include "./sockets.h"
-#include "./utils.h"
+
 
 #define MEMORIA_SWAP_CFG_PATH "cfg/memoria_swap.cfg"
 #define MEMORIA_SWAP_LOG_DEST "bin/memoria_swap.log"
