@@ -122,7 +122,7 @@ t_list* convertir_instruccion(char* buffer)
                     free(param2);   
                     instruccion->indicador = I_O;
                     primerParametroSinPipe = pseudoInstruccion[1];
-                    *param1=atoi(primerParametroSinPipe);
+                    *param1=string_to_uint(primerParametroSinPipe);
                     list_add(instruccion->parametros, param1);
                     list_add(instrucciones, instruccion);
                     break;
@@ -130,9 +130,9 @@ t_list* convertir_instruccion(char* buffer)
                     instruccion->indicador = WRITE;
                     primerParametroSinPipe = pseudoInstruccion[1];
                     segundoParametroSinPipe = pseudoInstruccion[2];
-                    *param1=atoi(primerParametroSinPipe);
-                    list_add(instruccion->parametros,&param1);
-                    *param2=atoi(segundoParametroSinPipe);
+                    *param1=string_to_uint(primerParametroSinPipe);
+                    list_add(instruccion->parametros, param1);
+                    *param2=string_to_uint(segundoParametroSinPipe);
                     list_add(instruccion->parametros, param2);
                     list_add(instrucciones, instruccion);
                     break;
@@ -140,9 +140,9 @@ t_list* convertir_instruccion(char* buffer)
                     instruccion->indicador = COPY;
                     primerParametroSinPipe = pseudoInstruccion[1];
                     segundoParametroSinPipe = pseudoInstruccion[2];
-                    *param1=atoi(primerParametroSinPipe);
-                    list_add(instruccion->parametros,&param1);
-                    *param2=atoi(segundoParametroSinPipe);
+                    *param1=string_to_uint(primerParametroSinPipe);
+                    list_add(instruccion->parametros, param1);
+                    *param2=string_to_uint(segundoParametroSinPipe);
                     list_add(instruccion->parametros, param2);
                     list_add(instrucciones, instruccion);
                     break;
@@ -150,7 +150,7 @@ t_list* convertir_instruccion(char* buffer)
                     free(param2);
                     instruccion->indicador = READ;
                     primerParametroSinPipe = pseudoInstruccion[1];
-                    *param1=atoi(primerParametroSinPipe);
+                    *param1=string_to_uint(primerParametroSinPipe);
                     list_add(instruccion->parametros, param1);
                     list_add(instrucciones, instruccion);
                     break;

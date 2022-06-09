@@ -7,11 +7,8 @@ int main(int argc, char* argv[]) {
 
     int socketEscucha = iniciar_servidor(kernelCfg->IP_KERNEL, kernelCfg->PUERTO_ESCUCHA);
     
-    //log_info(kernelLogger, "Kernel: Modo de ejecución %s", EXEC_MODE);
     struct sockaddr cliente;
     socklen_t len = sizeof(cliente);
-
-    log_info(kernelLogger, "Kernel: Esperando conexión entrante de Módulo Consola...");
 
     iniciar_planificacion();
 
