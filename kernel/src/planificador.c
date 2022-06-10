@@ -38,11 +38,6 @@ void iniciar_planificacion() {
     //Conexiones
     conexion_de_dispatch();
     conexion_de_interrupt();
-    // int memoria_fd=conectar_a_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_MEMORIA);
-    // if (memoria_fd == -1){
-    //     log_error(kernelCfg, "Kernel: No se pudo establecer conexión con Memoria. Valor conexión %d", memoria_fd);
-    //     return -1;
-    // } //comento para que no explote ahora 
 
     nextId = 1;
     /* Inicializacion de semaforos */
@@ -600,8 +595,9 @@ void* conexion_de_interrupt() {
 
     if (SOCKET_INTERRUPT == -1)
     {
-        log_error(kernelCfg, "Kernel: No se pudo establecer conexión con CPU. Valor conexión %d", SOCKET_INTERRUPT);
+        log_error(kernelLogger, "Kernel: No se pudo establecer conexión con CPU. Valor conexión %d", SOCKET_INTERRUPT);
         //return -1;
+        exit(-1);
     }
     
 
@@ -616,10 +612,11 @@ void* conexion_de_dispatch() {
     SOCKET_DISPATCH = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH);
     log_info(kernelLogger, "Kernel: Conectando a CPU");
 
-    if (SOCKET_DISPATCH == -1)
+    if (SOCKET_DISPATCH <=0)
     {
-        log_error(kernelCfg, "Kernel: No se pudo establecer conexión con CPU. Valor conexión %d", SOCKET_DISPATCH);
+        log_error(kernelLogger, "Kernel: No se pudo establecer conexión con CPU. Valor conexión %d", SOCKET_DISPATCH);
         //return -1;
+        exit(-1);
     }
     // CASO 1: Envio de PCB a CPU
     // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
