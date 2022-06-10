@@ -54,39 +54,73 @@ int main(int argc, char *argv[]){
     return EXIT_SUCCESS;
 }
 
-void aceptar_conexiones_memoria(conexion* conexion) { 
-    log_info(memoria_swapLogger, "Memoria: A la escucha de nuevas conexiones en puerto %d", conexion->socket);
-    for(;;) {
-        memoria_swapCfg->CPU_SOCKET = accept(conexion->socket, &(conexion->sockAddr), &(conexion->sockrAddrLen));
-        if(memoria_swapCfg->CPU_SOCKET > 0) {
-            log_info(memoria_swapLogger, "Memoria: Acepto la conexión del socket: %d", memoria_swapCfg->CPU_SOCKET);
-            recibir_instrucciones_cpu(memoria_swapCfg->CPU_SOCKET);
-        } else {
-            log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
-        }
-        memoria_swapCfg->KERNEL_SOCKET = accept(conexion->socket, &(conexion->sockAddr), &(conexion->sockrAddrLen));
-        if(memoria_swapCfg->KERNEL_SOCKET > 0) {
-            log_info(memoria_swapLogger, "Memoria: Acepto la conexión del socket: %d", memoria_swapCfg->KERNEL_SOCKET);
-            recibir_pcbs_kernel(memoria_swapCfg->KERNEL_SOCKET);
-        } else {
-            log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
-        }
-    }
-}
+
 
 int aceptar_conexion_memoria(conexion* con){
     int socket = accept(con->socket, &(con->sockAddr), &(con->sockrAddrLen));
     return socket;
 }
 
+//de aca para abajo deberian ir en otro archivo
+
 void recibir_instrucciones_cpu(int socket_cpu){
     log_info(memoria_swapLogger, "Memoria: entre a recibir cpu");
     while(1){
-        uint32_t* parametroWrite = malloc(sizeof(uint32_t));
-        if(recv(socket_cpu, parametroWrite, sizeof(uint32_t), MSG_WAITALL)){
-            log_info(memoria_swapLogger, "Memoria: Recibi parametro: %i", *parametroWrite);
+        int size = sizeof(code_instruccion)+2*sizeof(uint32_t); //que no mande la lista de parametros, asi es mas facil
+        void* buffer = malloc(size);
+        
+        //uint32_t* parametroWrite = malloc(sizeof(uint32_t));
+        if(recv(socket_cpu, buffer, size, MSG_WAITALL)){
+            procesar_instruccion(buffer,socket_cpu);
+
+            // log_info(memoria_swapLogger, "Memoria: Recibi parametro: %i", *parametroWrite);
         }
     }
+}
+
+void procesar_instruccion(void* buffer, int socket_cpu){
+    code_instruccion* codOp=malloc(sizeof(code_instruccion));
+    memcpy(&codOp, buffer, sizeof(code_instruccion));
+    switch (*codOp)
+    {
+    case READ:
+        uint32_t *param1 = malloc(sizeof(uint32_t));
+        memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
+        log_info(memoria_swapLogger, "Memoria: Recibi READ con parametro: %i", *param1);
+        procesar_read(*param1, socket_cpu); //TODO
+        free(buffer);
+        free(codOp);
+        free(param1);
+        break;
+    case WRITE:
+        uint32_t *param1 = malloc(sizeof(uint32_t));
+        uint32_t *param2 = malloc(sizeof(uint32_t));
+        memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
+        memcpy(param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
+        log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", *param1, *param2);
+        procesar_write(*param1, *param2, socket_cpu);//TODO
+        free(buffer);
+        free(codOp);
+        free(param1);
+        free(param2);
+        break;
+    default:
+        log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
+        break;
+    }
+    //devolver a cpu un ok o ver que devuelve en cada caso
+}
+
+void procesar_read(uint32_t param, int socket_cpu){ //READ devuelve el valor leido
+    log_info(memoria_swapLogger, "Memoria: Procesando READ");
+    //...
+    log_info(memoria_swapLogger, "Memoria: READ terminado");
+}
+
+void procesar_write(uint32_t param1, uint32_t param2, int socket_cpu){ //write no dice, devolver ok o error?
+    log_info(memoria_swapLogger, "Memoria: Procesando WRITE");
+    //...
+    log_info(memoria_swapLogger, "Memoria: WRITE terminado");
 }
 
 void recibir_pcbs_kernel(int socket_kernel){

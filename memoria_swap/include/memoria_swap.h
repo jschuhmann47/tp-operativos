@@ -16,10 +16,16 @@ t_memoria_swap_config* memoria_swapCfg;
 void* MEMORIA_PRINCIPAL;
 
 void* crear_espacio_de_memoria();
+void escribir_en_memoria(void* memoria, void* contenido, int offset, int size);
+void* leer_de_memoria(void* memoria, int offset, int size);
+
+
 void aceptar_conexiones_memoria(conexion* conexion);
 void recibir_pcbs_kernel(int socket_kernel);
 void recibir_instrucciones_cpu(int socket_cpu);
+void procesar_instruccion(void* buffer, int socket_cpu);
+void procesar_read(uint32_t param, int socket_cpu);
+void procesar_write(uint32_t param1, uint32_t param2, int socket_cpu);
 
-int aceptar_conexion_memoria(conexion* con);
 
 #endif

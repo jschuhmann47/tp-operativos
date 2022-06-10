@@ -393,3 +393,26 @@ int tamanioInstruccion(code_instruccion codOp){
 			break;
 	}
 }
+
+int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket){
+    uint32_t bytes = tamanioInstruccion(codOp);
+    void* buffer = malloc(bytes);
+    uint32_t offset = 0;
+
+    memcpy(buffer, &codOp, sizeof(code_instruccion));
+    offset += sizeof(code_instruccion);
+    memcpy(buffer + offset, &param1, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+
+    if(codOp == WRITE){
+        memcpy(buffer + offset, &param2, sizeof(uint32_t));
+        offset += sizeof(uint32_t);
+    }
+
+    if(send(socket, buffer, bytes, 0)){
+            return 1;
+    }
+    else {
+        return -1;
+    }
+}
