@@ -27,5 +27,6 @@ t_pcb* recibir_pcb(void* buffer,uint32_t bytes);
 
 //Utilities//
 int tamanioInstruccion(code_instruccion codOp);
+int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket);
 
 #endif

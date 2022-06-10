@@ -14,8 +14,8 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
         bool necesitaOperandos = cpu_decode(instruccionAEjecutar);
         
         if(necesitaOperandos){ 
-            uint32_t operando = cpu_fetch_operands(instruccionAEjecutar); 
-            cpu_execute_con_operando(instruccionAEjecutar,operando);
+            uint32_t operando = cpu_fetch_operands(instruccionAEjecutar, socket_memoria); 
+            cpu_execute_con_operando(instruccionAEjecutar,operando,socket_memoria);
 
         }else{
             cpu_execute(instruccionAEjecutar,pcb,socket_memoria);
@@ -85,16 +85,22 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         uint32_t* valor = list_get(instruccion->parametros, 1);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
-        if(send(socket_memoria, direccionLogicaW, sizeof(uint32_t), 0)){
+        if(mandar_instruccion(WRITE,*direccionLogicaW,*valor,socket_memoria)){
             log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
+        }else{
+            log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
         }
+        
         break;
     case READ:
         ;
         uint32_t* direccionLogicaR = list_get(instruccion->parametros, 0);
         log_info(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
-        if(send(socket_memoria, direccionLogicaR, sizeof(uint32_t), 0)){
+        if(mandar_instruccion(READ,*direccionLogicaR,NULL,socket_memoria)){
             log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
+        }
+        else{
+            log_info(cpuLogger, "CPU: No se pudo mandar instruccion READ a Memoria.");
         }
         break;
     case EXIT_I:
@@ -106,19 +112,30 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     }
 }
 
-void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando){
+void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando, int socket_memoria){
     //el COPY y el WRITE son iguales solo que el valor que entra en WRITE lo mandan, y el de COPY se busca en memoria, pero despues
     //de conseguir el valor de ahi en adelante es igual
+    uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
+    log_info(cpuLogger, "CPU: Ejecute COPY: %i ", *direccionLogicaW);
+    log_info(cpuLogger, "CPU: Ejecute COPY: %i ", operando);
+    if(mandar_instruccion(WRITE,*direccionLogicaW,operando,socket_memoria)){
+        log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
+    }else{
+        log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
+    }
     
 }
 
-uint32_t cpu_fetch_operands(t_instruccion* instruccion){
-    void* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
-    //TODO, buscarlo en la memoria
-    uint32_t* direccionLogicaC = list_get(instruccion->parametros, 0);
-    uint32_t* valor = list_get(instruccion->parametros, 1);
-    log_info(cpuLogger, "CPU: Ejecute COPY: %i ", *direccionLogicaC);
-    log_info(cpuLogger, "CPU: Ejecute COPY: %i ", *valor);
+uint32_t cpu_fetch_operands(t_instruccion* instruccion, int socket_memoria){
+    uint32_t* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
+    //reusar read
+    log_info(cpuLogger, "CPU: Fetch operands: %i ", *direccionMemoriaAObtener);
+    if(mandar_instruccion(READ,*direccionMemoriaAObtener,NULL,socket_memoria)){
+        log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
+    }
+    else{
+        log_info(cpuLogger, "CPU: No se pudo mandar instruccion READ a Memoria.");
+    }
     return 1;
 }
 
