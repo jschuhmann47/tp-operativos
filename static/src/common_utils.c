@@ -410,9 +410,11 @@ int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,in
     }
 
     if(send(socket, buffer, bytes, 0)){
-            return 1;
+        free(buffer);
+        return 1;
     }
     else {
+        free(buffer);
         return -1;
     }
 }
