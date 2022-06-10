@@ -16,8 +16,8 @@ int main(int argc, char* argv[]) {
 
     if (SOCKET_MEMORIA == -1)
     {
-        log_error(cpuCfg, "CPU: No se pudo establecer conexión con Memoria. Valor conexión %d", SOCKET_MEMORIA);
-        return -1;
+        log_error(cpuLogger, "CPU: No se pudo establecer conexión con Memoria. Valor conexión %d", SOCKET_MEMORIA);
+        exit(-1);
     }
 
     struct sockaddr clienteDispatch;
