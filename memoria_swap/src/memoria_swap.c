@@ -44,8 +44,6 @@ int main(int argc, char *argv[]){
     
     //pthread_create(&atenderKernel, NULL, aceptar_conexiones_memoria, conexionCpu);
 
-
-
     pthread_join(atenderCpu, NULL);
     pthread_join(atenderKernel, NULL);
 
@@ -64,10 +62,10 @@ int aceptar_conexion_memoria(conexion* con){
 //de aca para abajo deberian ir en otro archivo
 
 void recibir_instrucciones_cpu(int socket_cpu){
-    log_info(memoria_swapLogger, "Memoria: entre a recibir cpu");
     while(1){
-        int size = sizeof(code_instruccion)+2*sizeof(uint32_t); //que no mande la lista de parametros, asi es mas facil
+        uint32_t size = sizeof(code_instruccion)+2*sizeof(uint32_t); //que no mande la lista de parametros, asi es mas facil
         void* buffer = malloc(size);
+        log_info(memoria_swapLogger, "Memoria: Esperando instruccion de CPU");
         
         //uint32_t* parametroWrite = malloc(sizeof(uint32_t));
         if(recv(socket_cpu, buffer, size, MSG_WAITALL)){
@@ -80,21 +78,22 @@ void recibir_instrucciones_cpu(int socket_cpu){
 
 void procesar_instruccion(void* buffer, int socket_cpu){
     code_instruccion* codOp=malloc(sizeof(code_instruccion));
-    memcpy(&codOp, buffer, sizeof(code_instruccion));
+    memcpy(codOp, buffer, sizeof(code_instruccion));
+    uint32_t *param1 = malloc(sizeof(uint32_t));
+    uint32_t *param2 = malloc(sizeof(uint32_t));
+    log_info(memoria_swapLogger, "Memoria: Recibi el codigo de operacion: %i", *codOp);
     switch (*codOp)
     {
     case READ:
-        uint32_t *param1 = malloc(sizeof(uint32_t));
         memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi READ con parametro: %i", *param1);
         procesar_read(*param1, socket_cpu); //TODO
         free(buffer);
         free(codOp);
         free(param1);
+        free(param2);
         break;
     case WRITE:
-        uint32_t *param1 = malloc(sizeof(uint32_t));
-        uint32_t *param2 = malloc(sizeof(uint32_t));
         memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         memcpy(param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", *param1, *param2);

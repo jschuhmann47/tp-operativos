@@ -44,25 +44,3 @@ void liberar_modulo_memoria_swap(t_log *memoria_swapLogger, t_memoria_swap_confi
     free(memoria_swapCfg->PATH_SWAP);
     free(memoria_swapCfg);
 }
-
-//extra 
-
-
-int aceptarClienteMemoria(int fd_socket)
-{
-    struct sockaddr_in *unCliente;
-    memset(&unCliente, 0, sizeof(unCliente));
-    unsigned int addres_size = sizeof(unCliente);
-
-    int fd_Cliente = accept(fd_socket, (struct sockaddr *)&unCliente, &addres_size);
-    if (fd_Cliente == -1)
-    {
-        log_error(memoria_swapLogger, "El servidor no pudo aceptar la conexión entrante \n");
-    }
-    else
-    {
-        log_info(memoria_swapLogger, "Se conectó un proceso \n");
-    }
-
-    return fd_Cliente;
-}

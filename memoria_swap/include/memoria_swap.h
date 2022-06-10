@@ -20,7 +20,7 @@ void escribir_en_memoria(void* memoria, void* contenido, int offset, int size);
 void* leer_de_memoria(void* memoria, int offset, int size);
 
 
-void aceptar_conexiones_memoria(conexion* conexion);
+int aceptar_conexion_memoria(conexion* con);
 void recibir_pcbs_kernel(int socket_kernel);
 void recibir_instrucciones_cpu(int socket_cpu);
 void procesar_instruccion(void* buffer, int socket_cpu);

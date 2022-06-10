@@ -32,6 +32,5 @@ extern t_memoria_swap_config *consolaCfg;
 t_memoria_swap_config *memoria_swap_cfg_create(void);
 void memoria_swap_config_initialize(void *memoria_swapCfg, t_config *config);
 void liberar_modulo_memoria_swap(t_log *memoria_swapLogger, t_memoria_swap_config *memoria_swapCfg);
-int aceptarClienteMemoria(int fd_socket);
 
 #endif
