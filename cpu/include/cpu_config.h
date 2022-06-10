@@ -24,6 +24,19 @@ typedef struct {
     char* PUERTO_ESCUCHA_INTERRUPT;
 } t_cpu_config;
 
+typedef struct{
+    uint32_t entradasTlb;
+    char* agloritmoReemplazo;
+    uint32_t entradasDisponibles;
+    t_list* direcciones;
+} t_tlb;
+
+typedef struct{
+    uint32_t pagina;
+    uint32_t marco;
+
+} t_direccion;
+
 extern t_log* cpuLogger;
 extern t_cpu_config* consolaCfg;
 
@@ -33,5 +46,6 @@ uint32_t hayInterrupcion;
 t_cpu_config* cpu_cfg_create(void);
 void cpu_config_initialize(void* cpuCfg, t_config* config);
 void liberar_modulo_cpu(t_log* cpuLogger, t_cpu_config* cpuCfg);
+void generar_tlb(uint32_t entradasTlb, char* algoritmoReemplazo);
 
 #endif

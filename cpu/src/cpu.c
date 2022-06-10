@@ -1,4 +1,4 @@
-#include "cpu.h" //"../include/cpu.h"
+#include "cpu.h"
 
 int SOCKET_MEMORIA;
 
@@ -6,6 +6,8 @@ int main(int argc, char* argv[]) {
     cpuCfg = cpu_cfg_create();
     cpuLogger = log_create(CPU_LOG_DEST, CPU_MODULE_NAME, true, LOG_LEVEL_INFO);
     cargar_configuracion(CPU_MODULE_NAME, cpuCfg, CPU_CFG_PATH, cpuLogger, cpu_config_initialize);
+    generar_tlb(cpuCfg->ENTRADAS_TLB, cpuCfg->REEMPLAZO_TLB);
+    log_info(cpuLogger, "CPU: TLB inicializada");
 
     int socketEscuchaDispatch = iniciar_servidor(cpuCfg->IP_CPU, cpuCfg->PUERTO_ESCUCHA_DISPATCH);
 

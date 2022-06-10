@@ -37,3 +37,12 @@ void liberar_modulo_cpu(t_log* cpuLogger, t_cpu_config* cpuCfg) {
     free(cpuCfg->PUERTO_ESCUCHA_INTERRUPT);
     free(cpuCfg);
 }
+
+void generar_tlb(uint32_t entradasTlb, char* algoritmoReemplazo)
+{
+    t_tlb* tlb = malloc(sizeof(t_tlb));
+    tlb->entradasTlb = entradasTlb;
+    tlb->agloritmoReemplazo = algoritmoReemplazo;
+    tlb->entradasDisponibles = entradasTlb;
+    tlb->direcciones = list_create();
+}

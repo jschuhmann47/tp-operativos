@@ -16,7 +16,6 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
         if(necesitaOperandos){ 
             uint32_t operando = cpu_fetch_operands(instruccionAEjecutar, socket_memoria); 
             cpu_execute_con_operando(instruccionAEjecutar,operando,socket_memoria);
-
         }else{
             cpu_execute(instruccionAEjecutar,pcb,socket_memoria);
         }
@@ -47,7 +46,6 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
         }
     }
 }
-
 
 void calcularTiempoEnMs(t_pcb* pcb,struct timespec start,struct timespec end){ //la nueva rafaga se la asigna aca
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
@@ -128,7 +126,6 @@ void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando, int 
 
 uint32_t cpu_fetch_operands(t_instruccion* instruccion, int socket_memoria){
     uint32_t* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
-    //reusar read
     log_info(cpuLogger, "CPU: Fetch operands: %i ", *direccionMemoriaAObtener);
     if(mandar_instruccion(READ,*direccionMemoriaAObtener,NULL,socket_memoria)){
         log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
