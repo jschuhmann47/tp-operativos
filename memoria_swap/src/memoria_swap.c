@@ -16,18 +16,39 @@ int main(int argc, char *argv[])
     conexionCpu->socket=socket_servidor;
     conexionCpu->sockAddr=cliente;
     conexionCpu->sockrAddrLen=lenCliD;
+    pthread_t atenderCpu;
+    pthread_t atenderKernel;
     
-    pthread_t atenderDispatch;
-    pthread_create(&atenderDispatch, NULL, aceptar_conexiones_memoria, conexionCpu);
+    int socketCpu = aceptar_conexion_memoria(conexionCpu); //supuestamente kernel no arranca hasta que cpu este levantado asi que no deberia entrar aca
+    if(socketCpu > 0) {
+        log_info(memoria_swapLogger, "Memoria: Acepto la conexión del CPU con socket: %d", socket);
+        pthread_create(&atenderCpu, NULL, recibir_instrucciones_cpu, socketCpu);
+    } else {
+        log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
+    }
+    
 
-    pthread_join(atenderDispatch, NULL);
+    int socketKernel = aceptar_conexion_memoria(conexionCpu);
+    if(socketKernel > 0) {
+        log_info(memoria_swapLogger, "Memoria: Acepto la conexión del Kernel con socket: %d", socket);
+        pthread_create(&atenderKernel, NULL, recibir_pcbs_kernel, socketKernel);
+    } else {
+        log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
+    }
+    
+    //pthread_create(&atenderKernel, NULL, aceptar_conexiones_memoria, conexionCpu);
+
+
+
+    pthread_join(atenderCpu, NULL);
+    pthread_join(atenderKernel, NULL);
 
     liberar_modulo_memoria_swap(memoria_swapLogger, memoria_swapCfg);
 
     return EXIT_SUCCESS;
 }
 
-void aceptar_conexiones_memoria(conexion* conexion) {
+void aceptar_conexiones_memoria(conexion* conexion) { 
     log_info(memoria_swapLogger, "Memoria: A la escucha de nuevas conexiones en puerto %d", conexion->socket);
     for(;;) {
         memoria_swapCfg->CPU_SOCKET = accept(conexion->socket, &(conexion->sockAddr), &(conexion->sockrAddrLen));
@@ -37,16 +58,34 @@ void aceptar_conexiones_memoria(conexion* conexion) {
         } else {
             log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
         }
+        memoria_swapCfg->KERNEL_SOCKET = accept(conexion->socket, &(conexion->sockAddr), &(conexion->sockrAddrLen));
+        if(memoria_swapCfg->KERNEL_SOCKET > 0) {
+            log_info(memoria_swapLogger, "Memoria: Acepto la conexión del socket: %d", memoria_swapCfg->KERNEL_SOCKET);
+            recibir_instrucciones_kernel(memoria_swapCfg->KERNEL_SOCKET);
+        } else {
+            log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
+        }
     }
 }
 
-void recibir_instrucciones_cpu(int socket_memoria)
-{
+int aceptar_conexion_de_cpu(conexion* con){
+    int socket = accept(con->socket, &(con->sockAddr), &(con->sockrAddrLen));
+}
+
+void recibir_instrucciones_cpu(int socket_cpu){
     while(1){
         uint32_t* parametroWrite = malloc(sizeof(uint32_t));
-        if(recv(socket_memoria, parametroWrite, sizeof(uint32_t), MSG_WAITALL)){
+        if(recv(socket_cpu, parametroWrite, sizeof(uint32_t), MSG_WAITALL)){
             log_info(memoria_swapLogger, "Memoria: Recibi parametro: %i", *parametroWrite);
         }
+    }
+}
+
+void recibir_pcbs_kernel(int socket_kernel){
+    while(1){
+        //recibir la pcb y tamaño
+
+        //suspenderla o hacer lo que haya que hacer
     }
 }
 
