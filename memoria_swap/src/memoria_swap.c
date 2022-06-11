@@ -90,13 +90,13 @@ void procesar_instruccion(void* buffer, int socket_cpu){
     switch (codOp)
     {
     case READ:
-        memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
+        memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi READ con parametro: %i", param1);
         procesar_read(param1, socket_cpu); //TODO
         break;
     case WRITE:
-        memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
-        memcpy(param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
+        memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
+        memcpy(&param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", param1, param2);
         procesar_write(param1, param2, socket_cpu);//TODO
         break;

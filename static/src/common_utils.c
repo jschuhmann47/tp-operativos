@@ -395,14 +395,14 @@ int tamanioInstruccion(code_instruccion codOp){
 }
 
 int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket){
-    if(codOp != 2 || codOp != 4){
+    if(codOp != WRITE && codOp != READ){
         printf("\nSe envia una instruccion que no es valida\n"); //NO HAY LOGGER ACA
         return -1;
     }
     
     uint32_t bytes = tamanioInstruccion(codOp);
 
-    if(send(socket,bytes,sizeof(uint32_t),0)<0){
+    if(send(socket,&bytes,sizeof(uint32_t),0)<0){
         printf("\nError al enviar el tamanio de la instruccion\n"); //NO HAY LOGGER ACA
         return -1;
     }
@@ -421,10 +421,12 @@ int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,in
     }
 
     if(send(socket, buffer, bytes, 0)){
+        printf("\nEnviada instruccion OK\n");
         free(buffer);
         return 1;
     }
     else {
+        printf("\nFallo an enviar instruccion (not OK :( )\n");
         free(buffer);
         return -1;
     }

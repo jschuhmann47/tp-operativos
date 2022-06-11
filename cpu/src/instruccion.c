@@ -83,7 +83,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         uint32_t* valor = list_get(instruccion->parametros, 1);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
-        if(mandar_instruccion(WRITE,*direccionLogicaW,*valor,socket_memoria)){
+        if(mandar_instruccion(WRITE,*direccionLogicaW,*valor,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
         }else{
             log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
@@ -94,7 +94,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         ;
         uint32_t* direccionLogicaR = list_get(instruccion->parametros, 0);
         log_info(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
-        if(mandar_instruccion(READ,*direccionLogicaR,NULL,socket_memoria)){
+        if(mandar_instruccion(READ,*direccionLogicaR,0,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
         }
         else{
@@ -117,9 +117,9 @@ void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando, int 
     log_info(cpuLogger, "CPU: Ejecute COPY: %i ", *direccionLogicaW);
     log_info(cpuLogger, "CPU: Ejecute COPY: %i ", operando);
     if(mandar_instruccion(WRITE,*direccionLogicaW,operando,socket_memoria)){
-        log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
+        log_info(cpuLogger, "CPU: Se mando instruccion COPY/WRITE a Memoria.");
     }else{
-        log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
+        log_info(cpuLogger, "CPU: No se pudo mandar instruccion COPY/WRITE a Memoria.");
     }
     
 }
@@ -128,10 +128,10 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion, int socket_memoria){
     uint32_t* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
     log_info(cpuLogger, "CPU: Fetch operands: %i ", *direccionMemoriaAObtener);
     if(mandar_instruccion(READ,*direccionMemoriaAObtener,NULL,socket_memoria)){
-        log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
+        log_info(cpuLogger, "CPU: Se mando instruccion COPY/READ a Memoria.");
     }
     else{
-        log_info(cpuLogger, "CPU: No se pudo mandar instruccion READ a Memoria.");
+        log_info(cpuLogger, "CPU: No se pudo mandar instruccion COPY/READ a Memoria.");
     }
     return 1;
 }
