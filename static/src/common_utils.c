@@ -395,7 +395,7 @@ int tamanioInstruccion(code_instruccion codOp){
 }
 
 int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket){
-    if(codOp != WRITE || codOp != READ){
+    if(codOp != 2 || codOp != 4){
         printf("\nSe envia una instruccion que no es valida\n"); //NO HAY LOGGER ACA
         return -1;
     }
@@ -415,7 +415,7 @@ int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,in
     memcpy(buffer + offset, &param1, sizeof(uint32_t));
     offset += sizeof(uint32_t);
 
-    if(codOp == WRITE){
+    if(codOp == 2){
         memcpy(buffer + offset, &param2, sizeof(uint32_t));
         offset += sizeof(uint32_t);
     }
