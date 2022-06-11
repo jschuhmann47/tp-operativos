@@ -63,16 +63,16 @@ int aceptar_conexion_memoria(conexion* con){
 
 void recibir_instrucciones_cpu(int socket_cpu){
     while(1){
-        uint32_t size = sizeof(code_instruccion)+2*sizeof(uint32_t); //que no mande la lista de parametros, asi es mas facil
-        void* buffer = malloc(size);
+        uint32_t size = sizeof(uint32_t)*2+sizeof(code_instruccion);
+        void* buffer;
         log_info(memoria_swapLogger, "Memoria: Esperando instruccion de CPU");
-        
-        //uint32_t* parametroWrite = malloc(sizeof(uint32_t));
+    
         if(recv(socket_cpu, buffer, size, MSG_WAITALL)){
             procesar_instruccion(buffer,socket_cpu);
 
             // log_info(memoria_swapLogger, "Memoria: Recibi parametro: %i", *parametroWrite);
         }
+        free(buffer);
     }
 }
 
@@ -100,7 +100,7 @@ void procesar_instruccion(void* buffer, int socket_cpu){
         break;
     }
     //devolver a cpu un ok o ver que devuelve en cada caso
-    free(buffer);
+    //free(buffer);
     free(codOp);
     free(param1);
     free(param2);

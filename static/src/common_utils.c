@@ -396,9 +396,11 @@ int tamanioInstruccion(code_instruccion codOp){
 
 int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket){
     uint32_t bytes = tamanioInstruccion(codOp);
-    void* buffer = malloc(bytes);
+    void* buffer = malloc(bytes + sizeof(uint32_t));
     uint32_t offset = 0;
 
+    memcpy(buffer + offset, &bytes, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
     memcpy(buffer, &codOp, sizeof(code_instruccion));
     offset += sizeof(code_instruccion);
     memcpy(buffer + offset, &param1, sizeof(uint32_t));
