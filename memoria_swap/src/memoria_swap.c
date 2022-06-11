@@ -88,26 +88,23 @@ void procesar_instruccion(void* buffer, int socket_cpu){
         memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi READ con parametro: %i", *param1);
         procesar_read(*param1, socket_cpu); //TODO
-        free(buffer);
-        free(codOp);
-        free(param1);
-        free(param2);
         break;
     case WRITE:
         memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         memcpy(param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", *param1, *param2);
         procesar_write(*param1, *param2, socket_cpu);//TODO
-        free(buffer);
-        free(codOp);
-        free(param1);
-        free(param2);
         break;
     default:
         log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
         break;
     }
     //devolver a cpu un ok o ver que devuelve en cada caso
+    free(buffer);
+    free(codOp);
+    free(param1);
+    free(param2);
+    
 }
 
 void procesar_read(uint32_t param, int socket_cpu){ //READ devuelve el valor leido
