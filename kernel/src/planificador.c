@@ -201,23 +201,23 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
     
     sem_wait(&(pcbsBlocked->instanciasDisponibles));
     pthread_mutex_lock(&colaDeIO);
-    t_pcb* pcbABloquear = get_and_remove_primer_pcb_de_cola(pcbsBlocked); //algun tipo de semaforo porque esta corriendo el hilo de contar_tiempo_bloqueado a la vez?
+    t_pcb* pcbABloquear = get_and_remove_primer_pcb_de_cola(pcbsBlocked);
     log_info(kernelLogger, "Corto Plazo: Se bloquea el proceso %d", pcbABloquear->id);
     pthread_t contarTiempo;
     pthread_create(&contarTiempo,NULL,contar_tiempo_bloqueado,pcbABloquear);
     pthread_detach(contarTiempo);
     
-    usleep(tiempoBloqueadoPorIo);
+    sleep(tiempoBloqueadoPorIo/1000);
     pthread_mutex_lock(&suspensionDePCB);
     if(pcbABloquear->status==BLOCKED){ //chequea que no lo hayan suspendido
-        //remover_pcb_de_cola(pcbABloquear, pcbsBlocked);
+        
         cambiar_estado_pcb(pcbABloquear, READY);
         agregar_pcb_a_cola(pcbABloquear, pcbsReady);
         log_transition("Corto Plazo", "BLOCKED", "READY", pcbABloquear->id);
         sem_post(&(pcbsReady->instanciasDisponibles));
     }
     if(pcbABloquear->status == SUSBLOCKED){
-        //remover_pcb_de_cola(pcbABloquear, pcbsBlocked);
+        
         cambiar_estado_pcb(pcbABloquear, SUSREADY);
         agregar_pcb_a_cola(pcbABloquear, pcbsSusReady);
         log_transition("Kernel:", "SUSBLOCKED", "SUSREADY", pcbABloquear->id);
@@ -225,6 +225,7 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
     }
     pthread_mutex_unlock(&suspensionDePCB);
     pthread_mutex_unlock(&colaDeIO);
+    //pthread_join(contarTiempo,NULL);
 }
 
 
@@ -253,7 +254,7 @@ void* iniciar_mediano_plazo(void* _) { //esto no hace nada
 }
 
 void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a suspender siempre
-    usleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO);
+    sleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO/1000);
     pthread_mutex_lock(&suspensionDePCB);
     if(pcb->status==BLOCKED){
         //enviar_suspension_de_pcb_a_memoria(pcb);
@@ -262,6 +263,8 @@ void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a
         log_transition("Mediano Plazo", "BLOCKED", "SUSP/BLOCKED", pcb->id);
         /* Aumenta el grado de multiprogramción al suspender a un proceso */  
         sem_post(&gradoMultiprog); 
+    }else{
+        log_error(kernelLogger, "Mediano Plazo: No suspendo, estado %i",pcb->status);
     }
     pthread_mutex_unlock(&suspensionDePCB);
     pthread_exit(NULL);
@@ -333,7 +336,8 @@ void* iniciar_largo_plazo(void* _) {
             cambiar_estado_pcb(pcbQuePasaAReady, READY);
             agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
             log_transition("Largo Plazo", "SUSP/READY", "READY", pcbQuePasaAReady->id);
-            sem_post(&transicionarSusReadyAready);
+            
+            sem_post(&(pcbsReady->instanciasDisponibles));
             /* Con el post se libera el mecanismo de pasaje en el Planificador de Mediano Plazo */
         } else {                                    
             /* En caso de que no haya procesos en susp/ready, seguramente hay en new */
@@ -490,6 +494,7 @@ t_pcb* get_and_remove_primer_pcb_de_cola(t_cola_planificacion* cola) {
     pthread_mutex_lock(&(cola->mutex));
     if(!list_is_empty(cola->lista)) {
         pcb = (t_pcb*) list_remove(cola->lista, 0);
+        
     }
     pthread_mutex_unlock(&(cola->mutex));
 
@@ -546,10 +551,10 @@ bool algoritmo_srt_loaded(void) {
 /*---------------------------------------------- FIFO ----------------------------------------------*/
 
 t_pcb* elegir_en_base_a_fifo(t_cola_planificacion* colaPlanificacion) {
+    //pthread_mutex_lock(&(colaPlanificacion->mutex));
     t_pcb* primerPcb = get_and_remove_primer_pcb_de_cola(colaPlanificacion);
-    pthread_mutex_lock(&(colaPlanificacion->mutex));
     log_info(kernelLogger, "FIFO: Se toma una instancia de READY, PCB ID %d", primerPcb->id);
-    pthread_mutex_unlock(&(colaPlanificacion->mutex));
+    //pthread_mutex_unlock(&(colaPlanificacion->mutex));
     return primerPcb;
 }
 
