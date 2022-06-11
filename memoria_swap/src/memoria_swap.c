@@ -63,8 +63,13 @@ int aceptar_conexion_memoria(conexion* con){
 
 void recibir_instrucciones_cpu(int socket_cpu){
     while(1){
-        uint32_t size = sizeof(uint32_t)*2+sizeof(code_instruccion);
-        void* buffer;
+        uint32_t size;
+        if(recv(socket_cpu, &size, sizeof(uint32_t), MSG_WAITALL) == -1){
+            log_error(memoria_swapLogger, "Memoria: Error al recibir el tamaño de la instrucción: %s", strerror(errno));
+            break;
+        }
+        log_info(memoria_swapLogger, "Memoria: Recibiendo instrucción de %i bytes", size);
+        void* buffer=malloc(size);
         log_info(memoria_swapLogger, "Memoria: Esperando instruccion de CPU");
     
         if(recv(socket_cpu, buffer, size, MSG_WAITALL)){
@@ -77,34 +82,29 @@ void recibir_instrucciones_cpu(int socket_cpu){
 }
 
 void procesar_instruccion(void* buffer, int socket_cpu){
-    code_instruccion* codOp=malloc(sizeof(code_instruccion));
-    memcpy(codOp, buffer, sizeof(code_instruccion));
-    uint32_t *param1 = malloc(sizeof(uint32_t));
-    uint32_t *param2 = malloc(sizeof(uint32_t));
-    log_info(memoria_swapLogger, "Memoria: Recibi el codigo de operacion: %i", *codOp);
-    switch (*codOp)
+    code_instruccion codOp;
+    memcpy(&codOp, buffer, sizeof(code_instruccion));
+    uint32_t param1;
+    uint32_t param2;
+    log_info(memoria_swapLogger, "Memoria: Recibi el codigo de operacion: %i", codOp);
+    switch (codOp)
     {
     case READ:
         memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
-        log_info(memoria_swapLogger, "Memoria: Recibi READ con parametro: %i", *param1);
-        procesar_read(*param1, socket_cpu); //TODO
+        log_info(memoria_swapLogger, "Memoria: Recibi READ con parametro: %i", param1);
+        procesar_read(param1, socket_cpu); //TODO
         break;
     case WRITE:
         memcpy(param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         memcpy(param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
-        log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", *param1, *param2);
-        procesar_write(*param1, *param2, socket_cpu);//TODO
+        log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", param1, param2);
+        procesar_write(param1, param2, socket_cpu);//TODO
         break;
     default:
         log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
         break;
     }
     //devolver a cpu un ok o ver que devuelve en cada caso
-    //free(buffer);
-    free(codOp);
-    free(param1);
-    free(param2);
-    
 }
 
 void procesar_read(uint32_t param, int socket_cpu){ //READ devuelve el valor leido

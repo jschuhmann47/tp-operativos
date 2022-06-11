@@ -395,12 +395,21 @@ int tamanioInstruccion(code_instruccion codOp){
 }
 
 int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket){
+    if(codOp != WRITE || codOp != READ){
+        printf("\nSe envia una instruccion que no es valida\n"); //NO HAY LOGGER ACA
+        return -1;
+    }
+    
     uint32_t bytes = tamanioInstruccion(codOp);
-    void* buffer = malloc(bytes + sizeof(uint32_t));
+
+    if(send(socket,bytes,sizeof(uint32_t),0)<0){
+        printf("\nError al enviar el tamanio de la instruccion\n"); //NO HAY LOGGER ACA
+        return -1;
+    }
+
+    void* buffer = malloc(bytes);
     uint32_t offset = 0;
 
-    memcpy(buffer + offset, &bytes, sizeof(uint32_t));
-    offset += sizeof(uint32_t);
     memcpy(buffer, &codOp, sizeof(code_instruccion));
     offset += sizeof(code_instruccion);
     memcpy(buffer + offset, &param1, sizeof(uint32_t));
