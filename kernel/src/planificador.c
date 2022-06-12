@@ -306,11 +306,11 @@ void enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) { //no esta testeada
     sem_post(&suspensionConcluida); //creo que este va un poco despues
 }
 
-t_pcb* traer_pcb_de_memoria(){ //similar a traer_pcb_de_cpu pero con algunas cosas distintas
+/*t_pcb* traer_pcb_de_memoria(){ //similar a traer_pcb_de_cpu pero con algunas cosas distintas
     //TODO
     t_pcb* pcb;
     return pcb; 
-}
+}*/
 
 
 /*---------------------------------------------- PLANIFICADOR LARGO PLAZO ----------------------------------------------*/
@@ -464,7 +464,6 @@ void agregar_pcb_en_cola_new(int socket)
 
         sem_post(&hayPCBsParaAgregarAlSistema); 
     }
-    return EXIT_SUCCESS;
     free(mensaje);
 }
 

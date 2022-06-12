@@ -18,7 +18,7 @@
 #include <commons/collections/list.h>
 
 typedef struct {
-    int32_t CONSOLA_SOCKET;
+    int CONSOLA_SOCKET;
     char* IP_MEMORIA;
     char* PUERTO_MEMORIA;
     char* IP_CPU;
