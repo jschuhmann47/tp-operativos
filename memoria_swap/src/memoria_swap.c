@@ -28,6 +28,7 @@ int main(int argc, char *argv[]){
     int socketCpu = aceptar_conexion_memoria(conexionCpu); //supuestamente kernel no arranca hasta que cpu este levantado asi que no deberia entrar aca
     if(socketCpu > 0) {
         log_info(memoria_swapLogger, "Memoria: Acepto la conexión del CPU con socket: %d", socketCpu);
+        recibir_handshake(socketCpu);
         pthread_create(&atenderCpu, NULL, recibir_instrucciones_cpu, socketCpu);
     } else {
         log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
@@ -140,4 +141,17 @@ void* leer_de_memoria(void* memoria, int offset, int size){ //no valida nada
     void* contenido = malloc(size);
     memcpy(contenido, memoria + offset, size);
     return contenido;
+}
+
+void recibir_handshake(int socketCPu){
+    uint32_t handshake;
+    void* bytes = malloc(sizeof(uint32_t)*2);
+    if(recv(socketCPu, &handshake, sizeof(uint32_t), MSG_WAITALL)){
+        if(handshake == 1){
+            memcpy(bytes, &(memoria_swapCfg->TAM_PAGINA), sizeof(uint32_t));
+            memcpy(bytes + sizeof(uint32_t), &(memoria_swapCfg->PAGINAS_POR_TABLA), sizeof(uint32_t));
+            send(socketCPu, bytes, sizeof(uint32_t)*2, 0);
+        }
+    }
+    free(bytes);
 }

@@ -12,7 +12,7 @@
 
 typedef struct
 {   
-    uint32_t KERNEL_SOCKET;
+    int KERNEL_SOCKET;
     uint32_t CPU_SOCKET;
     char* IP_MEMORIA;
     char* PUERTO_ESCUCHA;
