@@ -15,6 +15,8 @@
 
 t_log* cpuLogger;
 t_cpu_config* cpuCfg;
+uint32_t tamanioPagina; 
+uint32_t paginasPorTabla;
 
 void aceptar_conexiones_cpu(conexion* conexion);
 void aceptar_conexiones_cpu_interrupcion(conexion* conexion);

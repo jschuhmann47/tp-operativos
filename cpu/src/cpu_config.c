@@ -46,3 +46,14 @@ void generar_tlb(uint32_t entradasTlb, char* algoritmoReemplazo)
     tlb->entradasDisponibles = entradasTlb;
     tlb->direcciones = list_create();
 }
+
+void handshake_a_memoria(int SOCKET_MEMORIA, uint32_t *tamanioPagina, uint32_t *paginasPorTabla){
+    uint32_t handshake = 1;
+    void* buffer = malloc(sizeof(uint32_t)*2);
+    if(send(SOCKET_MEMORIA, &handshake, sizeof(uint32_t), 0)){
+        recv(SOCKET_MEMORIA, buffer, sizeof(uint32_t)*2, MSG_WAITALL);
+        memcpy(tamanioPagina, buffer, sizeof(uint32_t));
+        memcpy(paginasPorTabla, buffer + sizeof(uint32_t), sizeof(uint32_t));
+    }
+    free(buffer);
+}

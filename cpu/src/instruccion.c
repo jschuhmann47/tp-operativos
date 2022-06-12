@@ -80,6 +80,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     case WRITE:
         ;
         uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
+        uint32_t direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla);
         uint32_t* valor = list_get(instruccion->parametros, 1);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
@@ -93,6 +94,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     case READ:
         ;
         uint32_t* direccionLogicaR = list_get(instruccion->parametros, 0);
+        uint32_t direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla);
         log_info(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
         if(mandar_instruccion(READ,*direccionLogicaR,0,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
@@ -127,7 +129,7 @@ void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando, int 
 uint32_t cpu_fetch_operands(t_instruccion* instruccion, int socket_memoria){
     uint32_t* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
     log_info(cpuLogger, "CPU: Fetch operands: %i ", *direccionMemoriaAObtener);
-    if(mandar_instruccion(READ,*direccionMemoriaAObtener,NULL,socket_memoria)){
+    if(mandar_instruccion(READ,*direccionMemoriaAObtener,0,socket_memoria)){
         log_info(cpuLogger, "CPU: Se mando instruccion COPY/READ a Memoria.");
     }
     else{

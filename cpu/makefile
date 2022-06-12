@@ -1,5 +1,5 @@
 # Include libraries here
-LIBRARIES=static commons pthread
+LIBRARIES=static commons pthread m
 # Include custom library paths here
 # SHARED_LIBRARY_PATHS=
 STATIC_LIBRARY_PATHS=../static
@@ -52,6 +52,10 @@ release: clean
 release: all
 
 start: all
+	export LD_LIBRARY_PATH=$(RUNTIME_LINKS); \
+	./$(BINARY) $(ARGS)
+
+valgrind: all
 	export LD_LIBRARY_PATH=$(RUNTIME_LINKS); \
 	valgrind --leak-check=full ./$(BINARY) $(ARGS)
 

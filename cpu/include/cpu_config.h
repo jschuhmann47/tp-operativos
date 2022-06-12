@@ -12,8 +12,8 @@
 #include <commons/string.h>
 
 typedef struct {
-    uint32_t KERNEL_SOCKET;
-    uint32_t KERNEL_INTERRUPT;
+    int KERNEL_SOCKET;
+    int KERNEL_INTERRUPT;
     uint32_t ENTRADAS_TLB;
     char* REEMPLAZO_TLB;
     uint32_t RETARDO_NOOP;
@@ -47,5 +47,6 @@ t_cpu_config* cpu_cfg_create(void);
 void cpu_config_initialize(void* cpuCfg, t_config* config);
 void liberar_modulo_cpu(t_log* cpuLogger, t_cpu_config* cpuCfg);
 void generar_tlb(uint32_t entradasTlb, char* algoritmoReemplazo);
+void handshake_a_memoria(int SOCKET_MEMORIA, uint32_t *tamanioPagina, uint32_t *paginasPorTabla);
 
 #endif

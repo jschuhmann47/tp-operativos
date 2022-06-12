@@ -22,6 +22,11 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
+    log_info(cpuLogger, "CPU: Realizando Handshake a Memoria");
+    handshake_a_memoria(SOCKET_MEMORIA, &tamanioPagina, &paginasPorTabla);
+    log_info(cpuLogger, "CPU: Recibi tamanio de pagina: %i", tamanioPagina);
+    log_info(cpuLogger, "CPU: Recibi paginas por tabla: %i", paginasPorTabla);
+
     struct sockaddr clienteDispatch;
     socklen_t lenCliD = sizeof(clienteDispatch);
 
