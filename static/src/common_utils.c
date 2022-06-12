@@ -29,7 +29,6 @@ code_instruccion getCodeIntruccion(char *code){
         return EXIT_I;
     if (string_equals_ignore_case(code, "I/O") || string_equals_ignore_case(code, "I_O"))
         return I_O;
-        
 }
 
 char* agregarInstruccion(char **intruccion, char *mensaje)
@@ -111,7 +110,7 @@ t_instruccion *crear_instruccion(void)
 	return instruccion;
 }
 
-int sizeArray(void **array)
+int sizeArray(char **array)
 {
     int cantidad = 0;
 

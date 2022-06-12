@@ -15,7 +15,8 @@ int cargar_configuracion(const char *nombreModulo, void *moduleCfg, char *config
 		void (*cargar_miembros)(void *cfg, t_config *localCfg));
 char* agregarInstruccion(char **intruccion, char *mensaje);
 t_instruccion *crear_instruccion(void);
-int sizeArray(void **array);
+int sizeArray(char **array);
+uint32_t string_to_uint(char* string);
 code_instruccion getCodeIntruccion(char *code);
 
 uint32_t enviar_tamanio_mensaje(t_mensaje_tamanio *msjeTamanio, int socket);
