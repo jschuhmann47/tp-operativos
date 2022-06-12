@@ -54,7 +54,6 @@ char *leer_archivo(char *nombre)
     if (file == NULL)
     {
         log_error(consolaLogger, "Error al abrir el archivo");
-        return -1;
     }
 
     while (!feof(file))
@@ -72,7 +71,7 @@ char *leer_archivo(char *nombre)
         fgets(palabras[posicion], 15, file);
         posicion++;
     }
-    void *mensaje = string_new();
+    char *mensaje = string_new();
     for (int posicion = 0; posicion < cantidadLineas; posicion++)
     {
         char **token = string_split(palabras[posicion], delimitador);

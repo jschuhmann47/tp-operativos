@@ -53,6 +53,10 @@ release: all
 
 start: all
 	export LD_LIBRARY_PATH=$(RUNTIME_LINKS); \
+	./$(BINARY) $(ARGS)
+
+valgrind: all
+	export LD_LIBRARY_PATH=$(RUNTIME_LINKS); \
 	valgrind --leak-check=full ./$(BINARY) $(ARGS)
 
 memcheck: all
