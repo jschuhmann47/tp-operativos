@@ -13,6 +13,7 @@ pthread_mutex_t mutexId;
 sem_t pcbsEnExit;
 pthread_mutex_t suspensionDePCB;
 pthread_mutex_t colaDeIO;
+pthread_mutex_t mutex_lista_sockets;
 
 //ID para el PCB
 static uint32_t nextId;
@@ -34,6 +35,8 @@ int SOCKET_INTERRUPT;
 
 int memoria_fd;
 
+t_list* sockets;
+
 void iniciar_planificacion() {
     //Conexiones
     conexion_de_dispatch();
@@ -48,6 +51,9 @@ void iniciar_planificacion() {
     sem_init(&suspensionConcluida, 0, 0);                               /* binario  */
     sem_init(&pcbsEnExit, 0, 0);
 
+
+    sockets = list_create();
+
     /* Inicialización de colas de planificación */
     pcbsNew = cola_planificacion_create(0);
     pcbsReady = cola_planificacion_create(0);
@@ -55,7 +61,6 @@ void iniciar_planificacion() {
     pcbsBlocked = cola_planificacion_create(0);
     pcbsSusReady = cola_planificacion_create(0);
     pcbsExit = cola_planificacion_create(0);
-    pthread_mutex_init(&mutexId, NULL);
 
     pthread_t thread;
     pthread_mutex_init(&mutexId, NULL);
@@ -71,6 +76,9 @@ void iniciar_planificacion() {
     /* Planificador corto plazo */
     pthread_create(&thread, NULL, iniciar_corto_plazo, NULL);
     pthread_detach(thread);
+
+
+    pthread_mutex_init(&mutex_lista_sockets, NULL);
 }
 
 /*---------------------------------------------- PLANIFICADOR CORTO PLAZO ----------------------------------------------*/
@@ -231,28 +239,6 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
 
 /*---------------------------------------------- PLANIFICADOR MEDIANO PLAZO ----------------------------------------------*/
 
-void* iniciar_mediano_plazo(void* _) { //esto no hace nada
-    // pthread_t th;
-    // pthread_create(&th, NULL, pasar_de_susready_a_ready, NULL); 
-    // pthread_detach(th);
-    // //pthread_create(&th, NULL, recibir_pcb_bloqueado, NULL);
-    // //pthread_detach(th);
-    // for(;;) {
-      
-    //     sem_wait(&hayPCBsParaPasarASusBlocked); // TODO: Va a estar esperando por que le hagan el post
-    //     t_pcb* pcbASuspender; //= pop_ultimo_de_cola(pcbsBlocked); //tiene que sacar segun el tiempo de configuracion, usar usleep
-    //     //enviar_suspension_de_pcb_a_memoria(pcbASuspender);
-    //     pthread_t contarTiempoBloqueado;
-    //     pthread_create(&contarTiempoBloqueado, NULL, contar_tiempo_bloqueado, pcbASuspender);
-                                 
-    //     sem_wait(&suspensionConcluida); // Cuando termine la suspension sale del for
-    //     //TODO: Aca pasar ya de SUSBLOCKED => SUSREADY ??? Un hilo?
-    //     //dice esto: La transición (SUSPENDED-BLOCKED -> SUSPENDED-READY), al ser una transición que va a darse al finalizar una entrada/salida, 
-    //     //no necesariamente forma parte del planificador de Mediano Plazo.
-    // }
-    // pthread_exit(NULL);
-}
-
 void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a suspender siempre
     sleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO/1000);
     pthread_mutex_lock(&suspensionDePCB);
@@ -363,17 +349,21 @@ void* liberar_procesos_en_exit(void* _) {
 
         t_pcb* pcbALiberar = get_and_remove_primer_pcb_de_cola(pcbsExit);
         
-        //TODO: Avisarle a Consola que finalizo su proceso. obtener el socket de esa consola en particular
+        
         log_info(kernelLogger, "Kernel: Desconexión Proceso con ID %d", pcbALiberar->id);
         log_transition("Corto Plazo", "EXEC", "EXIT", pcbALiberar->id);
         
-
+        
         log_info(kernelLogger, "Largo Plazo: Se libera una instancia de Grado Multiprogramación");
         /* Aumenta el grado de multiprogramación al tener proceso en EXIT */
+        
+        enviar_finalizacion_consola("Finish", get_socket_de_pid(pcbALiberar->id));
+        cerrar_socket_de_pid(pcbALiberar->id);
 
         pcb_destroy(pcbALiberar);
         
-        enviar_finalizacion_consola("Finish", kernelCfg->CONSOLA_SOCKET);
+        
+        
 
         sem_post(&gradoMultiprog);
     }
@@ -394,15 +384,27 @@ t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel
     return self;
 }
 
+// struct t_pcb
+// {
+//     uint32_t id;        
+//     t_status status;
+//     uint32_t tamanio;
+//     t_list *instrucciones;
+//     uint32_t programCounter;
+//     // TODO: Tabla de paginas
+//     // Estos dos ultimos solo se usan cuando es SRT
+//     double est_rafaga_actual; // Esta en Milisegundos
+//     double dur_ultima_rafaga;
+//     //void (*algoritmo_siguiente_estim)(t_pcb *self, time_t tiempoFinal, time_t tiempoInicial);
+// };
+
 void pcb_destroy(t_pcb *pcb) {
-    // Realiza los free correspondientes
-    //las variables no se si hacen falta free, las instrucciones seguro
-    list_destroy_and_destroy_elements(pcb->instrucciones, (void*)destruir_instruccion);
+    list_destroy_and_destroy_elements(pcb->instrucciones, destruir_instruccion);
     free(pcb);
 }
 
 void destruir_instruccion(t_instruccion* instruccion) {
-    list_destroy_and_destroy_elements(instruccion->parametros, (void*)free);
+    list_destroy_and_destroy_elements(instruccion->parametros, free);
     free(instruccion);
 }
 
@@ -453,6 +455,8 @@ void agregar_pcb_en_cola_new(int socket)
         uint32_t idPcb = get_siguiente_id();
         //CREAMOS EL PCB
         pcb = pcb_create(idPcb, tamanio, instrucciones, kernelCfg); //utilizar socketEscucha como ID de PCB.
+        agregar_lista_sockets(pcb->id,socket);
+
         log_info(kernelLogger, "ID PCB %i", pcb->id);
         if(pcb->status == NEW){
             log_info(kernelLogger, "STATUS PCB %s", "NEW");
@@ -625,3 +629,53 @@ void* conexion_de_dispatch() {
     // CASO 1: Envio de PCB a CPU
     // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
 }
+
+void agregar_lista_sockets(uint32_t id, int socket) {
+    t_socket* socketAAgregar= malloc(sizeof(t_socket));
+    socketAAgregar->id = id;
+    socketAAgregar->socket = socket;
+    pthread_mutex_lock(&mutex_lista_sockets);
+    list_add(sockets,socketAAgregar);
+    pthread_mutex_unlock(&mutex_lista_sockets);
+}
+
+void cerrar_socket_de_pid(uint32_t pid) {
+    int posicion = buscar_indice_socket_de_pid(pid);
+    pthread_mutex_lock(&mutex_lista_sockets);
+    if(posicion != -1) {
+        t_socket* pcbACerrar = list_remove(sockets, posicion);
+        pthread_mutex_unlock(&mutex_lista_sockets);
+        close(pcbACerrar->socket);
+        free(pcbACerrar);
+    }
+    else{
+        pthread_mutex_unlock(&mutex_lista_sockets);
+        log_error(kernelLogger, "Kernel: No se encontro el socket de PID %d", pid);
+    }
+}
+
+int buscar_indice_socket_de_pid(uint32_t pid) {
+    int posicion = -1;
+    for(int i = 0; i < list_size(sockets); i++) {
+        t_socket* socketActual = list_get(sockets, i);
+        if(socketActual->id == pid) {
+            posicion = i;
+            break;
+        }
+    }
+    return posicion;
+}
+
+int get_socket_de_pid(uint32_t pid) {
+    int posicion = buscar_indice_socket_de_pid(pid);
+    if(posicion != -1) {
+        t_socket* socketActual = list_get(sockets, posicion);
+        return socketActual->socket;
+    }
+    else{
+        log_error(kernelLogger, "Kernel: No se encontro el socket de PID %d", pid);
+        return -1;
+    }
+}
+
+
