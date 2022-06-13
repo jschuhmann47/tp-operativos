@@ -75,6 +75,7 @@ void recibir_instrucciones_cpu(int socket_cpu){
         
         switch(opCode){
             case INSTRUCCION:
+                ;
                 uint32_t size;
                 if(recv(socket_cpu, &size, sizeof(uint32_t), MSG_WAITALL) == -1){
                     log_error(memoria_swapLogger, "Memoria: Error al recibir size de CPU: %s", strerror(errno));
@@ -86,13 +87,13 @@ void recibir_instrucciones_cpu(int socket_cpu){
                     procesar_instruccion(buffer,socket_cpu);
                 }
                 free(buffer);
-                break;
+                continue;
             case TABLAUNO:
                 procesar_entrada_tabla_primer_nv(socket_cpu);
-                break;
+                continue;
             case TABLADOS:
                 procesar_entrada_tabla_segundo_nv(socket_cpu);
-                break;
+                continue;
         }
 
         
@@ -139,11 +140,11 @@ void procesar_write(uint32_t param1, uint32_t param2, int socket_cpu){ //write n
 
 void procesar_entrada_tabla_primer_nv(socket_cpu){
     
-    log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de primera nivel");
+    log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de primer nivel");
     uint32_t requestPrimerTabla;
     if(recv(socket_cpu, &requestPrimerTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al recibir requestPrimerTabla de CPU: %s", strerror(errno));
-        return;
+        //return;
     }
     
     //va a la tabla y trae el numero de la segunda tabla
@@ -151,16 +152,16 @@ void procesar_entrada_tabla_primer_nv(socket_cpu){
     uint32_t indiceSegundaTabla = 1;
     if(send(socket_cpu,&indiceSegundaTabla,sizeof(uint32_t),0) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al enviar indiceSegundaTabla a CPU: %s", strerror(errno));
-        return;
+        //return;
     }
 }
 
 void procesar_entrada_tabla_segundo_nv(socket_cpu){
-    
+    log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de segundo nivel");
     uint32_t requestSegundaTabla;
     if(recv(socket_cpu, &requestSegundaTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al recibir requestSegundaTabla de CPU: %s", strerror(errno));
-        return;
+        //return;
     }
 
     //busca el marco en la tabla de segunda nivel
@@ -168,7 +169,7 @@ void procesar_entrada_tabla_segundo_nv(socket_cpu){
     uint32_t marco = 1;
     if(send(socket_cpu,&marco,sizeof(uint32_t),0) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al enviar marco a CPU: %s", strerror(errno));
-        return;
+        //return;
     }
 
 }
