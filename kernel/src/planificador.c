@@ -645,6 +645,7 @@ void cerrar_socket_de_pid(uint32_t pid) {
     if(posicion != -1) {
         t_socket* pcbACerrar = list_remove(sockets, posicion);
         pthread_mutex_unlock(&mutex_lista_sockets);
+        log_info(kernelLogger,"Se cierra socket del proceso %i",pcbACerrar->id);
         close(pcbACerrar->socket);
         free(pcbACerrar);
     }
