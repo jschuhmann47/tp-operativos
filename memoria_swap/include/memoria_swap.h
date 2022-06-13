@@ -16,7 +16,7 @@ t_memoria_swap_config* memoria_swapCfg;
 void* MEMORIA_PRINCIPAL;
 
 void* crear_espacio_de_memoria();
-void escribir_en_memoria(void* memoria, void* contenido, int offset, int size);
+void escribir_en_memoria(void* memoria, void* contenido, uint32_t marco, uint32_t desplazamiento,int size);
 void* leer_de_memoria(void* memoria, int offset, int size);
 
 

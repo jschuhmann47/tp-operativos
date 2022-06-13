@@ -12,7 +12,9 @@
 typedef enum
 {
     MENSAJE,
-    INSTRUCCION
+    INSTRUCCION,
+    TABLAUNO,
+    TABLADOS
 } op_code;
 
 typedef enum
