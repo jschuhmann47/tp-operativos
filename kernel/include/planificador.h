@@ -13,6 +13,11 @@
 #include "kernel.h"
 
 
+typedef struct{
+    uint32_t* id;
+    int* socket;
+} t_socket;
+
 
 void iniciar_planificacion();
 
@@ -29,7 +34,6 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo);
 
 
 // Planificador Mediano Plazo
-void* iniciar_mediano_plazo(void* _);
 void* pasar_de_susready_a_ready(void* _);
 void enviar_suspension_de_pcb_a_memoria(t_pcb* pcb);
 void* contar_tiempo_bloqueado(t_pcb* pcb);
@@ -69,6 +73,13 @@ t_pcb* srt_pcb_menor_estimacion_entre(t_pcb* unPcb, t_pcb* otroPcb);
 t_pcb* elegir_en_base_a_srt(t_cola_planificacion* colaPlanificacion);
 double media_exponencial(double realAnterior, double estAnterior);
 void calcular_nueva_estimacion_actual(t_pcb* pcb);
+
+//Conexiones
+void agregar_lista_sockets(uint32_t id, int socket);
+void cerrar_socket_de_pid(uint32_t pid);
+int buscar_indice_socket_de_pid(uint32_t pid);
+int get_socket_de_pid(uint32_t pid);
+
 
 
 
