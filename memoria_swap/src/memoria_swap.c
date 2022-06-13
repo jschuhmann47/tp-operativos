@@ -66,21 +66,36 @@ int aceptar_conexion_memoria(conexion* con){
 
 void recibir_instrucciones_cpu(int socket_cpu){
     while(1){
-        uint32_t size;
-        if(recv(socket_cpu, &size, sizeof(uint32_t), MSG_WAITALL) == -1){
-            log_error(memoria_swapLogger, "Memoria: Error al recibir el tamaño de la instrucción: %s", strerror(errno));
+        
+        op_code opCode;
+        if(recv(socket_cpu, &opCode, sizeof(op_code), MSG_WAITALL) == -1){
+            log_error(memoria_swapLogger, "Memoria: Error al recibir opCode de CPU: %s", strerror(errno));
             break;
         }
-        log_info(memoria_swapLogger, "Memoria: Recibiendo instrucción de %i bytes", size);
-        void* buffer=malloc(size);
-        log_info(memoria_swapLogger, "Memoria: Esperando instruccion de CPU");
-    
-        if(recv(socket_cpu, buffer, size, MSG_WAITALL)){
-            procesar_instruccion(buffer,socket_cpu);
-
-            // log_info(memoria_swapLogger, "Memoria: Recibi parametro: %i", *parametroWrite);
+        
+        switch(opCode){
+            case INSTRUCCION:
+                uint32_t size;
+                if(recv(socket_cpu, &size, sizeof(uint32_t), MSG_WAITALL) == -1){
+                    log_error(memoria_swapLogger, "Memoria: Error al recibir size de CPU: %s", strerror(errno));
+                    break;
+                }
+                void* buffer=malloc(size);
+                log_info(memoria_swapLogger, "Memoria: Esperando instruccion de CPU");
+                if(recv(socket_cpu, buffer, size, MSG_WAITALL)){
+                    procesar_instruccion(buffer,socket_cpu);
+                }
+                free(buffer);
+                break;
+            case TABLAUNO:
+                procesar_entrada_tabla_primer_nv(socket_cpu);
+                break;
+            case TABLADOS:
+                procesar_entrada_tabla_segundo_nv(socket_cpu);
+                break;
         }
-        free(buffer);
+
+        
     }
 }
 
@@ -122,6 +137,43 @@ void procesar_write(uint32_t param1, uint32_t param2, int socket_cpu){ //write n
     log_info(memoria_swapLogger, "Memoria: WRITE terminado");
 }
 
+void procesar_entrada_tabla_primer_nv(socket_cpu){
+    
+    log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de primera nivel");
+    uint32_t requestPrimerTabla;
+    if(recv(socket_cpu, &requestPrimerTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
+        log_error(memoria_swapLogger, "Memoria: Error al recibir requestPrimerTabla de CPU: %s", strerror(errno));
+        return;
+    }
+    
+    //va a la tabla y trae el numero de la segunda tabla
+
+    uint32_t indiceSegundaTabla = 1;
+    if(send(socket_cpu,&indiceSegundaTabla,sizeof(uint32_t),0) == -1){
+        log_error(memoria_swapLogger, "Memoria: Error al enviar indiceSegundaTabla a CPU: %s", strerror(errno));
+        return;
+    }
+}
+
+void procesar_entrada_tabla_segundo_nv(socket_cpu){
+    
+    uint32_t requestSegundaTabla;
+    if(recv(socket_cpu, &requestSegundaTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
+        log_error(memoria_swapLogger, "Memoria: Error al recibir requestSegundaTabla de CPU: %s", strerror(errno));
+        return;
+    }
+
+    //busca el marco en la tabla de segunda nivel
+
+    uint32_t marco = 1;
+    if(send(socket_cpu,&marco,sizeof(uint32_t),0) == -1){
+        log_error(memoria_swapLogger, "Memoria: Error al enviar marco a CPU: %s", strerror(errno));
+        return;
+    }
+
+}
+
+
 void recibir_pcbs_kernel(int socket_kernel){
     log_info(memoria_swapLogger, "Memoria: entre a recibir kernel");
     while(1){
@@ -135,12 +187,13 @@ void* crear_espacio_de_memoria(){
     return malloc(memoria_swapCfg->TAM_MEMORIA);
 }
 
-void escribir_en_memoria(void* memoria, void* contenido, int offset, int size){ //esta funcion no valida si se pueda escribir
+void escribir_en_memoria(void* memoria, void* contenido, uint32_t marco, uint32_t desplazamiento,int size){
+    uint32_t offset = marco * memoria_swapCfg->TAM_PAGINA + desplazamiento;
     memcpy(memoria + offset, contenido, size);
 }
 
 void* leer_de_memoria(void* memoria, int offset, int size){ //no valida nada
-    void* contenido = malloc(size);
+    void* contenido = malloc(size); //con marco
     memcpy(contenido, memoria + offset, size);
     return contenido;
 }
@@ -157,3 +210,4 @@ void recibir_handshake(int socketCPu){
     }
     free(bytes);
 }
+

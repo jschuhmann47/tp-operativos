@@ -2,12 +2,46 @@
 
 uint32_t traducir_direccion(uint32_t direccionLogica, 
                           uint32_t tamanioPagina, 
-                          uint32_t paginasPorTabla)
+                          uint32_t paginasPorTabla,
+                          int socket_memoria)
 {
     uint32_t numeroDePagina = floor(direccionLogica/tamanioPagina);
+    
+
+
     uint32_t entradaTablaPrimerNivel = floor(numeroDePagina/paginasPorTabla);
+
     uint32_t entradaTablaSegundoNivel = numeroDePagina % paginasPorTabla;
+
+    uint32_t rtaTablaPrimerNivel,marco;
+
     uint32_t desplazamiento = direccionLogica - numeroDePagina * tamanioPagina;
+
+    if(send(socket_memoria,&entradaTablaPrimerNivel,sizeof(entradaTablaPrimerNivel),0)<0){
+        log_error(cpuLogger, "CPU: No se pudo enviar entradaTablaPrimerNivel a Memoria.");
+        
+    }else{
+        log_info(cpuLogger, "CPU: Se mando entradaTablaPrimerNivel a Memoria.");
+        if(recv(socket_memoria,&rtaTablaPrimerNivel,sizeof(rtaTablaPrimerNivel),0)<0){
+            log_error(cpuLogger, "CPU: No se pudo recibir rtaTablaPrimerNivel de Memoria.");
+        }
+        else{
+            log_info(cpuLogger, "CPU: Se recibio rtaTablaPrimerNivel de Memoria.");
+            if(send(socket_memoria,&entradaTablaSegundoNivel,sizeof(entradaTablaSegundoNivel),0)<0){
+                log_error(cpuLogger, "CPU: No se pudo enviar entradaTablaSegundoNivel a Memoria.");
+            }
+            else{
+                log_info(cpuLogger, "CPU: Se mando entradaTablaSegundoNivel a Memoria.");
+                if(recv(socket_memoria,&marco,sizeof(marco),0)<0){
+                    log_error(cpuLogger, "CPU: No se pudo recibir rtaTablaSegundoNivel de Memoria.");
+                }
+                else{
+                    log_info(cpuLogger, "CPU: Se recibio rtaTablaSegundoNivel de Memoria.");
+                    return marco + desplazamiento;
+                }
+        }
+    }
+
 
     log_info(cpuLogger, "CPU: Numero de Pagina: %i", numeroDePagina);
     log_info(cpuLogger, "CPU: Tabla Primer Nivel: %i", entradaTablaPrimerNivel);

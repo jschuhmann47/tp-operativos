@@ -80,11 +80,11 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     case WRITE:
         ;
         uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
-        uint32_t direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla);
+        uint32_t direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
         uint32_t* valor = list_get(instruccion->parametros, 1);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
-        if(mandar_instruccion(WRITE,*direccionLogicaW,*valor,socket_memoria)>0){
+        if(mandar_instruccion(WRITE,direccionFisicaW,*valor,socket_memoria)>0){ //cambiar op code
             log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
         }else{
             log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
@@ -94,9 +94,9 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     case READ:
         ;
         uint32_t* direccionLogicaR = list_get(instruccion->parametros, 0);
-        uint32_t direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla);
+        uint32_t direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla,socket_memoria);
         log_info(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
-        if(mandar_instruccion(READ,*direccionLogicaR,0,socket_memoria)>0){
+        if(mandar_instruccion(READ,direccionFisicaR,0,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
         }
         else{
