@@ -27,7 +27,7 @@ typedef struct
 } t_memoria_swap_config;
 
 extern t_log *memoria_swapLogger;
-extern t_memoria_swap_config *consolaCfg;
+extern t_memoria_swap_config *memoria_swapCfg;
 
 t_memoria_swap_config *memoria_swap_cfg_create(void);
 void memoria_swap_config_initialize(void *memoria_swapCfg, t_config *config);
