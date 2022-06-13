@@ -6,8 +6,9 @@
 
 typedef struct{
     uint32_t indice;
-    t_segundoNivel* paginaSegNv;
+    t_tablaSegundoNivel* tablaSegundoNivel;
 } t_primerNivel;
+
 
 typedef struct{
     uint32_t indice;
@@ -17,8 +18,14 @@ typedef struct{
     bool modificado; //bit de modificado
 } t_segundoNivel;
 
+typedef struct{
+    t_list* marcos;
+    //pthread_mutex_t mutex;
+    uint32_t puntero;
+} t_tablaSegundoNivel;
+
 
 void inicializar_tabla_paginas();
-
+void reemplazar_pagina(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
 
 #endif
