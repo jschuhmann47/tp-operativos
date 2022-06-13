@@ -399,6 +399,11 @@ int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,in
         return -1;
     }
     
+    op_code opCode = INSTRUCCION;
+    if(send(socket,&opCode,sizeof(op_code),0)<0){
+        printf("\nError al enviar el opCode al ejecutar instruccion\n");
+    }
+    
     uint32_t bytes = tamanioInstruccion(codOp);
 
     if(send(socket,&bytes,sizeof(uint32_t),0)<0){
