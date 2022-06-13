@@ -70,7 +70,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     switch (codOp)
     {
     case NO_OP:
-        usleep(cpuCfg->RETARDO_NOOP);
+        sleep(cpuCfg->RETARDO_NOOP/1000);
         log_info(cpuLogger, "CPU: Ejecute NO_OP");
         break;
     case I_O: 

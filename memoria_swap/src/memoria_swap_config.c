@@ -44,3 +44,4 @@ void liberar_modulo_memoria_swap(t_log *memoria_swapLogger, t_memoria_swap_confi
     free(memoria_swapCfg->PATH_SWAP);
     free(memoria_swapCfg);
 }
+
