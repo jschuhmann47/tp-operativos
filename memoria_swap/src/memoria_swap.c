@@ -65,7 +65,39 @@ int aceptar_conexion_memoria(conexion* con){
 //de aca para abajo deberian ir en otro archivo
 
 void recibir_instrucciones_cpu(int socket_cpu){
-    
+    while(1){
+        
+        op_code opCode;
+        if(recv(socket_cpu, &opCode, sizeof(op_code), MSG_WAITALL) == -1){
+            log_error(memoria_swapLogger, "Memoria: Error al recibir opCode de CPU: %s", strerror(errno));
+            break;
+        }
+        
+        switch(opCode){
+            case INSTRUCCION:
+                ;
+                uint32_t size;
+                if(recv(socket_cpu, &size, sizeof(uint32_t), MSG_WAITALL) == -1){
+                    log_error(memoria_swapLogger, "Memoria: Error al recibir size de CPU: %s", strerror(errno));
+                    break;
+                }
+                void* buffer=malloc(size);
+                log_info(memoria_swapLogger, "Memoria: Esperando instruccion de CPU");
+                if(recv(socket_cpu, buffer, size, MSG_WAITALL)){
+                    procesar_instruccion(buffer,socket_cpu);
+                }
+                free(buffer);
+                continue;
+            case TABLAUNO:
+                procesar_entrada_tabla_primer_nv(socket_cpu);
+                continue;
+            case TABLADOS:
+                procesar_entrada_tabla_segundo_nv(socket_cpu);
+                continue;
+        }
+
+        
+    }
 }
 
 void procesar_instruccion(void* buffer, int socket_cpu){
