@@ -77,6 +77,6 @@ void reemplazo_clock_modificado(t_segundoNivel* paginaAAgregar,t_tablaSegundoNiv
 
 /* clock modificado:
 Busca U=0 M=0
-Busca U=0 M=1 y remplaza U=1 en cero
+Busca U=0 M=1 y reemplaza U=1 a U=0
 repetir hasta encontrar
 */

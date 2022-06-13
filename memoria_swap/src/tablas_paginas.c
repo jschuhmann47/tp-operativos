@@ -12,6 +12,7 @@ void inicializar_tabla_paginas(){
     for (int i = 0; i < cantTablas; i++) {
         t_primerNivel* entradaPrimerNivel = malloc(sizeof(t_primerNivel));
         entradaPrimerNivel->indice = i;
+        
         t_tablaSegundoNivel* entrada = malloc(sizeof(t_tablaSegundoNivel));
         entrada->puntero=0;
         entrada->marcos = list_create();
