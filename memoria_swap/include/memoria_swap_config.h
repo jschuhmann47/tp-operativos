@@ -10,6 +10,9 @@
 #include <commons/log.h>
 #include <commons/string.h>
 
+// #include "tablas_paginas.h"
+// #include "algoritmos_reemplazo.h"
+
 typedef struct
 {   
     int KERNEL_SOCKET;

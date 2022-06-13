@@ -8,7 +8,7 @@ int cantTablas;
 void inicializar_tabla_paginas(){
     tablaPaginasPrimerNivel = list_create();
     cantTablas = memoria_swapCfg->PAGINAS_POR_TABLA; //ambas tienen el mismo tamaño
-   
+    log_info(memoria_swapLogger, "Cantidad de tablas: %i",cantTablas);
     for (int i = 0; i < cantTablas; i++) {
         t_primerNivel* entradaPrimerNivel = malloc(sizeof(t_primerNivel));
         entradaPrimerNivel->indice = i;
@@ -26,6 +26,7 @@ void inicializar_tabla_paginas(){
         }
         list_add(tablaPaginasPrimerNivel, entradaPrimerNivel);
     }
+    log_info(memoria_swapLogger, "Inicializadas las tablas correctamente");
 }
 
 // void obtener_nro_pagina_segunda_tabla(uint32_t indice, uint32_t* nroPagina){

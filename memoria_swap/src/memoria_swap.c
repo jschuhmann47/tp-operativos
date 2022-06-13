@@ -6,6 +6,8 @@ int main(int argc, char *argv[]){
     memoria_swapCfg = memoria_swap_cfg_create();
     cargar_configuracion(MEMORIA_SWAP_MODULE_NAME, memoria_swapCfg, MEMORIA_SWAP_CFG_PATH, memoria_swapLogger, memoria_swap_config_initialize);
 
+    inicializar_tabla_paginas();
+
     int socket_servidor = iniciar_servidor(memoria_swapCfg->IP_MEMORIA, memoria_swapCfg->PUERTO_ESCUCHA);
     
     struct sockaddr cliente;
