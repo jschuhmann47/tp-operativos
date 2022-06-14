@@ -6,8 +6,6 @@ uint32_t traducir_direccion(uint32_t direccionLogica,
                           int socket_memoria){
 
     uint32_t numeroDePagina = floor(direccionLogica/tamanioPagina);
-    
-
 
     uint32_t entradaTablaPrimerNivel = floor(numeroDePagina/paginasPorTabla);
 

@@ -129,7 +129,7 @@ void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socket
         if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
             log_info(cpuLogger, "CPU: Mande el PCB a Kernel");
             if(send(socketKernelDispatch, &tiempoABloquearse, sizeof(uint32_t), 0)){ 
-                log_info(cpuLogger, "CPU: Mande el tiempo de IO a Kernel. Tiempo mandado IO %ld",tiempoABloquearse);
+                log_info(cpuLogger, "CPU: Mande el tiempo de IO a Kernel. Tiempo mandado IO %i",tiempoABloquearse);
                 log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
                 free(buffer);
                 free(bytes);
