@@ -39,7 +39,6 @@ typedef enum
     EXIT
 } t_status;
 
-// TODO: Ver si cuando tomamos el archivo de instrucciones lo podemos parsear a esta estructura
 typedef struct
 {
     code_instruccion indicador;
@@ -49,7 +48,7 @@ typedef struct
 typedef struct t_pcb t_pcb; // Se declara este para poder usar el del "algortimo_update"
 struct t_pcb
 {
-    uint32_t id;        //como hacemos incremental el id? buscar.
+    uint32_t id;
     t_status status;
     uint32_t tamanio;
     t_list *instrucciones;
