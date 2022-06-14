@@ -12,17 +12,6 @@ int main(int argc, char* argv[]) {
 
     iniciar_planificacion(); //esta se conecta a cpu
 
-    int socketMemoria = conectar_a_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_MEMORIA);
-    log_info(kernelLogger, "Kernel: Conectando a Memoria");
-
-    if (socketMemoria == -1){
-        log_error(kernelLogger, "Kernel: No se pudo establecer conexión con Memoria. Valor conexión %d", socketMemoria);
-        return -1;
-    }else{
-        log_info(kernelLogger, "Kernel: Conexion a Memoria exitosa");
-    }
-
-
     aceptar_conexiones_kernel(socketEscucha, cliente, len);
 
     liberar_modulo_kernel(kernelLogger, kernelCfg);

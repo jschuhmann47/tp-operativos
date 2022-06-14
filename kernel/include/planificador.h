@@ -42,6 +42,7 @@ void suspender_tiempo_de_io(t_pcb* pcb, uint32_t tiempo);
 // Planificador Largo Plazo
 void* iniciar_largo_plazo(void* _);
 void* liberar_procesos_en_exit(void* _);
+void solicitar_nueva_tabla_memoria();
 
 // Manejo de PCBs
 t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel_config* config);
@@ -79,6 +80,7 @@ void agregar_lista_sockets(uint32_t id, int socket);
 void cerrar_socket_de_pid(uint32_t pid);
 int buscar_indice_socket_de_pid(uint32_t pid);
 int get_socket_de_pid(uint32_t pid);
+void* conexion_de_memoria();
 
 
 

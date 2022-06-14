@@ -33,7 +33,8 @@ int SOCKET_DISPATCH;
 //Socket para interrupt
 int SOCKET_INTERRUPT;
 
-int memoria_fd;
+//Socket para memoria
+int SOCKET_MEMORIA;
 
 t_list* sockets;
 
@@ -41,6 +42,7 @@ void iniciar_planificacion() {
     //Conexiones
     conexion_de_dispatch();
     conexion_de_interrupt();
+    conexion_de_memoria();
 
     nextId = 1;
     /* Inicializacion de semaforos */
@@ -282,10 +284,10 @@ void enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) { //no esta testeada
     serializar_pcb(pcb,&bytes);
     mensaje->tamanio=bytes;
 
-    enviar_tamanio_mensaje(mensaje, memoria_fd);
+    enviar_tamanio_mensaje(mensaje, SOCKET_MEMORIA);
     
-    if(send(memoria_fd, mensaje, sizeof(t_pcb), 0) == -1) {
-        log_error(kernelLogger, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", memoria_fd);
+    if(send(SOCKET_MEMORIA, mensaje, sizeof(t_pcb), 0) == -1) {
+        log_error(kernelLogger, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", SOCKET_MEMORIA);
         //return -1;
     }
     log_info(kernelLogger,"Kernel: Enviada PCB a Memoria");
@@ -334,6 +336,7 @@ void* iniciar_largo_plazo(void* _) {
 
             cambiar_estado_pcb(pcbQuePasaAReady, READY);
             agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
+            solicitar_nueva_tabla_memoria(pcbQuePasaAReady);
             log_transition("Largo Plazo", "NEW", "READY", pcbQuePasaAReady->id);
 
             sem_post(&(pcbsReady->instanciasDisponibles));
@@ -370,6 +373,19 @@ void* liberar_procesos_en_exit(void* _) {
     pthread_exit(NULL);
 }
 
+void solicitar_nueva_tabla_memoria(t_pcb* pcb)
+{
+    op_code opCode = NEWTABLE;
+    uint32_t indice;
+    if(send(SOCKET_MEMORIA, &opCode, sizeof(op_code), 0)){
+        log_info(kernelLogger, "Largo Plazo: Solicitud de tabla inicializada");
+    }
+    if(recv(SOCKET_MEMORIA, &indice, sizeof(uint32_t), MSG_WAITALL)){
+        log_info(kernelLogger, "Largo Plazo: Recibi el indice de tabla %i correctamente para el PCB: %i ", indice ,pcb->id);
+        pcb->tablaDePaginas = indice;
+    }
+}
+
 /*---------------------------------------------- MANEJO DE PCBs ----------------------------------------------*/
 
 t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel_config* config) {
@@ -379,24 +395,11 @@ t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel
     self->tamanio = tamanio;
     self->instrucciones = instrucciones;
     self->programCounter = 0;
+    self->tablaDePaginas = 0;
     self->est_rafaga_actual = kernelCfg->ESTIMACION_INICIAL;
     self->dur_ultima_rafaga = kernelCfg->ESTIMACION_INICIAL;
     return self;
 }
-
-// struct t_pcb
-// {
-//     uint32_t id;        
-//     t_status status;
-//     uint32_t tamanio;
-//     t_list *instrucciones;
-//     uint32_t programCounter;
-//     // TODO: Tabla de paginas
-//     // Estos dos ultimos solo se usan cuando es SRT
-//     double est_rafaga_actual; // Esta en Milisegundos
-//     double dur_ultima_rafaga;
-//     //void (*algoritmo_siguiente_estim)(t_pcb *self, time_t tiempoFinal, time_t tiempoInicial);
-// };
 
 void pcb_destroy(t_pcb *pcb) {
     list_destroy_and_destroy_elements(pcb->instrucciones, destruir_instruccion);
@@ -604,13 +607,26 @@ void* conexion_de_interrupt() {
     if (SOCKET_INTERRUPT == -1)
     {
         log_error(kernelLogger, "Kernel: No se pudo establecer conexión con CPU. Valor conexión %d", SOCKET_INTERRUPT);
-        //return -1;
         exit(-1);
+    }else{
+        log_info(kernelLogger, "Kernel: Conexion a CPU Interrupt exitosa");
     }
     
 
     //TODO: Le aviso a CPU que me tiene que dar el pcb que esta en Exec, si es que hay alguno
     //TODO: Si CPU maneja la cola de pcbsExec, solo tengo que sacarlo de ahi
+}
+
+void* conexion_de_memoria() {
+    SOCKET_MEMORIA = conectar_a_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_MEMORIA);
+    log_info(kernelLogger, "Kernel: Conectando a Memoria");
+
+    if (SOCKET_MEMORIA == -1){
+        log_error(kernelLogger, "Kernel: No se pudo establecer conexión con Memoria. Valor conexión %d", socketMemoria);
+        exit (-1);
+    }else{
+        log_info(kernelLogger, "Kernel: Conexion a Memoria exitosa");
+    }
 }
 
 //En todos los casos el PCB será recibido a través de la conexión de dispatch - Es bidireccional, por aca tambien le mando el PCB a CPU
@@ -623,8 +639,9 @@ void* conexion_de_dispatch() {
     if (SOCKET_DISPATCH <=0)
     {
         log_error(kernelLogger, "Kernel: No se pudo establecer conexión con CPU. Valor conexión %d", SOCKET_DISPATCH);
-        //return -1;
         exit(-1);
+    }else{
+        log_info(kernelLogger, "Kernel: Conexion a CPU Dispatch exitosa");
     }
     // CASO 1: Envio de PCB a CPU
     // CASO 2: Recibo PCB de CPU porque lo desalojo porque recibio un mensaje por conexion_de_interrupt
