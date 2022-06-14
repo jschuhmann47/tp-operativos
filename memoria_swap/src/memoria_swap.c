@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
     int socketKernel = aceptar_conexion_memoria(conexionKernel);
     if(socketKernel > 0) {
         log_info(memoria_swapLogger, "Memoria: Acepto la conexión del Kernel con socket: %d", socketKernel);
-        pthread_create(&atenderKernel, NULL, recibir_pcbs_kernel, socketKernel);
+        pthread_create(&atenderKernel, NULL, atender_peticiones_kernel, socketKernel);
     } else {
         log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
     }
@@ -173,16 +173,43 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
 }
 
 
-void recibir_pcbs_kernel(int socket_kernel){
+void atender_peticiones_kernel(int socket_kernel){
     log_info(memoria_swapLogger, "Memoria: entre a recibir kernel");
     while(1){
-        //recibir la pcb y tamaño
-
-        //suspenderla o hacer lo que haya que hacer
+        op_code opCode;
+        if(recv(socket_kernel, &opCode, sizeof(op_code), MSG_WAITALL)){
+            switch(opCode){
+                case NEWTABLE:
+                ;
+                t_tablaSegundoNivel* tablaSegundoNivel = malloc(sizeof(t_tablaSegundoNivel));
+                tablaSegundoNivel->puntero = 0;
+                tablaSegundoNivel->marcos = list_create();
+                uint32_t indice = agregar_a_tabla_primer_nivel(tablaSegundoNivel);
+                if(send(socket_kernel, &indice, sizeof(uint32_t), 0)){
+                    log_info(memoria_swapLogger, "Memoria: Envio de posicion de tabla correctamente");
+                }
+                break;
+                case SUSPENSION:
+                ;
+                void* buffer;
+                t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
+                if (recibir_tamanio_mensaje(tamanio_mensaje, socket_kernel)){
+                    buffer = malloc(tamanio_mensaje->tamanio);
+                    log_info(memoria_swapLogger, "MEMORIA: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
+                    if (recv(socket_kernel, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
+                        t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
+                        log_info(memoria_swapLogger, "MEMORIA: Recibi el PCB con ID: %i", pcb->id);
+                        //suspender_pcb();
+                        free(pcb);
+                    }
+                }  
+            }
+        }
     }
 }
 
-void* crear_espacio_de_memoria(){
+void* crear_espacio_de_memoria()
+{
     return malloc(memoria_swapCfg->TAM_MEMORIA);
 }
 
@@ -191,13 +218,15 @@ void escribir_en_memoria(void* memoria, void* contenido, uint32_t marco, uint32_
     memcpy(memoria + offset, contenido, size);
 }
 
-void* leer_de_memoria(void* memoria, int offset, int size){ //no valida nada
+void* leer_de_memoria(void* memoria, int offset, int size)
+{ //no valida nada
     void* contenido = malloc(size); //con marco
     memcpy(contenido, memoria + offset, size);
     return contenido;
 }
 
-void recibir_handshake(int socketCPu){
+void recibir_handshake(int socketCPu)
+{
     uint32_t handshake;
     void* bytes = malloc(sizeof(uint32_t)*2);
     if(recv(socketCPu, &handshake, sizeof(uint32_t), MSG_WAITALL)){
@@ -210,3 +239,15 @@ void recibir_handshake(int socketCPu){
     free(bytes);
 }
 
+uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel)
+{
+    t_primerNivel* primerNivel;
+    primerNivel = list_find(tablaPaginasPrimerNivel, lugar_libre);
+    primerNivel->tablaSegundoNivel = tablaSegundoNivel;
+    return primerNivel->indice;
+}
+
+bool lugar_libre(t_primerNivel* filaPrimerNivel)
+{
+    return filaPrimerNivel->tablaSegundoNivel == NULL;
+}

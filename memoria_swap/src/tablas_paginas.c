@@ -1,8 +1,5 @@
 #include "tablas_paginas.h"
 
-
-t_list* tablaPaginasPrimerNivel;
-
 int cantTablas;
 
 void inicializar_tabla_paginas(){
@@ -12,9 +9,9 @@ void inicializar_tabla_paginas(){
     for (int i = 0; i < cantTablas; i++) {
         t_primerNivel* entradaPrimerNivel = malloc(sizeof(t_primerNivel));
         entradaPrimerNivel->indice = i;
-        
-        t_tablaSegundoNivel* entrada = malloc(sizeof(t_tablaSegundoNivel));
-        entrada->puntero=0;
+        entradaPrimerNivel->tablaSegundoNivel = NULL;
+        //t_tablaSegundoNivel* entrada = malloc(sizeof(t_tablaSegundoNivel));
+        /*entrada->puntero=0;
         entrada->marcos = list_create();
         for(int j = 0; j < cantTablas; j++){
             t_segundoNivel* nuevoMarco = malloc(sizeof(t_segundoNivel));
@@ -23,7 +20,7 @@ void inicializar_tabla_paginas(){
             nuevoMarco->uso = false;
             nuevoMarco->modificado = false;
             list_add(entrada->marcos, nuevoMarco);
-        }
+        }*/
         list_add(tablaPaginasPrimerNivel, entradaPrimerNivel);
     }
     log_info(memoria_swapLogger, "Inicializadas las tablas correctamente");

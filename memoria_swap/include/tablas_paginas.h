@@ -8,6 +8,7 @@
 #include "memoria_swap_config.h"
 #include <commons/collections/list.h>
 
+t_list* tablaPaginasPrimerNivel;
 
 typedef struct {
     uint32_t indice;
@@ -19,7 +20,7 @@ typedef struct {
 
 typedef struct t_tablaSegundoNivel t_tablaSegundoNivel;
 struct t_tablaSegundoNivel{
-    t_list* marcos;
+    t_list* marcos; //lista de t_segundoNivel
     //pthread_mutex_t mutex;
     uint32_t puntero;
 };
