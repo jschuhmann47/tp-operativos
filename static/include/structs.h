@@ -14,7 +14,9 @@ typedef enum
     MENSAJE,
     INSTRUCCION,
     TABLAUNO,
-    TABLADOS
+    TABLADOS,
+    NEWTABLE,
+    SUSPENSION
 } op_code;
 
 typedef enum
@@ -53,7 +55,7 @@ struct t_pcb
     uint32_t tamanio;
     t_list *instrucciones;
     uint32_t programCounter;
-    // TODO: Tabla de paginas
+    uint32_t tablaDePaginas;
     // Estos dos ultimos solo se usan cuando es SRT
     double est_rafaga_actual; // Esta en Milisegundos
     double dur_ultima_rafaga;
