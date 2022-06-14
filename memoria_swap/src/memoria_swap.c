@@ -55,8 +55,6 @@ int main(int argc, char *argv[]){
     return EXIT_SUCCESS;
 }
 
-
-
 int aceptar_conexion_memoria(conexion* con){
     int socket = accept(con->socket, &(con->sockAddr), &(con->sockrAddrLen));
     return socket;
@@ -138,7 +136,7 @@ void procesar_write(uint32_t param1, uint32_t param2, int socket_cpu){ //write n
     log_info(memoria_swapLogger, "Memoria: WRITE terminado");
 }
 
-void procesar_entrada_tabla_primer_nv(socket_cpu){
+void procesar_entrada_tabla_primer_nv(int socket_cpu){
     
     log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de primer nivel");
     uint32_t requestPrimerTabla;
@@ -156,7 +154,7 @@ void procesar_entrada_tabla_primer_nv(socket_cpu){
     }
 }
 
-void procesar_entrada_tabla_segundo_nv(socket_cpu){
+void procesar_entrada_tabla_segundo_nv(int socket_cpu){
     log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de segundo nivel");
     uint32_t requestSegundaTabla;
     if(recv(socket_cpu, &requestSegundaTabla, sizeof(uint32_t), MSG_WAITALL) == -1){

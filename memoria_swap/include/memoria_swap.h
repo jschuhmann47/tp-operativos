@@ -27,6 +27,8 @@ void procesar_instruccion(void* buffer, int socket_cpu);
 void procesar_read(uint32_t param, int socket_cpu);
 void procesar_write(uint32_t param1, uint32_t param2, int socket_cpu);
 void recibir_handshake(int socketCPu);
+void procesar_entrada_tabla_primer_nv(int socket_cpu);
+void procesar_entrada_tabla_segundo_nv(int socket_cpu);
 
 
 #endif
