@@ -149,8 +149,9 @@ void* check_interrupt(){
     log_info(cpuLogger,"CPU: Hilo de atenciones a interrupciones inicializado");
     while(1){
         uint32_t mensaje;
-        if(recv(cpuCfg->KERNEL_INTERRUPT, &mensaje, sizeof(uint32_t), MSG_WAITALL)){
-            log_info(cpuLogger, "CPU: Recibi una interrupcion");
+        recv(cpuCfg->KERNEL_INTERRUPT, &mensaje, sizeof(uint32_t), MSG_WAITALL);
+        if(mensaje==1){
+            log_warning(cpuLogger, "CPU: Recibi una interrupcion");
             pthread_mutex_lock(&mutex_interrupciones);
             hayInterrupcion=1; //y que se ponga en 0 en instruccion.c cuando se haga el ciclo
             pthread_mutex_unlock(&mutex_interrupciones);

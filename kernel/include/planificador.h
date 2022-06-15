@@ -27,11 +27,11 @@ void* conexion_de_interrupt();
 void* conexion_de_dispatch();
 void interrupcion_a_cpu();
 void mandar_pcb_a_cpu(t_pcb* pcb);
-t_pcb* traer_pcb_de_cpu();
+void* traer_pcb_de_cpu();
 //void determinar_ready_o_blocked(t_pcb* pcb);
 bool instruccion_actual_es(t_pcb* pcb, code_instruccion codOp);
 void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo);
-
+void interrumpir_si_es_srt();
 
 // Planificador Mediano Plazo
 void* pasar_de_susready_a_ready(void* _);
