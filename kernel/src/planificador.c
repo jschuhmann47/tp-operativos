@@ -101,13 +101,6 @@ void* iniciar_corto_plazo(void* _) {
         sem_wait(&(pcbsReady->instanciasDisponibles)); //Llega un nuevo pcb a ready
         log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
         
-        if(algoritmo_srt_loaded() && list_size(pcbsExec->lista) > 0 && !deboInterrumpir) {
-            log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
-            interrupcion_a_cpu();
-            //traer_pcb_de_cpu();
-        
-        }
-
         sem_wait(&listoParaEjecutar);
         
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
@@ -121,10 +114,16 @@ void* iniciar_corto_plazo(void* _) {
         mandar_pcb_a_cpu(pcbQuePasaAExec);
         sem_post(&(pcbsExec->instanciasDisponibles));
 
-        //traer_pcb_de_cpu();
-        
     }
     pthread_exit(NULL);
+}
+
+void interrumpir_si_es_srt(){
+    if(algoritmo_srt_loaded() && list_size(pcbsExec->lista) > 0) {
+        
+        log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
+        interrupcion_a_cpu();
+    }
 }
 
 
@@ -153,13 +152,10 @@ void* traer_pcb_de_cpu(){
         calcular_nueva_estimacion_actual(pcb);
         
         if(ultimaInstruccion->indicador != I_O && ultimaInstruccion->indicador != EXIT_I){ //fue por interrupcion
-            deboInterrumpir=1;
             cambiar_estado_pcb(pcb, READY);
             agregar_pcb_a_cola(pcb, pcbsReady);
             log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
             sem_post(&(pcbsReady->instanciasDisponibles));
-        }else{
-            deboInterrumpir=0;
         }
         sem_post(&listoParaEjecutar);
 
@@ -240,6 +236,7 @@ void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo){
         cambiar_estado_pcb(pcbABloquear, READY);
         agregar_pcb_a_cola(pcbABloquear, pcbsReady);
         log_transition("Corto Plazo", "BLOCKED", "READY", pcbABloquear->id);
+        interrumpir_si_es_srt();
         sem_post(&(pcbsReady->instanciasDisponibles));
     }
     if(pcbABloquear->status == SUSBLOCKED){
@@ -284,7 +281,7 @@ void* pasar_de_susready_a_ready(void* _) {
         agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
 
         log_transition("Mediano Plazo", "SUSP/READY", "READY", pcbQuePasaAReady->id);
-
+        interrumpir_si_es_srt();
         sem_post(&(pcbsReady->instanciasDisponibles));
     }
     pthread_exit(NULL);
@@ -340,7 +337,7 @@ void* iniciar_largo_plazo(void* _) {
             cambiar_estado_pcb(pcbQuePasaAReady, READY);
             agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
             log_transition("Largo Plazo", "SUSP/READY", "READY", pcbQuePasaAReady->id);
-            
+            interrumpir_si_es_srt();
             sem_post(&(pcbsReady->instanciasDisponibles));
             /* Con el post se libera el mecanismo de pasaje en el Planificador de Mediano Plazo */
         } else {                                    
@@ -354,7 +351,7 @@ void* iniciar_largo_plazo(void* _) {
             agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
             solicitar_nueva_tabla_memoria(pcbQuePasaAReady);
             log_transition("Largo Plazo", "NEW", "READY", pcbQuePasaAReady->id);
-
+            interrumpir_si_es_srt();
             sem_post(&(pcbsReady->instanciasDisponibles));
         }
     }
