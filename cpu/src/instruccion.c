@@ -9,7 +9,7 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
-    while(1){ //CHEQUEAR QUE SEA EXIT, INTERRUPCION Y I/O
+    while(1){ 
         t_instruccion* instruccionAEjecutar = cpu_fetch(pcb);
         bool necesitaOperandos = cpu_decode(instruccionAEjecutar);
         

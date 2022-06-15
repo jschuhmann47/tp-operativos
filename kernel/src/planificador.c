@@ -14,6 +14,7 @@ sem_t pcbsEnExit;
 pthread_mutex_t suspensionDePCB;
 pthread_mutex_t colaDeIO;
 pthread_mutex_t mutex_lista_sockets;
+sem_t listoParaEjecutar;
 
 //ID para el PCB
 static uint32_t nextId;
@@ -36,6 +37,8 @@ int SOCKET_INTERRUPT;
 //Socket para memoria
 int SOCKET_MEMORIA;
 
+int deboInterrumpir=0;
+
 t_list* sockets;
 
 void iniciar_planificacion() {
@@ -52,6 +55,7 @@ void iniciar_planificacion() {
     sem_init(&transicionarSusReadyAready, 0, 0);                        /* binario  */
     sem_init(&suspensionConcluida, 0, 0);                               /* binario  */
     sem_init(&pcbsEnExit, 0, 0);
+    sem_init(&listoParaEjecutar, 0, 1);
 
 
     sockets = list_create();
@@ -66,6 +70,7 @@ void iniciar_planificacion() {
 
     pthread_t thread;
     pthread_mutex_init(&mutexId, NULL);
+    
 
     /* Planificador largo plazo */
     pthread_create(&thread, NULL, iniciar_largo_plazo, NULL);
@@ -79,6 +84,12 @@ void iniciar_planificacion() {
     pthread_create(&thread, NULL, iniciar_corto_plazo, NULL);
     pthread_detach(thread);
 
+    
+    pthread_create(&thread, NULL, traer_pcb_de_cpu, NULL);
+    pthread_detach(thread);
+    
+    
+
 
     pthread_mutex_init(&mutex_lista_sockets, NULL);
 }
@@ -90,82 +101,87 @@ void* iniciar_corto_plazo(void* _) {
         sem_wait(&(pcbsReady->instanciasDisponibles)); //Llega un nuevo pcb a ready
         log_info(kernelLogger, "Corto Plazo: Se toma una instancia de READY");
         
-        if(algoritmo_srt_loaded()) {
-            if(list_size(pcbsExec->lista) > 0){
-                log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
-                interrupcion_a_cpu();
-                traer_pcb_de_cpu(); //esta funcion ya pone la pcb en la cola que corresponde, la saca de la cola de exec y calcula nueva rafaga
-            }
+        if(algoritmo_srt_loaded() && list_size(pcbsExec->lista) > 0 && !deboInterrumpir) {
+            log_info(kernelLogger, "Corto Plazo: Interrupción de SRT, se trae PCB de EXEC");
+            interrupcion_a_cpu();
+            //traer_pcb_de_cpu();
+        
         }
+
+        sem_wait(&listoParaEjecutar);
         
         t_pcb* pcbQuePasaAExec = elegir_pcb_segun_algoritmo(pcbsReady);
 
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
-        sem_post(&(pcbsExec->instanciasDisponibles));
+        
 
         log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
+        sem_post(&(pcbsExec->instanciasDisponibles));
 
-        traer_pcb_de_cpu();
-        
-    
+        //traer_pcb_de_cpu();
         
     }
     pthread_exit(NULL);
 }
 
 
+void* traer_pcb_de_cpu(){
+    while(1){
+        sem_wait(&(pcbsExec->instanciasDisponibles));
+        t_pcb* pcb;
+        void* buffer;
+        log_info(kernelLogger, "Kernel: Esperando PCB de CPU");
+        t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
 
-t_pcb* traer_pcb_de_cpu(){
-    
-    sem_wait(&(pcbsExec->instanciasDisponibles));
-    t_pcb* pcb;
-    void* buffer;
-    log_info(kernelLogger, "Kernel: Recibiendo PCB de CPU");
-    t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
+        if (recibir_tamanio_mensaje(tamanio_mensaje, SOCKET_DISPATCH)){
+            buffer = malloc(tamanio_mensaje->tamanio);
+            log_info(kernelLogger, "Kernel: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
+            if (recv(SOCKET_DISPATCH, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
+                pcb = recibir_pcb(buffer,tamanio_mensaje->tamanio);
+                log_info(kernelLogger, "Kernel: Recibi el PCB con ID: %i", pcb->id);
+            }
+        }
+        uint32_t tiempoABloquearsePorIO; 
+        t_instruccion* ultimaInstruccion = list_get(pcb->instrucciones, (pcb->programCounter)-1);
+        code_instruccion instruccion = ultimaInstruccion->indicador;
+            
+        remover_pcb_de_cola(pcb, pcbsExec);
+        
+        calcular_nueva_estimacion_actual(pcb);
+        
+        if(ultimaInstruccion->indicador != I_O && ultimaInstruccion->indicador != EXIT_I){ //fue por interrupcion
+            deboInterrumpir=1;
+            cambiar_estado_pcb(pcb, READY);
+            agregar_pcb_a_cola(pcb, pcbsReady);
+            log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
+            sem_post(&(pcbsReady->instanciasDisponibles));
+        }else{
+            deboInterrumpir=0;
+        }
+        sem_post(&listoParaEjecutar);
 
-    if (recibir_tamanio_mensaje(tamanio_mensaje, SOCKET_DISPATCH)){
-        buffer = malloc(tamanio_mensaje->tamanio);
-        log_info(kernelLogger, "Kernel: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
-        if (recv(SOCKET_DISPATCH, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
-            pcb = recibir_pcb(buffer,tamanio_mensaje->tamanio);
-            log_info(kernelLogger, "Kernel: Recibi el PCB con ID: %i", pcb->id);
+        if(ultimaInstruccion->indicador == I_O){
+            if(recv(SOCKET_DISPATCH,&tiempoABloquearsePorIO,sizeof(uint32_t),MSG_WAITALL) < 0){
+                log_error(kernelLogger, "Kernel: Error al recibir el mensaje de tiempo a bloquearse por IO");
+            }
+            log_info(kernelLogger, "Kernel: Recibi el tiempo a bloquearse por IO: %i", tiempoABloquearsePorIO);
+            cambiar_estado_pcb(pcb, BLOCKED);
+            agregar_pcb_a_cola(pcb, pcbsBlocked);
+            log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
+            sem_post(&(pcbsBlocked->instanciasDisponibles));
+            atender_procesos_bloqueados(tiempoABloquearsePorIO);
         }
-    }
-    uint32_t tiempoABloquearsePorIO; 
-    t_instruccion* ultimaInstruccion = list_get(pcb->instrucciones, (pcb->programCounter)-1);
-    code_instruccion instruccion = ultimaInstruccion->indicador;
-    log_info(kernelLogger, "Kernel: Instruccion: %i", instruccion);
-    
-    remover_pcb_de_cola(pcb, pcbsExec);
-    calcular_nueva_estimacion_actual(pcb);
-    
-    if(ultimaInstruccion->indicador == I_O){
-        if(recv(SOCKET_DISPATCH,&tiempoABloquearsePorIO,sizeof(uint32_t),MSG_WAITALL) < 0){
-            log_error(kernelLogger, "Kernel: Error al recibir el mensaje de tiempo a bloquearse por IO");
+        if(ultimaInstruccion->indicador == EXIT_I){
+            cambiar_estado_pcb(pcb, EXIT);
+            agregar_pcb_a_cola(pcb, pcbsExit);
+            sem_post(&(pcbsExit->instanciasDisponibles));
         }
-        log_info(kernelLogger, "Kernel: Recibi el tiempo a bloquearse por IO: %i", tiempoABloquearsePorIO);
-        cambiar_estado_pcb(pcb, BLOCKED);
-        agregar_pcb_a_cola(pcb, pcbsBlocked);
-        log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
-        sem_post(&(pcbsBlocked->instanciasDisponibles));
-        atender_procesos_bloqueados(tiempoABloquearsePorIO);
+        
     }
-    if(ultimaInstruccion->indicador == EXIT_I){
-        cambiar_estado_pcb(pcb, EXIT);
-        agregar_pcb_a_cola(pcb, pcbsExit);
-        sem_post(&(pcbsExit->instanciasDisponibles));
-    }
-    if(ultimaInstruccion->indicador != I_O && ultimaInstruccion->indicador != EXIT_I){
-        cambiar_estado_pcb(pcb, READY);
-        agregar_pcb_a_cola(pcb, pcbsReady);
-        log_transition("Corto Plazo", "EXEC", "READY", pcb->id);
-        sem_post(&(pcbsReady->instanciasDisponibles));
-    }
-    
-    return pcb;
+    pthread_exit(NULL);
 }
 
 bool instruccion_actual_es(t_pcb* pcb, code_instruccion codOp){
