@@ -43,9 +43,6 @@ void reemplazar_pagina(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tabla
     }
 }
 
-
-
-
 uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel)
 {
     t_primerNivel* primerNivel;
