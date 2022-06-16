@@ -38,7 +38,9 @@ typedef struct{
 } t_direccion;
 
 extern t_log* cpuLogger;
-extern t_cpu_config* consolaCfg;
+//extern t_cpu_config* consolaCfg;
+extern t_cpu_config* cpuCfg;
+t_tlb* tlb;
 
 pthread_mutex_t mutex_interrupciones;
 uint32_t hayInterrupcion;

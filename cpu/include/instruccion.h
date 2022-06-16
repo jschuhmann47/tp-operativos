@@ -9,6 +9,7 @@
 #include "cpu_config.h"
 #include "cpu.h"
 #include "mmu.h"
+#include "tlb.h"
 
 void hacer_ciclo_de_instruccion(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelDispatch, int socket_memoria);
 t_instruccion* cpu_fetch (t_pcb* pcb);
