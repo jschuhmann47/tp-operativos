@@ -70,6 +70,7 @@ bool cpu_decode(t_instruccion* instruccion){
 
 void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     code_instruccion codOp = instruccion->indicador;
+    uint32_t indice;
     switch (codOp)
     {
     case NO_OP:
@@ -83,7 +84,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     case WRITE:
         ;
         uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
-        uint32_t indice = obtener_indice_traduccion_tlb(*direccionLogicaW);
+        indice = obtener_indice_traduccion_tlb(*direccionLogicaW);
         uint32_t direccionFisicaW;
         if(indice==-1){ //no esta en la tlb
             direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
@@ -104,7 +105,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     case READ:
         ;
         uint32_t* direccionLogicaR = list_get(instruccion->parametros, 0);
-        uint32_t indice = obtener_indice_traduccion_tlb(*direccionLogicaR);
+        indice = obtener_indice_traduccion_tlb(*direccionLogicaR);
         uint32_t direccionFisicaR;
         if(indice==-1){ //no esta en la tlb
             direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla,socket_memoria);
