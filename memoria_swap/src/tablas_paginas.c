@@ -2,6 +2,8 @@
 
 int cantTablas;
 
+t_list* marcosLibres;
+
 void inicializar_tabla_paginas(){
     tablaPaginasPrimerNivel = list_create();
     cantTablas = memoria_swapCfg->PAGINAS_POR_TABLA; //ambas tienen el mismo tamaño
@@ -25,6 +27,7 @@ void inicializar_tabla_paginas(){
     }
     log_info(memoria_swapLogger, "Inicializadas las tablas correctamente");
 }
+
 
 // void obtener_nro_pagina_segunda_tabla(uint32_t indice, uint32_t* nroPagina){
 //     *nroPagina = indice % tamanioSegundaTabla;

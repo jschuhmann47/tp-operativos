@@ -1,5 +1,6 @@
 #include "manejo_memoria.h"
 
+t_list* marcosLibres;
 
 void* crear_espacio_de_memoria()
 {
@@ -16,4 +17,27 @@ void* leer_de_memoria(void* memoria, uint32_t marco, uint32_t desplazamiento, in
     void* contenido = malloc(size); //con marco
     memcpy(contenido, memoria + desplazamiento, size);
     return contenido;
+}
+
+void inicializar_marcos(){
+    marcosLibres = list_create();
+    
+    int cantMarcos=10; //Ver de donde sale este valor   
+    for(int i = 0; i < cantMarcos; i++){
+        t_marco* marco=malloc(sizeof(t_marco));
+        marco->nroMarco=i;
+        marco->estaLibre=true;
+        list_add(marcosLibres, i);
+    }
+
+}
+
+bool marco_libre(uint32_t marco){
+    
+    t_marco* encontrado = list_find(marcosLibres, marco);
+    if(encontrado != NULL){
+        return encontrado->estaLibre;
+    }
+    return false;
+
 }
