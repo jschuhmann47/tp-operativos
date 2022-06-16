@@ -35,5 +35,10 @@ struct t_primerNivel{
 
 void inicializar_tabla_paginas();
 void reemplazar_pagina(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
+uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
+bool lugar_libre(t_primerNivel* filaPrimerNivel);
+void procesar_entrada_tabla_primer_nv(int socket_cpu);
+void procesar_entrada_tabla_segundo_nv(int socket_cpu);
+
 
 #endif

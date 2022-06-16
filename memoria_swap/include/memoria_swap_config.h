@@ -11,6 +11,11 @@
 #include <commons/string.h>
 #include "tablas_paginas.h"
 
+#include "procesar_instrucciones.h"
+#include "manejo_memoria.h"
+
+
+
 typedef struct
 {   
     int KERNEL_SOCKET;
