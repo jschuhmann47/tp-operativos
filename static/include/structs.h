@@ -73,6 +73,11 @@ typedef struct t_mensaje_tamanio {
     uint32_t tamanio;
 } t_mensaje_tamanio;
 
+typedef struct t_tiempo_io {
+    t_pcb* pcb;
+    uint32_t* tiempo;
+} t_tiempo_io;
+
 typedef struct{
 	uint32_t size;
 	void* stream;
