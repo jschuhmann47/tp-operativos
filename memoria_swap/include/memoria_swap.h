@@ -15,21 +15,8 @@ t_log* memoria_swapLogger;
 t_memoria_swap_config* memoria_swapCfg;
 void* MEMORIA_PRINCIPAL;
 
-void* crear_espacio_de_memoria();
-void escribir_en_memoria(void* memoria, void* contenido, uint32_t marco, uint32_t desplazamiento,int size);
-void* leer_de_memoria(void* memoria, int offset, int size);
-
-
 int aceptar_conexion_memoria(conexion* con);
 void atender_peticiones_kernel(int socket_kernel);
-void recibir_instrucciones_cpu(int socket_cpu);
-void procesar_instruccion(void* buffer, int socket_cpu);
-void procesar_read(uint32_t param, int socket_cpu);
-void procesar_write(uint32_t param1, uint32_t param2, int socket_cpu);
 void recibir_handshake(int socketCPu);
-void procesar_entrada_tabla_primer_nv(int socket_cpu);
-void procesar_entrada_tabla_segundo_nv(int socket_cpu);
-uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
-bool lugar_libre(t_primerNivel* filaPrimerNivel);
 
 #endif
