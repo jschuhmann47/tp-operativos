@@ -34,7 +34,6 @@ typedef struct{
 typedef struct{
     uint32_t pagina;
     uint32_t marco;
-
 } t_direccion;
 
 extern t_log* cpuLogger;

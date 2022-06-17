@@ -7,12 +7,6 @@ void generar_tlb(uint32_t entradasTlb, char* algoritmoReemplazo)
     tlb->agloritmoReemplazo = algoritmoReemplazo;
     tlb->entradasDisponibles = entradasTlb;
     tlb->direcciones = list_create();
-    for(int i = 0; i<cpuCfg->ENTRADAS_TLB;i++){
-        t_direccion* d = malloc(sizeof(t_direccion));
-        d->pagina=0;
-        d->marco=0;
-        list_add(tlb->direcciones,d);
-    }
 }
 
 void liberar_tlb()
@@ -25,18 +19,12 @@ void limpiar_tlb()
 {
     list_destroy_and_destroy_elements(tlb->direcciones, free);
     tlb->direcciones = list_create();
-    for(int i = 0; i<cpuCfg->ENTRADAS_TLB;i++){
-        t_direccion* d = malloc(sizeof(t_direccion));
-        d->pagina=0;
-        d->marco=0;
-        list_add(tlb->direcciones,d);
-    }
 }
 
 int obtener_indice_traduccion_tlb(uint32_t pagina) //devuelve el indice, o -1 si no esta traducida
 {
     t_direccion* d;
-    for(int i = 0;i<cpuCfg->ENTRADAS_TLB;i++){
+    for(int i = 0;i<list_size(tlb->direcciones);i++){
         d = list_get(tlb->direcciones, i);
         if(d==NULL){
             break;
@@ -64,7 +52,7 @@ void agregar_a_tlb(uint32_t pagina, uint32_t marco){
 }
 
 void agregar_traduccion_a_tabla_tlb(uint32_t pagina, uint32_t marco){ //El algoritmo de reemplazo, que puede ser FIFO o LRU.
-    if(list_size(tlb)==cpuCfg->ENTRADAS_TLB){
+    if(list_size(tlb->direcciones)==cpuCfg->ENTRADAS_TLB){
         if(strcmp(cpuCfg->REEMPLAZO_TLB, "LRU")==0){
             reemplazar_tlb_lru(pagina, marco);
         }
@@ -77,9 +65,9 @@ void agregar_traduccion_a_tabla_tlb(uint32_t pagina, uint32_t marco){ //El algor
 }
 
 void reemplazar_tlb_lru(uint32_t pagina, uint32_t marco){ //crear un timer y guardar el tiempo? mas facil para hacer los 2
-    
+    log_info(cpuLogger, "CPU: LRU");
 }
 
 void reemplazar_tlb_fifo(uint32_t pagina, uint32_t marco){
-    
+    log_info(cpuLogger, "CPU: FIFO");
 }

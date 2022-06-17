@@ -49,7 +49,7 @@ uint32_t traducir_direccion(uint32_t direccionLogica,
                 }
                 else{
                     log_info(cpuLogger, "CPU: Se recibio rtaTablaSegundoNivel de Memoria.");
-                    return marco + desplazamiento;
+                    return (marco * tamanioPagina) + desplazamiento;
                 }
             }
         }
