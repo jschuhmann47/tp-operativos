@@ -42,18 +42,20 @@ void procesar_instruccion(void* buffer, int socket_cpu){
     uint32_t param1;
     uint32_t param2;
     log_info(memoria_swapLogger, "Memoria: Recibi el codigo de operacion: %i", codOp);
+    uint32_t leido;
     switch (codOp)
     {
     case READ:
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi READ con parametro: %i", param1);
-        procesar_read(param1, socket_cpu); //TODO
+        leido = procesar_read(param1, socket_cpu);
+        send(socket_cpu, &leido, sizeof(leido), 0);
         break;
     case WRITE:
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         memcpy(&param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", param1, param2);
-        procesar_write(param1, param2, socket_cpu);//TODO
+        procesar_write(param1, param2, socket_cpu);
         break;
     default:
         log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
@@ -62,14 +64,26 @@ void procesar_instruccion(void* buffer, int socket_cpu){
     //devolver a cpu un ok o ver que devuelve en cada caso
 }
 
-void procesar_read(uint32_t param, int socket_cpu){ //READ devuelve el valor leido
+uint32_t procesar_read(uint32_t direccionFisica, int socket_cpu){ //READ devuelve el valor leido
     log_info(memoria_swapLogger, "Memoria: Procesando READ");
-    //...
-    log_info(memoria_swapLogger, "Memoria: READ terminado");
+    uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
+    uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
+    uint32_t* leido = leer_de_memoria(MEMORIA_PRINCIPAL, marco, desplazamiento, sizeof(uint32_t));
+    log_info(memoria_swapLogger, "Memoria: READ terminado %i", *leido);
+    return *leido;
 }
 
-void procesar_write(uint32_t param1, uint32_t param2, int socket_cpu){ //write no dice, devolver ok o error?
+void procesar_write(uint32_t direccionFisica, uint32_t valor, int socket_cpu){ //write no dice, devolver ok o error?
     log_info(memoria_swapLogger, "Memoria: Procesando WRITE");
-    //...
+    uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
+    uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
+    log_info(memoria_swapLogger, "Memoria: Marco %i", marco);
+    escribir_en_memoria(MEMORIA_PRINCIPAL, &valor, marco, desplazamiento, sizeof(uint32_t));
+    marcar_marco_ocupado(marco);
+    //TODO Que reciba el PID para que pueda seguir utilizandolo. Chequear si con Tabla de Paginas funciona el IF.
+    /*if(marco_libre(marco)){
+        escribir_en_memoria(MEMORIA_PRINCIPAL, &valor, marco, desplazamiento, sizeof(uint32_t));
+        marcar_marco_ocupado(marco);
+    }*/
     log_info(memoria_swapLogger, "Memoria: WRITE terminado");
 }

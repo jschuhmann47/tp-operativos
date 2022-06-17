@@ -14,7 +14,7 @@
 #include "procesar_instrucciones.h"
 #include "manejo_memoria.h"
 
-
+extern void* MEMORIA_PRINCIPAL;
 
 typedef struct
 {   
