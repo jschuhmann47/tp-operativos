@@ -11,6 +11,7 @@ typedef struct{
 
 void generar_tlb(uint32_t entradasTlb, char* algoritmoReemplazo);
 void liberar_tlb();
+void limpiar_tlb();
 int obtener_indice_traduccion_tlb(uint32_t pagina);
 uint32_t obtener_traduccion_tlb(int indice);
 void agregar_a_tlb(uint32_t pagina, uint32_t marco);

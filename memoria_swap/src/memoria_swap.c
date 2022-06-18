@@ -97,6 +97,8 @@ void atender_peticiones_kernel(int socket_kernel){
                 if(recv(socket_kernel, &indiceALiberar, sizeof(uint32_t), MSG_WAITALL)){
                     log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a liberar: %i", indiceALiberar);
                     remover_tabla_primer_nivel(indiceALiberar);
+                }else{
+                    log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
                 }
             }
         }

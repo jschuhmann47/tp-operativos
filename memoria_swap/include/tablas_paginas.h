@@ -6,6 +6,7 @@
 #include <commons/log.h>
 
 #include "memoria_swap_config.h"
+
 #include <commons/collections/list.h>
 
 t_list* tablaPaginasPrimerNivel;
@@ -31,7 +32,7 @@ struct t_primerNivel{
     t_tablaSegundoNivel* tablaSegundoNivel;
 };
 
-
+#include "algoritmos_reemplazo.h"
 
 void inicializar_tabla_paginas();
 void reemplazar_pagina(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
@@ -39,6 +40,8 @@ uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
 bool lugar_libre(t_primerNivel* filaPrimerNivel);
 void procesar_entrada_tabla_primer_nv(int socket_cpu);
 void procesar_entrada_tabla_segundo_nv(int socket_cpu);
+void remover_tabla_primer_nivel(uint32_t indice);
+uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
 
 
 #endif

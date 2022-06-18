@@ -54,6 +54,7 @@ int get_grado_multiprog_actual(void);
 void log_transition(const char* entityName, const char* prev, const char* post, int pid);
 void agregar_pcb_en_cola_new(int socket);
 uint32_t get_siguiente_id();
+void liberar_pcb_de_memoria(t_pcb* pcb);
 
 
 // Manejo de colas

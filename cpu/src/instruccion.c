@@ -34,10 +34,9 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
             log_info(cpuLogger, "CPU: Desalojo por instruccion I/O");
             calcularTiempoEnMs(pcb,start,end);
             limpiar_tlb();
-            uint32_t* tiempoABloquearPorIO=malloc(sizeof(uint32_t));
-            tiempoABloquearPorIO = list_get(instruccionAEjecutar->parametros,0);
+            uint32_t* tiempoABloquearPorIO=list_get(instruccionAEjecutar->parametros,0);
             mandar_pcb_a_kernel_con_io(pcb,bytes,socketKernelDispatch,*tiempoABloquearPorIO);
-            free(tiempoABloquearPorIO);
+            //free(tiempoABloquearPorIO);
             break;
         }
         if(salirPorInterrupcion){

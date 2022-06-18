@@ -174,7 +174,7 @@ void* traer_pcb_de_cpu(){
 void* determinar_cola(t_tiempo_io* pcbConTiempo)
 {
     t_pcb* pcb = pcbConTiempo->pcb;
-    uint32_t* tiempoABloquearsePorIO = &(pcbConTiempo->tiempo);
+    uint32_t tiempoABloquearsePorIO = pcbConTiempo->tiempo;
 
     t_instruccion* ultimaInstruccion = list_get(pcb->instrucciones, (pcb->programCounter)-1);
 
@@ -187,12 +187,12 @@ void* determinar_cola(t_tiempo_io* pcbConTiempo)
     sem_post(&listoParaEjecutar);
 
     if(ultimaInstruccion->indicador == I_O){
-        log_info(kernelLogger, "Kernel: Recibi el tiempo a bloquearse por IO: %i", *tiempoABloquearsePorIO);
+        log_info(kernelLogger, "Kernel: Recibi el tiempo a bloquearse por IO: %i", tiempoABloquearsePorIO);
         cambiar_estado_pcb(pcb, BLOCKED);
         agregar_pcb_a_cola(pcb, pcbsBlocked);
         log_transition("Corto Plazo", "EXEC", "BLOCKED", pcb->id);
         sem_post(&(pcbsBlocked->instanciasDisponibles));
-        atender_procesos_bloqueados(*tiempoABloquearsePorIO);
+        atender_procesos_bloqueados(tiempoABloquearsePorIO);
     }
     if(ultimaInstruccion->indicador == EXIT_I){
         cambiar_estado_pcb(pcb, EXIT);
@@ -302,6 +302,7 @@ void* pasar_de_susready_a_ready(void* _) {
         sem_wait(&(pcbsSusReady->instanciasDisponibles));
         sem_wait(&gradoMultiprog);
         t_pcb* pcbQuePasaAReady = get_and_remove_primer_pcb_de_cola(pcbsSusReady);
+        liberar_pcb_de_memoria(pcbQuePasaAReady);
         cambiar_estado_pcb(pcbQuePasaAReady, READY);
         agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
 
@@ -320,16 +321,16 @@ void enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) { //no esta testeada
     t_mensaje_tamanio* mensaje = malloc(sizeof(t_mensaje_tamanio));
     uint32_t bytes;
     void* buffer = serializar_pcb(pcb,&bytes);
-    buffer = malloc(bytes);
+    //buffer = malloc(bytes);
     mensaje->tamanio=bytes;
-
+    //poner mutex con la de liberar pcb de memoria
     if(send(SOCKET_MEMORIA, &codOp, sizeof(op_code), 0) == -1) {
         log_error(kernelLogger, "Error al enviar el codigo de operacion a la Memoria");
     }
 
     enviar_tamanio_mensaje(mensaje, SOCKET_MEMORIA);
     
-    if(send(SOCKET_MEMORIA, mensaje, bytes, 0) == -1) {
+    if(send(SOCKET_MEMORIA, buffer, bytes, 0) == -1) {
         log_error(kernelLogger, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", SOCKET_MEMORIA);
         //return -1;
     }
@@ -367,8 +368,8 @@ void* iniciar_largo_plazo(void* _) {
         if(!list_is_empty(pcbsSusReady->lista)) {
             /* Como tiene mayor prioridad los procesos en susp/ready > new, vemos si hay procesos en dicha cola */
             t_pcb* pcbQuePasaAReady = get_and_remove_primer_pcb_de_cola(pcbsSusReady);
-            cambiar_estado_pcb(pcbQuePasaAReady, READY);
             liberar_pcb_de_memoria(pcbQuePasaAReady);
+            cambiar_estado_pcb(pcbQuePasaAReady, READY);
             agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
             log_transition("Largo Plazo", "SUSP/READY", "READY", pcbQuePasaAReady->id);
             interrumpir_si_es_srt();
@@ -444,6 +445,7 @@ void liberar_pcb_de_memoria(t_pcb* pcb){
     if(send(SOCKET_MEMORIA, &indiceAEliminar, sizeof(uint32_t), 0)<0){
         log_error(kernelLogger, "Largo Plazo: Error al enviar el indice de tabla");
     }
+    log_info(kernelLogger, "Largo Plazo: Enviada liberacion de PCB a Memoria");
 
 }
     

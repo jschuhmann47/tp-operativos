@@ -48,10 +48,15 @@ uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel)
     t_primerNivel* primerNivel;
     primerNivel = list_find(tablaPaginasPrimerNivel, lugar_libre);
     //if(primerNivel != NULL){
-    primerNivel->tablaSegundoNivel = tablaSegundoNivel;
-    return primerNivel->indice;  
+    t_tablaSegundoNivel* tsn = malloc(size_tabla_segundo_nivel(tablaSegundoNivel));
+    primerNivel->tablaSegundoNivel = tsn;
+    return primerNivel->indice; 
     //}
     
+}
+
+uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel){
+    return sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_segundoNivel);
 }
 
 bool lugar_libre(t_primerNivel* filaPrimerNivel)

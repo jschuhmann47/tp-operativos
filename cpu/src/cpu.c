@@ -94,7 +94,6 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
                 t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
                 log_info(cpuLogger, "CPU: Recibi el PCB con ID: %i", pcb->id);
                 hacer_ciclo_de_instruccion(pcb, tamanio_mensaje, socketKernelDispatch, SOCKET_MEMORIA);
-                free(pcb);
             }
         }  
     }
