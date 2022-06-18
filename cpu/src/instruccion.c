@@ -143,6 +143,9 @@ void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando, int 
         agregar_traduccion_a_tabla_tlb(*direccionLogicaW, direccionFisicaW);
     }else{
         direccionFisicaW = obtener_traduccion_tlb(indice);
+        if(strcmp(cpuCfg->REEMPLAZO_TLB, "LRU")==0){
+            actualizar_tiempo_ultimo_uso_tlb(indice);
+        }
     }
     if(mandar_instruccion(WRITE,direccionFisicaW,operando,socket_memoria)){
         log_info(cpuLogger, "CPU: Se mando instruccion COPY/WRITE a Memoria.");

@@ -11,5 +11,18 @@ void agregar_a_tlb(uint32_t pagina, uint32_t marco);
 void agregar_traduccion_a_tabla_tlb(uint32_t pagina, uint32_t marco);
 void reemplazar_tlb_lru(uint32_t pagina, uint32_t marco);
 void reemplazar_tlb_fifo(uint32_t pagina, uint32_t marco);
+void agregar_a_tlb_en_indice(uint32_t pagina, uint32_t marco, int indice);
+int obtener_indice_victima_lru();
+t_entrada_lru* comparar_lru(t_entrada_lru* a, t_entrada_lru* b);
+void actualizar_tiempo_ultimo_uso_tlb(int indice);
 
+typedef struct{
+    int indice;
+    int contadorTiempo;
+} t_entrada_lru;
+
+
+int indiceReemplazoFifo;
+t_list* reemplazoLru;
+int instanteCargaLru;
 #endif
