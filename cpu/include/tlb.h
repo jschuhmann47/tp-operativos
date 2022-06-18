@@ -3,6 +3,12 @@
 
 #include "cpu_config.h"
 
+typedef struct{
+    int indice;
+    int contadorTiempo;
+} t_entrada_lru;
+
+
 void generar_tlb(uint32_t entradasTlb, char* algoritmoReemplazo);
 void liberar_tlb();
 int obtener_indice_traduccion_tlb(uint32_t pagina);
@@ -16,10 +22,6 @@ int obtener_indice_victima_lru();
 t_entrada_lru* comparar_lru(t_entrada_lru* a, t_entrada_lru* b);
 void actualizar_tiempo_ultimo_uso_tlb(int indice);
 
-typedef struct{
-    int indice;
-    int contadorTiempo;
-} t_entrada_lru;
 
 
 int indiceReemplazoFifo;

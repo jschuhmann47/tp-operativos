@@ -57,7 +57,7 @@ start: all
 
 valgrind: all
 	export LD_LIBRARY_PATH=$(RUNTIME_LINKS); \
-	valgrind --leak-check=full ./$(BINARY) $(ARGS)
+	valgrind --leak-check=full --track-origins=yes ./$(BINARY) $(ARGS)
 
 memcheck: all
 	export LD_LIBRARY_PATH=$(RUNTIME_LINKS); \

@@ -47,13 +47,24 @@ uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel)
 {
     t_primerNivel* primerNivel;
     primerNivel = list_find(tablaPaginasPrimerNivel, lugar_libre);
+    //if(primerNivel != NULL){
     primerNivel->tablaSegundoNivel = tablaSegundoNivel;
-    return primerNivel->indice;
+    return primerNivel->indice;  
+    //}
+    
 }
 
 bool lugar_libre(t_primerNivel* filaPrimerNivel)
 {
     return filaPrimerNivel->tablaSegundoNivel == NULL;
+}
+
+void remover_tabla_primer_nivel(uint32_t indice){
+    t_primerNivel* primerNivel;
+    primerNivel = list_remove(tablaPaginasPrimerNivel, indice);
+    list_destroy_and_destroy_elements(primerNivel->tablaSegundoNivel->marcos,free);
+    free(primerNivel->tablaSegundoNivel);
+    free(primerNivel);
 }
 
 
