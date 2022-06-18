@@ -47,13 +47,14 @@ void solicitar_nueva_tabla_memoria();
 
 // Manejo de PCBs
 t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel_config* config);
-void pcb_destroy(t_pcb *pcb);
-void destruir_instruccion(t_instruccion* instruccion);
+//void pcb_destroy(t_pcb *pcb);
+//void destruir_instruccion(t_instruccion* instruccion);
 void cambiar_estado_pcb(t_pcb* pcb, t_status nuevoEstado);
 int get_grado_multiprog_actual(void);
 void log_transition(const char* entityName, const char* prev, const char* post, int pid);
 void agregar_pcb_en_cola_new(int socket);
 uint32_t get_siguiente_id();
+
 
 // Manejo de colas
 t_cola_planificacion* cola_planificacion_create(int semInitVal);

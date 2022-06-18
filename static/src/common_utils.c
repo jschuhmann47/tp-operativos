@@ -169,7 +169,8 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
                                 sizeof(uint32_t) +//cantidadInstrucciones
                                 sizeof(typeof(pcb->programCounter)) +//PC
                                 sizeof(typeof(pcb->est_rafaga_actual))+
-                                sizeof(typeof(pcb->dur_ultima_rafaga))); //rafaga
+                                sizeof(typeof(pcb->dur_ultima_rafaga)))+ //rafaga
+                                sizeof(uint32_t);//cantidadPaginas
 
     uint32_t offset = 0, tmp_size = 0;
     
@@ -251,6 +252,10 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
 
     tmp_size = sizeof(pcb->dur_ultima_rafaga);
     memcpy(empaquetado + offset, &(pcb->dur_ultima_rafaga), tmp_size);
+    offset += tmp_size;
+
+    tmp_size = sizeof(pcb->tablaDePaginas);
+    memcpy(empaquetado + offset, &(pcb->tablaDePaginas), tmp_size);
     offset += tmp_size;
 
     *bytes = offset;
@@ -363,8 +368,12 @@ t_pcb* recibir_pcb(void* buffer,uint32_t bytes)
     offset += tmp_len;
 
     memcpy(&pcb->dur_ultima_rafaga, buffer + offset, tmp_len = sizeof(typeof(pcb->dur_ultima_rafaga)));
+    offset += tmp_len;
 
-    free(buffer); //ver si esto rompe o no
+    memcpy(&pcb->tablaDePaginas, buffer + offset, tmp_len = sizeof(typeof(pcb->tablaDePaginas)));
+    offset += tmp_len;
+
+    free(buffer);
 
     return pcb;
 }
@@ -435,3 +444,14 @@ int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,in
         return -1;
     }
 }
+
+void pcb_destroy(t_pcb *pcb) {
+    list_destroy_and_destroy_elements(pcb->instrucciones, destruir_instruccion);
+    free(pcb);
+}
+
+void destruir_instruccion(t_instruccion* instruccion) {
+    list_destroy_and_destroy_elements(instruccion->parametros, free);
+    free(instruccion);
+}
+

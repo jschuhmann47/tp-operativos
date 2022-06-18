@@ -90,7 +90,14 @@ void atender_peticiones_kernel(int socket_kernel){
                         //suspender_pcb();
                         free(pcb);
                     }
-                }  
+                }
+                case FREEPCB:
+                ;
+                uint32_t indiceALiberar;
+                if(recv(socket_kernel, &indiceALiberar, sizeof(uint32_t), MSG_WAITALL)){
+                    log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a liberar: %i", indiceALiberar);
+                    remover_tabla_primer_nivel(indiceALiberar);
+                }
             }
         }
     }
