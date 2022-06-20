@@ -2,12 +2,12 @@
 
 
 
-void reemplazo_clock(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel){
+void reemplazo_clock(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel){
     int limite = list_size(tablaSegundoNivel->marcos);
     
     while (1){
-        t_segundoNivel* victima = NULL;
-        t_segundoNivel* pagina = list_get(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero);
+        t_marco* victima = NULL;
+        t_marco* pagina = list_get(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero);
         
         if(!pagina->uso){
            victima = list_remove(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero);
@@ -25,13 +25,13 @@ void reemplazo_clock(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSe
     }
 }
 
-void reemplazo_clock_modificado(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel){
+void reemplazo_clock_modificado(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel){
     int contadorPasadas = 0;
     int limite = list_size(tablaSegundoNivel->marcos);
     int nroVuelta = 0;
     while (1){
-        t_segundoNivel* victima = NULL;
-        t_segundoNivel* pagina = list_get(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero);
+        t_marco* victima = NULL;
+        t_marco* pagina = list_get(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero);
 
         if(nroVuelta==1){
             if(!pagina->uso && pagina->modificado){

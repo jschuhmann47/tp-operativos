@@ -6,22 +6,21 @@
 #include <commons/log.h>
 
 #include "memoria_swap_config.h"
-
 #include <commons/collections/list.h>
 
 t_list* tablaPaginasPrimerNivel;
 
 typedef struct {
-    uint32_t indice;
     uint32_t marco;
     bool presencia; //bit de presencia
     bool uso; //bit de uso
     bool modificado; //bit de modificado
-} t_segundoNivel;
+} t_marco;
 
 typedef struct t_tablaSegundoNivel t_tablaSegundoNivel;
 struct t_tablaSegundoNivel{
-    t_list* marcos; //lista de t_segundoNivel
+    uint32_t indice;
+    t_list* marcos; //lista de t_marco
     //pthread_mutex_t mutex;
     uint32_t puntero;
 };
@@ -35,7 +34,7 @@ struct t_primerNivel{
 #include "algoritmos_reemplazo.h"
 
 void inicializar_tabla_paginas();
-void reemplazar_pagina(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
+void reemplazar_pagina(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
 uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
 bool lugar_libre(t_primerNivel* filaPrimerNivel);
 void procesar_entrada_tabla_primer_nv(int socket_cpu);

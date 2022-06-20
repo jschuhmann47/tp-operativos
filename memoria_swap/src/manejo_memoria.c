@@ -26,7 +26,7 @@ void inicializar_marcos(){
     
     int cantMarcos=10; //Ver de donde sale este valor   
     for(int i = 0; i < cantMarcos; i++){
-        t_marco* marco=malloc(sizeof(t_marco));
+        t_marco_libre* marco=malloc(sizeof(t_marco_libre));
         marco->nroMarco=i;
         marco->estaLibre=true;
         list_add(marcosLibres, marco);
@@ -35,7 +35,7 @@ void inicializar_marcos(){
 
 bool marco_libre(uint32_t marco){
     
-    t_marco* encontrado = encontrar_marco(marco);
+    t_marco_libre* encontrado = encontrar_marco(marco);
     if(encontrado != NULL){
         return encontrado->estaLibre;
     }
@@ -44,23 +44,23 @@ bool marco_libre(uint32_t marco){
 }
 
 void marcar_marco_ocupado(uint32_t marco){
-    t_marco* encontrado = encontrar_marco(marco);
+    t_marco_libre* encontrado = encontrar_marco(marco);
     if(encontrado != NULL){
         encontrado->estaLibre=false;
     }
 }
 
 void marcar_marco_libre(uint32_t marco){
-    t_marco* encontrado = encontrar_marco(marco);
+    t_marco_libre* encontrado = encontrar_marco(marco);
     if(encontrado != NULL){
         encontrado->estaLibre=true;
     }
 }
 
-t_marco* encontrar_marco(uint32_t marcoABuscar){
+t_marco_libre* encontrar_marco(uint32_t marcoABuscar){
     int cantMarcos = list_size(marcosLibres);
     for(int i = 0; i < cantMarcos; i++){
-        t_marco* marco = list_get(marcosLibres, i);
+        t_marco_libre* marco = list_get(marcosLibres, i);
         if(marcoABuscar == marco->nroMarco){
             return marco;
         }

@@ -11,7 +11,7 @@
 
 
 
-void reemplazo_clock(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
-void reemplazo_clock_modificado(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
+void reemplazo_clock(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
+void reemplazo_clock_modificado(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
 
 #endif

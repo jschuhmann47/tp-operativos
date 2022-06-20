@@ -34,7 +34,7 @@ void inicializar_tabla_paginas(){
 // }
 
 
-void reemplazar_pagina(t_segundoNivel* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel){
+void reemplazar_pagina(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel){
     if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO, "CLOCK") == 0){
         reemplazo_clock(paginaAAgregar, tablaSegundoNivel);
     }
@@ -56,7 +56,7 @@ uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel)
 }
 
 uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel){
-    return sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_segundoNivel);
+    return sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_marco);
 }
 
 bool lugar_libre(t_primerNivel* filaPrimerNivel)
@@ -79,15 +79,16 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu){
     uint32_t requestPrimerTabla;
     if(recv(socket_cpu, &requestPrimerTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al recibir requestPrimerTabla de CPU: %s", strerror(errno));
-        //return;
+        exit(-1);
     }
     
-    //va a la tabla y trae el numero de la segunda tabla
+    t_primerNivel* entradaTabla = list_get(tablaPaginasPrimerNivel, requestPrimerTabla);
+    t_tablaSegundoNivel* tablaSegundoNivel = entradaTabla->tablaSegundoNivel;
+    uint32_t indiceSegundoNivel = tablaSegundoNivel->indice;
 
-    uint32_t indiceSegundaTabla = 1;
-    if(send(socket_cpu,&indiceSegundaTabla,sizeof(uint32_t),0) == -1){
-        log_error(memoria_swapLogger, "Memoria: Error al enviar indiceSegundaTabla a CPU: %s", strerror(errno));
-        //return;
+    if(send(socket_cpu,&indiceSegundoNivel,sizeof(uint32_t),0) == -1){
+        log_error(memoria_swapLogger, "Memoria: Error al enviar indiceSegundoNivel a CPU: %s", strerror(errno));
+        exit(-1);
     }
 }
 
@@ -96,15 +97,37 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
     uint32_t requestSegundaTabla;
     if(recv(socket_cpu, &requestSegundaTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al recibir requestSegundaTabla de CPU: %s", strerror(errno));
-        //return;
+        exit(-1);
     }
 
-    //busca el marco en la tabla de segunda nivel
+    t_tablaSegundoNivel* tablaSegundoNivel;
+    uint32_t nroMarco;
 
-    uint32_t marco = 1;
-    if(send(socket_cpu,&marco,sizeof(uint32_t),0) == -1){
+    if(!list_is_empty(tablaSegundoNivel->marcos)){
+        t_marco* marco = list_get(tablaSegundoNivel->marcos, requestSegundaTabla);
+        nroMarco = marco->marco;
+    } else {
+        if(list_size(tablaSegundoNivel->marcos) < memoria_swapCfg->MARCOS_POR_PROCESO){
+            t_marco* marco = malloc(sizeof(t_marco));
+            //marco->marco = funcion que devuelva marco libre
+            marco->uso = false;
+            marco->presencia = true;
+            marco->modificado = false;
+            list_add(tablaSegundoNivel->marcos, marco);
+            //nroMarco = marco->marco;
+        } else {
+            if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO, "CLOCK") == 0){
+                //reemplazar clock
+            }
+            if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO, "CLOCK-M") == 0){
+                //reemplazar clock-m
+            }
+        }
+    }
+
+    if(send(socket_cpu,&nroMarco,sizeof(uint32_t),0) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al enviar marco a CPU: %s", strerror(errno));
-        //return;
+        exit(-1);
     }
 
 }

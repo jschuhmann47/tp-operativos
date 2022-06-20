@@ -69,6 +69,7 @@ uint32_t procesar_read(uint32_t direccionFisica, int socket_cpu){ //READ devuelv
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
     uint32_t* leido = leer_de_memoria(MEMORIA_PRINCIPAL, marco, desplazamiento, sizeof(uint32_t));
+    marcar_marco_ocupado(marco);
     log_info(memoria_swapLogger, "Memoria: READ terminado %i", *leido);
     return *leido;
 }

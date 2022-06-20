@@ -10,7 +10,7 @@ typedef struct
 {
     uint32_t nroMarco;
     bool estaLibre;
-} t_marco;
+} t_marco_libre;
 
 void* crear_espacio_de_memoria();
 void escribir_en_memoria(void* memoria, void* contenido, uint32_t marco, uint32_t desplazamiento,int size);
@@ -18,7 +18,7 @@ void* leer_de_memoria(void* memoria, uint32_t marco, uint32_t desplazamiento, in
 void inicializar_marcos();
 bool marco_libre(uint32_t marco);
 void marcar_marco_ocupado(uint32_t marco);
-t_marco* encontrar_marco(uint32_t marcoABuscar);
+t_marco_libre* encontrar_marco(uint32_t marcoABuscar);
 
 
 #endif

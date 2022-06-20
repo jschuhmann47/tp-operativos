@@ -9,6 +9,9 @@ int main(int argc, char *argv[]){
     inicializar_tabla_paginas();
     inicializar_marcos();
     MEMORIA_PRINCIPAL = crear_espacio_de_memoria();
+
+    nextIndice = 0; //se inicia el indice para tabla de segundo nivel.
+
     int socket_servidor = iniciar_servidor(memoria_swapCfg->IP_MEMORIA, memoria_swapCfg->PUERTO_ESCUCHA);
     struct sockaddr cliente;
     socklen_t lenCliD = sizeof(cliente);
@@ -70,6 +73,7 @@ void atender_peticiones_kernel(int socket_kernel){
                 case NEWTABLE:
                 ;
                 t_tablaSegundoNivel* tablaSegundoNivel = malloc(sizeof(t_tablaSegundoNivel));
+                tablaSegundoNivel->indice = get_siguiente_indice();
                 tablaSegundoNivel->puntero = 0;
                 tablaSegundoNivel->marcos = list_create();
                 uint32_t indice = agregar_a_tabla_primer_nivel(tablaSegundoNivel);
@@ -120,4 +124,11 @@ void recibir_handshake(int socketCPu)
     free(bytes);
 }
 
-
+uint32_t get_siguiente_indice() 
+{
+    pthread_mutex_lock(&nextIndice);
+    uint32_t id = nextIndice;
+    nextIndice++;
+    pthread_mutex_unlock(&nextIndice);
+    return id;
+}
