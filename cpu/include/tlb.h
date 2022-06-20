@@ -3,6 +3,10 @@
 
 #include "cpu_config.h"
 
+int indiceReemplazoFifo;
+t_list* reemplazoLru;
+int instanteCargaLru;
+
 typedef struct{
     int indice;
     int contadorTiempo;
@@ -23,9 +27,4 @@ int obtener_indice_victima_lru();
 t_entrada_lru* comparar_lru(t_entrada_lru* a, t_entrada_lru* b);
 void actualizar_tiempo_ultimo_uso_tlb(int indice);
 
-
-
-int indiceReemplazoFifo;
-t_list* reemplazoLru;
-int instanteCargaLru;
 #endif
