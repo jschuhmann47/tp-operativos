@@ -82,7 +82,7 @@ void remover_tabla_primer_nivel(uint32_t indice){
     primerNivel = list_get(tablaPrimerNivel, indice);
     list_destroy_and_destroy_elements(primerNivel->tablaSegundoNivel->marcos,free);
     free(primerNivel->tablaSegundoNivel);
-    list_remove(tablaPrimerNivel, indice);
+    //list_remove(tablaPrimerNivel, indice);
     //free(primerNivel);
 }
 
