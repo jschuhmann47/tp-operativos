@@ -2,8 +2,6 @@
 
 int cantTablas;
 
-t_list* marcosLibres;
-
 void inicializar_tabla_paginas(){
     tablaPrimerNivel = list_create();
     tablasSegundoNivel = list_create();
@@ -70,7 +68,7 @@ t_marco* crear_marco(){
 
 
 uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel){
-    return sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_marco);
+    return 2*sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_marco);
 }
 
 bool lugar_libre(t_primerNivel* filaPrimerNivel)
@@ -108,18 +106,19 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu){
 
 void procesar_entrada_tabla_segundo_nv(int socket_cpu){
     log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de segundo nivel");
-    uint32_t requestSegundaTabla;
-    if(recv(socket_cpu, &requestSegundaTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
-        log_error(memoria_swapLogger, "Memoria: Error al recibir requestSegundaTabla de CPU: %s", strerror(errno));
+    uint32_t indicePagina;
+    if(recv(socket_cpu, &indicePagina, sizeof(uint32_t), MSG_WAITALL) == -1){
+        log_error(memoria_swapLogger, "Memoria: Error al recibir indicePagina de CPU: %s", strerror(errno));
         exit(-1);
     }
 
-    t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, requestSegundaTabla); //encuentra la tabla correspondiente
+    t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, indicePagina); //encuentra la tabla correspondiente
   
-    t_marco* marcoEncontrado = list_get(tablaSegundoNivel->marcos, requestSegundaTabla);
+    t_marco* marcoEncontrado = list_get(tablaSegundoNivel->marcos, indicePagina);
     uint32_t nroMarco = marcoEncontrado->marco;
-    if(nroMarco==-1){
-        nroMarco = conseguir_marco_libre(tablaSegundoNivel->marcos);
+    if(!marcoEncontrado->presencia){
+        nroMarco = conseguir_marco_libre(tablaSegundoNivel, indicePagina); //esta por dentro va a reemplazar de ser necesario, y/o mandar a swap
+        marcar_marco_ocupado(nroMarco);
     }
     
 
@@ -130,15 +129,27 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
 
 }
 
-int conseguir_marco_libre(t_list* marcos){ //busca un lugar libre y sino reemplaza segun algoritmo
-    t_list* libres = list_filter(marcos, marco_en_tabla_sin_asignarse);
-    if(!list_is_empty(libres)){
-        t_marco* marco = list_remove(libres, 0);
-        list_destroy(libres);
-        //TODO
+int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indicePagina){ //busca un lugar libre y sino reemplaza segun algoritmo
+    int marcoLibre = encontrar_marco_libre();
+    if(marcoLibre == -1){
+        t_marco* nuevoMarco = malloc(sizeof(t_marco)); //el nro de marco va a ser el de la victima
+        nuevoMarco->presencia=true;
+        nuevoMarco->uso=true;
+        if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK")==0){
+            reemplazo_clock(nuevoMarco,tablaSegundoNivel);
+        }
+        if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK-M")==0){
+            reemplazo_clock_modificado(nuevoMarco,tablaSegundoNivel);
+        }
+        //ver cuándo tiene que swapear y qué TODO !!
+    }
+    else{
+        t_marco* m = list_get(tablaSegundoNivel->marcos,indicePagina);
+        m->marco=marcoLibre;
+        m->presencia=true;
+        m->uso=true;
+        return marcoLibre;
     }
 }
 
-bool* marco_en_tabla_sin_asignarse(t_marco* marco){
-    return marco->marco==-1;
-}
+// void cargar_marco_en_memoria()

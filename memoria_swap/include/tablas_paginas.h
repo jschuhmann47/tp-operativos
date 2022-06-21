@@ -7,6 +7,7 @@
 
 #include "memoria_swap_config.h"
 #include <commons/collections/list.h>
+#include "marcos_libres.h"
 
 t_list* tablaPrimerNivel;
 t_list* tablasSegundoNivel;
@@ -29,7 +30,7 @@ struct t_tablaSegundoNivel{
 typedef struct t_primerNivel t_primerNivel;
 struct t_primerNivel{
     uint32_t indice;
-    t_tablaSegundoNivel* tablaSegundoNivel;
+    t_tablaSegundoNivel* tablaSegundoNivel; //creo que esto hay que cambiarlo a un indice en la lista de tablasSegundoNivel
 };
 
 #include "algoritmos_reemplazo.h"

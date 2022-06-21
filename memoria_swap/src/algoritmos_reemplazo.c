@@ -11,6 +11,7 @@ void reemplazo_clock(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNi
         
         if(!pagina->uso){
            victima = list_remove(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero);
+           paginaAAgregar->marco=victima->marco;
            list_add_in_index(tablaSegundoNivel, tablaSegundoNivel->puntero, paginaAAgregar);
            tablaSegundoNivel->puntero++;
            break;
@@ -36,6 +37,7 @@ void reemplazo_clock_modificado(t_marco* paginaAAgregar,t_tablaSegundoNivel* tab
         if(nroVuelta==1){
             if(!pagina->uso && pagina->modificado){
                 victima = list_remove(tablaSegundoNivel, tablaSegundoNivel->puntero);
+                paginaAAgregar->marco=victima->marco;
                 list_add_in_index(tablaSegundoNivel, tablaSegundoNivel->puntero, paginaAAgregar);
                 break;
             }
@@ -52,6 +54,7 @@ void reemplazo_clock_modificado(t_marco* paginaAAgregar,t_tablaSegundoNivel* tab
         else{
             if(!pagina->uso && !pagina->modificado){
                 victima = list_remove(tablaSegundoNivel, tablaSegundoNivel->puntero);
+                paginaAAgregar->marco=victima->marco;
                 list_add_in_index(tablaSegundoNivel, tablaSegundoNivel->puntero, paginaAAgregar);
                 tablaSegundoNivel->puntero++;
                 break;
