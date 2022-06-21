@@ -8,10 +8,11 @@
 #include "memoria_swap_config.h"
 #include <commons/collections/list.h>
 
-t_list* tablaPaginasPrimerNivel;
+t_list* tablaPrimerNivel;
+t_list* tablasSegundoNivel;
 
 typedef struct {
-    uint32_t marco;
+    int marco;
     bool presencia; //bit de presencia
     bool uso; //bit de uso
     bool modificado; //bit de modificado
