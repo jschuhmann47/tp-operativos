@@ -445,7 +445,7 @@ void liberar_pcb_de_memoria(t_pcb* pcb){
     if(send(SOCKET_MEMORIA, &indiceAEliminar, sizeof(uint32_t), 0)<0){
         log_error(kernelLogger, "Largo Plazo: Error al enviar el indice de tabla");
     }
-    log_info(kernelLogger, "Largo Plazo: Enviada liberacion de PCB a Memoria");
+    log_info(kernelLogger, "Largo Plazo: Enviada liberacion de PCB a Memoria %i",pcb->tablaDePaginas);
 
 }
     

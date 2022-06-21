@@ -32,12 +32,13 @@ void reemplazar_pagina(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundo
     }
 }
 
-uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel)
+uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivell)
 {
     t_primerNivel* primerNivel;
     primerNivel = list_find(tablaPrimerNivel, lugar_libre);
     //if(primerNivel != NULL){
-    t_tablaSegundoNivel* tsn = malloc(size_tabla_segundo_nivel(tablaSegundoNivel));
+    t_tablaSegundoNivel* tsn = malloc(size_tabla_segundo_nivel(tablaSegundoNivell));
+    tsn = tablaSegundoNivell;
     primerNivel->tablaSegundoNivel = tsn;
     return primerNivel->indice; 
     //}
@@ -78,10 +79,11 @@ bool lugar_libre(t_primerNivel* filaPrimerNivel)
 
 void remover_tabla_primer_nivel(uint32_t indice){
     t_primerNivel* primerNivel;
-    primerNivel = list_remove(tablaPrimerNivel, indice);
+    primerNivel = list_get(tablaPrimerNivel, indice);
     list_destroy_and_destroy_elements(primerNivel->tablaSegundoNivel->marcos,free);
     free(primerNivel->tablaSegundoNivel);
-    free(primerNivel);
+    list_remove(tablaPrimerNivel, indice);
+    //free(primerNivel);
 }
 
 

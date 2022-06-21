@@ -95,6 +95,7 @@ void atender_peticiones_kernel(int socket_kernel){
                         free(pcb);
                     }
                 }
+                break;
                 case FREEPCB:
                 ;
                 uint32_t indiceALiberar;
@@ -104,6 +105,7 @@ void atender_peticiones_kernel(int socket_kernel){
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
                 }
+                break;
             }
         }
     }

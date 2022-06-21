@@ -43,6 +43,7 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu);
 void procesar_entrada_tabla_segundo_nv(int socket_cpu);
 void remover_tabla_primer_nivel(uint32_t indice);
 uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
+t_marco* crear_marco();
 
 
 #endif
