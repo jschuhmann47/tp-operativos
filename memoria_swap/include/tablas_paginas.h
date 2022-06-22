@@ -7,11 +7,13 @@
 
 #include "memoria_swap_config.h"
 #include <commons/collections/list.h>
+#include "marcos_libres.h"
 
-t_list* tablaPaginasPrimerNivel;
+t_list* tablaPrimerNivel;
+t_list* tablasSegundoNivel;
 
 typedef struct {
-    uint32_t marco;
+    int marco;
     bool presencia; //bit de presencia
     bool uso; //bit de uso
     bool modificado; //bit de modificado
@@ -19,7 +21,7 @@ typedef struct {
 
 typedef struct t_tablaSegundoNivel t_tablaSegundoNivel;
 struct t_tablaSegundoNivel{
-    uint32_t indice;
+    int indice;
     t_list* marcos; //lista de t_marco
     //pthread_mutex_t mutex;
     uint32_t puntero;
@@ -28,7 +30,7 @@ struct t_tablaSegundoNivel{
 typedef struct t_primerNivel t_primerNivel;
 struct t_primerNivel{
     uint32_t indice;
-    t_tablaSegundoNivel* tablaSegundoNivel;
+    int indiceTablaSegundoNivel; //creo que esto hay que cambiarlo a un indice en la lista de tablasSegundoNivel
 };
 
 #include "algoritmos_reemplazo.h"
@@ -41,6 +43,8 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu);
 void procesar_entrada_tabla_segundo_nv(int socket_cpu);
 void remover_tabla_primer_nivel(uint32_t indice);
 uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
+t_marco* crear_marco();
+void liberar_marco(t_marco* marco);
 
 
 #endif

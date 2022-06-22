@@ -88,3 +88,24 @@ void procesar_write(uint32_t direccionFisica, uint32_t valor, int socket_cpu){ /
     }*/
     log_info(memoria_swapLogger, "Memoria: WRITE terminado");
 }
+
+
+void suspender_proceso(uint32_t indice, uint32_t pid){
+    log_info(memoria_swapLogger,"Entre a Liberar marcos para el proceso %i",pid);
+    t_tablaSegundoNivel* tablaALiberar = list_get(tablasSegundoNivel,indice);
+    t_marco* m;
+    for(int i=0; i<list_size(tablaALiberar->marcos);i++){
+        m=list_get(tablaALiberar->marcos,i);
+        if(m->presencia){
+            
+            
+            // if(m->modificado){
+            //     char* lectura; //TODO
+            //     escribir_en_archivo(pid, lectura);
+            // }
+            liberar_marco(m);
+        }
+    }
+    log_info(memoria_swapLogger,"Marcos liberados para el proceso %i",pid);
+
+}

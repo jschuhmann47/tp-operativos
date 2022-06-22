@@ -7,7 +7,7 @@ int main(int argc, char *argv[]){
     cargar_configuracion(MEMORIA_SWAP_MODULE_NAME, memoria_swapCfg, MEMORIA_SWAP_CFG_PATH, memoria_swapLogger, memoria_swap_config_initialize);
 
     inicializar_tabla_paginas();
-    inicializar_marcos();
+    void inicializar_lista_marcos_libres();
     MEMORIA_PRINCIPAL = crear_espacio_de_memoria();
 
     nextIndice = 0; //se inicia el indice para tabla de segundo nivel.
@@ -72,16 +72,13 @@ void atender_peticiones_kernel(int socket_kernel){
             switch(opCode){
                 case NEWTABLE:
                 ;
-                t_tablaSegundoNivel* tablaSegundoNivel = malloc(sizeof(t_tablaSegundoNivel));
-                tablaSegundoNivel->indice = get_siguiente_indice();
-                tablaSegundoNivel->puntero = 0;
-                tablaSegundoNivel->marcos = list_create();
+                t_tablaSegundoNivel* tablaSegundoNivel = crear_tabla_segundo_nivel();
                 uint32_t indice = agregar_a_tabla_primer_nivel(tablaSegundoNivel);
                 if(send(socket_kernel, &indice, sizeof(uint32_t), 0)){
                     log_info(memoria_swapLogger, "Memoria: Envio de posicion de tabla correctamente");
                 }
                 break;
-                case SUSPENSION:
+                case SUSPENSION: //que reciba solo el indice de tabla de 2do nivel
                 ;
                 void* buffer;
                 t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
@@ -91,10 +88,12 @@ void atender_peticiones_kernel(int socket_kernel){
                     if (recv(socket_kernel, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
                         t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
                         log_info(memoria_swapLogger, "MEMORIA: Recibi el PCB con ID: %i", pcb->id);
-                        //suspender_pcb();
+                        
+                        suspender_proceso(pcb->tablaDePaginas, pcb->id);
                         free(pcb);
                     }
                 }
+                break;
                 case FREEPCB:
                 ;
                 uint32_t indiceALiberar;
@@ -104,6 +103,8 @@ void atender_peticiones_kernel(int socket_kernel){
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
                 }
+                //eliminar_archivo();
+                break;
             }
         }
     }
