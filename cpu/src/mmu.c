@@ -38,7 +38,7 @@ uint32_t traducir_direccion(uint32_t direccionLogica,
             log_error(cpuLogger, "CPU: No se pudo enviar opCodeDos a Memoria.");
             }
             //log_info(cpuLogger, "CPU: Se mando opCodeDos a Memoria.");
-            if(send(socket_memoria,&rtaTablaPrimerNivel,sizeof(entradaTablaSegundoNivel),0)<0){
+            if(send(socket_memoria,&rtaTablaPrimerNivel,sizeof(rtaTablaPrimerNivel),0)<0){
                 log_error(cpuLogger, "CPU: No se pudo enviar rtaTablaPrimerNivel a Memoria.");
             }
 
