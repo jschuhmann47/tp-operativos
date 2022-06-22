@@ -12,7 +12,7 @@ void generar_archivo(uint32_t pid, char *contenido)
     string_append(&path, memoria_swapCfg->PATH_SWAP);
     string_append(&path, string_itoa(pid));
     string_append(&path, ".swap");
-    FILE *archivo = fopen(path, "a+"); //a+: append y read
+    FILE *archivo = fopen(path, "w"); //a+: append y read
     
     //escribir lo que haya que escribir
     
@@ -31,4 +31,11 @@ void eliminar_archivo(uint32_t pid)
     string_append(&path, ".swap");
     remove(path);
     pthread_mutex_unlock(&accesoAArchivo);
+}
+
+void escribir_en_archivo(uint32_t pid, char *contenido){
+    pthread_mutex_lock(&accesoAArchivo);
+    //TODO
+    pthread_mutex_unlock(&accesoAArchivo);
+
 }

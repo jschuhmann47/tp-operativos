@@ -11,5 +11,7 @@
 
 void generar_archivo(uint32_t pid, char *contenido);
 void eliminar_archivo(uint32_t pid);
+void escribir_en_archivo(uint32_t pid, char *contenido);
+
 
 #endif
