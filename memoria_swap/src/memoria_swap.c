@@ -7,7 +7,7 @@ int main(int argc, char *argv[]){
     cargar_configuracion(MEMORIA_SWAP_MODULE_NAME, memoria_swapCfg, MEMORIA_SWAP_CFG_PATH, memoria_swapLogger, memoria_swap_config_initialize);
 
     inicializar_tabla_paginas();
-    void inicializar_lista_marcos_libres();
+    inicializar_lista_marcos_libres();
     MEMORIA_PRINCIPAL = crear_espacio_de_memoria();
 
     nextIndice = 0; //se inicia el indice para tabla de segundo nivel.

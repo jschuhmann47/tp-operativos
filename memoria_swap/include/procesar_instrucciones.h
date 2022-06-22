@@ -9,8 +9,8 @@
 void recibir_instrucciones_cpu(int socket_cpu);
 void procesar_instruccion(void* buffer, int socket_cpu);
 
-uint32_t procesar_read(uint32_t direccionFisica, int socket_cpu);
-void procesar_write(uint32_t direccionFisica, uint32_t valor, int socket_cpu);
+uint32_t procesar_read(uint32_t direccionFisica);
+void procesar_write(uint32_t direccionFisica, uint32_t valor);
 
 void suspender_proceso(uint32_t indice, uint32_t pid);
 #endif

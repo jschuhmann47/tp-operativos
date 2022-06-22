@@ -48,14 +48,14 @@ void procesar_instruccion(void* buffer, int socket_cpu){
     case READ:
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi READ con parametro: %i", param1);
-        leido = procesar_read(param1, socket_cpu);
-        send(socket_cpu, &leido, sizeof(leido), 0);
+        leido = procesar_read(param1);
+        send(socket_cpu, &leido, sizeof(uint32_t), 0);
         break;
     case WRITE:
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         memcpy(&param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", param1, param2);
-        procesar_write(param1, param2, socket_cpu);
+        procesar_write(param1, param2);
         break;
     default:
         log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
@@ -64,7 +64,7 @@ void procesar_instruccion(void* buffer, int socket_cpu){
     //devolver a cpu un ok o ver que devuelve en cada caso
 }
 
-uint32_t procesar_read(uint32_t direccionFisica, int socket_cpu){ //READ devuelve el valor leido
+uint32_t procesar_read(uint32_t direccionFisica){ //READ devuelve el valor leido
     log_info(memoria_swapLogger, "Memoria: Procesando READ");
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
@@ -74,7 +74,7 @@ uint32_t procesar_read(uint32_t direccionFisica, int socket_cpu){ //READ devuelv
     return *leido;
 }
 
-void procesar_write(uint32_t direccionFisica, uint32_t valor, int socket_cpu){ //write no dice, devolver ok o error?
+void procesar_write(uint32_t direccionFisica, uint32_t valor){ //write no dice, devolver ok o error?
     log_info(memoria_swapLogger, "Memoria: Procesando WRITE");
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
