@@ -1,6 +1,10 @@
 #include "memoria_swap.h"
 
+pthread_mutex_t mutexIndice;
+
 int main(int argc, char *argv[]){
+
+    pthread_mutex_init(&mutexIndice, NULL);
 
     memoria_swapLogger = log_create(MEMORIA_SWAP_LOG_DEST, MEMORIA_SWAP_MODULE_NAME, true, LOG_LEVEL_INFO);
     memoria_swapCfg = memoria_swap_cfg_create();
@@ -127,9 +131,9 @@ void recibir_handshake(int socketCPu)
 
 uint32_t get_siguiente_indice() 
 {
-    pthread_mutex_lock(&nextIndice);
+    pthread_mutex_lock(&mutexIndice);
     uint32_t id = nextIndice;
     nextIndice++;
-    pthread_mutex_unlock(&nextIndice);
+    pthread_mutex_unlock(&mutexIndice);
     return id;
 }
