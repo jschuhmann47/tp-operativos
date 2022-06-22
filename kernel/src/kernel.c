@@ -32,7 +32,7 @@ void aceptar_conexiones_kernel(int socketEscucha, struct sockaddr cliente, sockl
     }
 }
 
-void crear_hilo_handler_conexion_entrante(int* socket) 
+void crear_hilo_handler_conexion_entrante(int socket) 
 {
     pthread_t threadSuscripcion;
     pthread_create(&threadSuscripcion, NULL, agregar_pcb_en_cola_new, (void *) socket);

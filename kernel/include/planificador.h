@@ -14,8 +14,8 @@
 
 
 typedef struct{
-    uint32_t* id;
-    int* socket;
+    uint32_t id;
+    int socket;
 } t_socket;
 
 
@@ -23,15 +23,13 @@ void iniciar_planificacion();
 
 // Planificador Corto Plazo
 void* iniciar_corto_plazo(void* _);
-void* conexion_de_interrupt();
-void* conexion_de_dispatch();
 void interrupcion_a_cpu();
 void mandar_pcb_a_cpu(t_pcb* pcb);
 void* traer_pcb_de_cpu();
 //void determinar_ready_o_blocked(t_pcb* pcb);
 bool instruccion_actual_es(t_pcb* pcb, code_instruccion codOp);
 void atender_procesos_bloqueados(uint32_t tiempoBloqueadoPorIo);
-void* determinar_cola(t_tiempo_io* pcbConTiempo);
+void determinar_cola(t_tiempo_io* pcbConTiempo);
 void interrumpir_si_es_srt();
 
 // Planificador Mediano Plazo
@@ -83,7 +81,9 @@ void agregar_lista_sockets(uint32_t id, int socket);
 void cerrar_socket_de_pid(uint32_t pid);
 int buscar_indice_socket_de_pid(uint32_t pid);
 int get_socket_de_pid(uint32_t pid);
-void* conexion_de_memoria();
+void conexion_de_memoria();
+void conexion_de_interrupt();
+void conexion_de_dispatch();
 
 
 

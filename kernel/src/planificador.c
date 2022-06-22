@@ -171,7 +171,7 @@ void* traer_pcb_de_cpu(){
     pthread_exit(NULL);
 }
 
-void* determinar_cola(t_tiempo_io* pcbConTiempo)
+void determinar_cola(t_tiempo_io* pcbConTiempo)
 {
     t_pcb* pcb = pcbConTiempo->pcb;
     uint32_t tiempoABloquearsePorIO = pcbConTiempo->tiempo;
@@ -652,7 +652,7 @@ void calcular_nueva_estimacion_actual(t_pcb* pcb){
 /*---------------------------------------------- CONEXIONES ----------------------------------------------*/
 
 //La conexión de interrupt dedicada solamente a enviar mensajes de interrupción
-void* conexion_de_interrupt() {
+void conexion_de_interrupt() {
     log_info(kernelLogger, "Hilo interrupt inicializado");
 
     SOCKET_INTERRUPT = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_INTERRUPT);
@@ -671,7 +671,7 @@ void* conexion_de_interrupt() {
     //TODO: Si CPU maneja la cola de pcbsExec, solo tengo que sacarlo de ahi
 }
 
-void* conexion_de_memoria() {
+void conexion_de_memoria() {
     SOCKET_MEMORIA = conectar_a_servidor(kernelCfg->IP_MEMORIA, kernelCfg->PUERTO_MEMORIA);
     log_info(kernelLogger, "Kernel: Conectando a Memoria");
 
@@ -684,7 +684,7 @@ void* conexion_de_memoria() {
 }
 
 //En todos los casos el PCB será recibido a través de la conexión de dispatch - Es bidireccional, por aca tambien le mando el PCB a CPU
-void* conexion_de_dispatch() {
+void conexion_de_dispatch() {
     log_info(kernelLogger, "Hilo dispatch inicializado");
 
     SOCKET_DISPATCH = conectar_a_servidor(kernelCfg->IP_CPU, kernelCfg->PUERTO_CPU_DISPATCH);
