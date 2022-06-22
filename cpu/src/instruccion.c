@@ -89,7 +89,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
             direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
             agregar_a_tlb(*direccionLogicaW, direccionFisicaW);
         }else{
-            direccionFisicaW = obtener_indice_traduccion_tlb(indice);
+            direccionFisicaW = obtener_traduccion_tlb(indice);
         }
         uint32_t* valor = list_get(instruccion->parametros, 1);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
@@ -110,7 +110,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
             direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla,socket_memoria);
             agregar_a_tlb(*direccionLogicaR, direccionFisicaR);
         }else{
-            direccionFisicaR = obtener_indice_traduccion_tlb(indice);
+            direccionFisicaR = obtener_traduccion_tlb(indice);
         }
         log_info(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
         if(mandar_instruccion(READ,direccionFisicaR,0,socket_memoria)>0){
@@ -139,7 +139,7 @@ void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando, int 
         direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
         agregar_a_tlb(*direccionLogicaW, direccionFisicaW);
     }else{
-        direccionFisicaW = obtener_indice_traduccion_tlb(indice);
+        direccionFisicaW = obtener_traduccion_tlb(indice);
     }
     log_info(cpuLogger, "CPU: Ejecute COPY: %i ", direccionFisicaW);
     log_info(cpuLogger, "CPU: Ejecute COPY: %i ", operando);
@@ -159,7 +159,7 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion, int socket_memoria){
         direccionFisicaR = traducir_direccion(*direccionMemoriaAObtener, tamanioPagina, paginasPorTabla,socket_memoria);
         agregar_a_tlb(*direccionMemoriaAObtener, direccionFisicaR);
     }else{
-        direccionFisicaR = obtener_indice_traduccion_tlb(indice);
+        direccionFisicaR = obtener_traduccion_tlb(indice);
     }
 
     log_info(cpuLogger, "CPU: Fetch operands: %i ", direccionFisicaR);
