@@ -72,10 +72,7 @@ void atender_peticiones_kernel(int socket_kernel){
             switch(opCode){
                 case NEWTABLE:
                 ;
-                t_tablaSegundoNivel* tablaSegundoNivel = malloc(sizeof(t_tablaSegundoNivel));
-                tablaSegundoNivel->indice = get_siguiente_indice();
-                tablaSegundoNivel->puntero = 0;
-                tablaSegundoNivel->marcos = list_create();
+                t_tablaSegundoNivel* tablaSegundoNivel = crear_tabla_segundo_nivel();
                 uint32_t indice = agregar_a_tabla_primer_nivel(tablaSegundoNivel);
                 if(send(socket_kernel, &indice, sizeof(uint32_t), 0)){
                     log_info(memoria_swapLogger, "Memoria: Envio de posicion de tabla correctamente");
@@ -106,6 +103,7 @@ void atender_peticiones_kernel(int socket_kernel){
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
                 }
+                //eliminar_archivo();
                 break;
             }
         }

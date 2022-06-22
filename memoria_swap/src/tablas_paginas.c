@@ -69,7 +69,7 @@ t_marco* crear_marco(){
 
 
 uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel){
-    return 2*sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_marco);
+    return sizeof(int)+sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_marco);
 }
 
 bool lugar_libre(t_primerNivel* filaPrimerNivel)
@@ -83,7 +83,7 @@ void remover_tabla_primer_nivel(uint32_t indice){
     t_tablaSegundoNivel* tablaSegNvALiberar = list_get(tablasSegundoNivel,primerNivel->indiceTablaSegundoNivel);
     
     list_map(tablaSegNvALiberar->marcos,liberar_marco); //revisar si esto esta bien
-    list_destroy_and_destroy_elements(tablaSegNvALiberar->marcos,free);
+    //list_destroy_and_destroy_elements(tablaSegNvALiberar->marcos,free);
     primerNivel->indiceTablaSegundoNivel = -1;
     //list_remove(tablaPrimerNivel, indice);
     //free(primerNivel);
