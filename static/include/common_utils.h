@@ -27,11 +27,11 @@ uint32_t recibir_tamanio_mensaje(t_mensaje_tamanio *tamanio_mensaje, int socket)
 t_pcb* recibir_pcb(void* buffer,uint32_t bytes);
 
 //Utilities//
-int tamanioInstruccion(code_instruccion codOp);
+uint32_t tamanioInstruccion(code_instruccion codOp);
 int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket);
 
 void pcb_destroy(t_pcb *pcb);
-void* destruir_instruccion(t_instruccion* instruccion);
+void destruir_instruccion(t_instruccion* instruccion);
 
 
 #endif

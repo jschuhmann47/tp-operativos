@@ -378,7 +378,7 @@ t_pcb* recibir_pcb(void* buffer,uint32_t bytes)
     return pcb;
 }
 
-int tamanioInstruccion(code_instruccion codOp){
+uint32_t tamanioInstruccion(code_instruccion codOp){
 	switch (codOp)
 	{
 		case NO_OP:
@@ -450,7 +450,7 @@ void pcb_destroy(t_pcb *pcb) {
     free(pcb);
 }
 
-void* destruir_instruccion(t_instruccion* instruccion) {
+void destruir_instruccion(t_instruccion* instruccion) {
     list_destroy_and_destroy_elements(instruccion->parametros, free);
     free(instruccion);
 }
