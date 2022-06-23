@@ -23,13 +23,13 @@ void recibir_instrucciones_cpu(int socket_cpu){
                     procesar_instruccion(buffer,socket_cpu);
                 }
                 free(buffer);
-                continue;
+                break;
             case TABLAUNO:
                 procesar_entrada_tabla_primer_nv(socket_cpu);
-                continue;
+                break;
             case TABLADOS:
                 procesar_entrada_tabla_segundo_nv(socket_cpu);
-                continue;
+                break;
         }
 
         

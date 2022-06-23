@@ -109,7 +109,7 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu){
         log_error(memoria_swapLogger, "Memoria: Error al recibir requestPrimerTabla de CPU: %s", strerror(errno));
         exit(-1);
     }
-    
+    log_info(memoria_swapLogger, "Memoria: Buenos dias %i",requestPrimerTabla);
     t_primerNivel* entradaTabla = list_get(tablaPrimerNivel, requestPrimerTabla);
     uint32_t indiceSegundoNivel = entradaTabla->indiceTablaSegundoNivel;
 

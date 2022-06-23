@@ -87,7 +87,8 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         uint32_t direccionFisicaW;
         if(indice==-1){ //no esta en la tlb
             direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
-            agregar_a_tlb(*direccionLogicaW, direccionFisicaW);
+            uint32_t as = floor(floor(*direccionLogicaW/tamanioPagina) / paginasPorTabla);
+            agregar_a_tlb(as, direccionFisicaW);
         }else{
             direccionFisicaW = obtener_traduccion_tlb(indice);
         }
@@ -108,7 +109,8 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         uint32_t direccionFisicaR;
         if(indice==-1){ //no esta en la tlb
             direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
-            agregar_a_tlb(*direccionLogicaR, direccionFisicaR);
+            uint32_t as =floor(floor(*direccionLogicaR/tamanioPagina) / paginasPorTabla);
+            agregar_a_tlb(as, direccionFisicaR);
         }else{
             direccionFisicaR = obtener_traduccion_tlb(indice);
         }
@@ -137,7 +139,8 @@ void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t ope
     uint32_t direccionFisicaW;
     if(indice==-1){ //no esta en la tlb
         direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
-        agregar_a_tlb(*direccionLogicaW, direccionFisicaW);
+        uint32_t as =floor(floor(*direccionLogicaW/tamanioPagina) / paginasPorTabla);
+        agregar_a_tlb(as, direccionFisicaW);
     }else{
         direccionFisicaW = obtener_traduccion_tlb(indice);
     }
@@ -157,7 +160,8 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion, t_pcb* pcb,int socket_me
     uint32_t direccionFisicaR;
     if(indice==-1){ //no esta en la tlb
         direccionFisicaR = traducir_direccion(*direccionMemoriaAObtener, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
-        agregar_a_tlb(*direccionMemoriaAObtener, direccionFisicaR);
+        uint32_t as =floor(floor(*direccionMemoriaAObtener/tamanioPagina) / paginasPorTabla);
+        agregar_a_tlb(as, direccionFisicaR);
     }else{
         direccionFisicaR = obtener_traduccion_tlb(indice);
     }
