@@ -40,9 +40,15 @@ uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegNv)
     //t_tablaSegundoNivel* tsn = malloc(size_tabla_segundo_nivel(tablaSegundoNivell));
     //tsn = tablaSegundoNivell;
     primerNivel->indiceTablaSegundoNivel = tablaSegNv->indice;
+    log_info(memoria_swapLogger, "Memoria: asigno %i - %i",primerNivel->indice,primerNivel->indiceTablaSegundoNivel);
     return primerNivel->indice; 
     //}
     
+}
+
+bool lugar_libre(t_primerNivel* filaPrimerNivel)
+{
+    return filaPrimerNivel->indiceTablaSegundoNivel == -1;
 }
 
 t_tablaSegundoNivel* crear_tabla_segundo_nivel(){
@@ -72,10 +78,7 @@ uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel){
     return sizeof(int)+sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_marco);
 }
 
-bool lugar_libre(t_primerNivel* filaPrimerNivel)
-{
-    return filaPrimerNivel->indiceTablaSegundoNivel == -1;
-}
+
 
 void remover_tabla_primer_nivel(uint32_t indice){
     t_primerNivel* primerNivel;
@@ -108,8 +111,7 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu){
     }
     
     t_primerNivel* entradaTabla = list_get(tablaPrimerNivel, requestPrimerTabla);
-    t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel,entradaTabla->indiceTablaSegundoNivel);
-    uint32_t indiceSegundoNivel = tablaSegundoNivel->indice;
+    uint32_t indiceSegundoNivel = entradaTabla->indiceTablaSegundoNivel;
 
     if(send(socket_cpu,&indiceSegundoNivel,sizeof(uint32_t),0) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al enviar indiceSegundoNivel a CPU: %s", strerror(errno));
@@ -125,7 +127,7 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         log_error(memoria_swapLogger, "Memoria: Error al recibir nroTabla de CPU: %s", strerror(errno));
         exit(-1);
     }
-
+    log_info(memoria_swapLogger, "Memoria: Buenas tardes %i",nroTabla);
     t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, nroTabla); //encuentra la tabla correspondiente
     
     uint32_t nroPagina;

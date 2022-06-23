@@ -14,8 +14,8 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
         bool necesitaOperandos = cpu_decode(instruccionAEjecutar);
         
         if(necesitaOperandos){ 
-            uint32_t operando = cpu_fetch_operands(instruccionAEjecutar, socket_memoria); 
-            cpu_execute_con_operando(instruccionAEjecutar,operando,socket_memoria);
+            uint32_t operando = cpu_fetch_operands(instruccionAEjecutar, pcb,socket_memoria); 
+            cpu_execute_con_operando(instruccionAEjecutar,pcb,operando,socket_memoria);
         }else{
             cpu_execute(instruccionAEjecutar,pcb,socket_memoria);
         }
@@ -86,7 +86,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         indice = obtener_indice_traduccion_tlb(*direccionLogicaW);
         uint32_t direccionFisicaW;
         if(indice==-1){ //no esta en la tlb
-            direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
+            direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
             agregar_a_tlb(*direccionLogicaW, direccionFisicaW);
         }else{
             direccionFisicaW = obtener_traduccion_tlb(indice);
@@ -107,7 +107,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         indice = obtener_indice_traduccion_tlb(*direccionLogicaR);
         uint32_t direccionFisicaR;
         if(indice==-1){ //no esta en la tlb
-            direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla,socket_memoria);
+            direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
             agregar_a_tlb(*direccionLogicaR, direccionFisicaR);
         }else{
             direccionFisicaR = obtener_traduccion_tlb(indice);
@@ -129,14 +129,14 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     }
 }
 
-void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando, int socket_memoria){
+void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t operando, int socket_memoria){
     //el COPY y el WRITE son iguales solo que el valor que entra en WRITE lo mandan, y el de COPY se busca en memoria, pero despues
     //de conseguir el valor de ahi en adelante es igual
     uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
     uint32_t indice = obtener_indice_traduccion_tlb(*direccionLogicaW);
     uint32_t direccionFisicaW;
     if(indice==-1){ //no esta en la tlb
-        direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
+        direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
         agregar_a_tlb(*direccionLogicaW, direccionFisicaW);
     }else{
         direccionFisicaW = obtener_traduccion_tlb(indice);
@@ -151,12 +151,12 @@ void cpu_execute_con_operando(t_instruccion* instruccion,uint32_t operando, int 
     
 }
 
-uint32_t cpu_fetch_operands(t_instruccion* instruccion, int socket_memoria){
+uint32_t cpu_fetch_operands(t_instruccion* instruccion, t_pcb* pcb,int socket_memoria){
     uint32_t* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
     uint32_t indice = obtener_indice_traduccion_tlb(*direccionMemoriaAObtener);
     uint32_t direccionFisicaR;
     if(indice==-1){ //no esta en la tlb
-        direccionFisicaR = traducir_direccion(*direccionMemoriaAObtener, tamanioPagina, paginasPorTabla,socket_memoria);
+        direccionFisicaR = traducir_direccion(*direccionMemoriaAObtener, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
         agregar_a_tlb(*direccionMemoriaAObtener, direccionFisicaR);
     }else{
         direccionFisicaR = obtener_traduccion_tlb(indice);
