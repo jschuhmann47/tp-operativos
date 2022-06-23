@@ -51,9 +51,9 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
 
 void calcularTiempoEnMs(t_pcb* pcb,struct timespec start,struct timespec end){ //la nueva rafaga se la asigna aca
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
-    uint32_t tiempoEnMs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
-    log_info(cpuLogger, "El tiempo en ejecucion fue de %d ms", tiempoEnMs/1000);
-    pcb->dur_ultima_rafaga=tiempoEnMs/1000;
+    uint32_t tiempoEnNs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
+    log_info(cpuLogger, "El tiempo en ejecucion fue de %d ms", tiempoEnNs/1000);
+    pcb->dur_ultima_rafaga=tiempoEnNs/1000;
 }
 
 t_instruccion* cpu_fetch (t_pcb* pcb){
@@ -86,16 +86,16 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         indice = obtener_indice_traduccion_tlb(*direccionLogicaW);
         uint32_t direccionFisicaW;
         if(indice==-1){ //no esta en la tlb
-            direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
-            uint32_t as = floor(floor(*direccionLogicaW/tamanioPagina) / paginasPorTabla);
-            agregar_a_tlb(as, direccionFisicaW);
+            direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
+            uint32_t nroPagina = floor(floor(*direccionLogicaW/tamanioPagina) / paginasPorTabla);
+            agregar_a_tlb(nroPagina, direccionFisicaW);
         }else{
             direccionFisicaW = obtener_traduccion_tlb(indice);
         }
         uint32_t* valor = list_get(instruccion->parametros, 1);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
-        if(mandar_instruccion(WRITE,direccionFisicaW,*valor,socket_memoria)>0){ //cambiar op code
+        if(mandar_instruccion(WRITE,direccionFisicaW,*valor,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
         }else{
             log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
@@ -108,9 +108,9 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         indice = obtener_indice_traduccion_tlb(*direccionLogicaR);
         uint32_t direccionFisicaR;
         if(indice==-1){ //no esta en la tlb
-            direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
-            uint32_t as =floor(floor(*direccionLogicaR/tamanioPagina) / paginasPorTabla);
-            agregar_a_tlb(as, direccionFisicaR);
+            direccionFisicaR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla,socket_memoria);
+            uint32_t nroPagina =floor(floor(*direccionLogicaR/tamanioPagina) / paginasPorTabla);
+            agregar_a_tlb(nroPagina, direccionFisicaR);
         }else{
             direccionFisicaR = obtener_traduccion_tlb(indice);
         }
@@ -132,15 +132,13 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
 }
 
 void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t operando, int socket_memoria){
-    //el COPY y el WRITE son iguales solo que el valor que entra en WRITE lo mandan, y el de COPY se busca en memoria, pero despues
-    //de conseguir el valor de ahi en adelante es igual
     uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
     uint32_t indice = obtener_indice_traduccion_tlb(*direccionLogicaW);
     uint32_t direccionFisicaW;
     if(indice==-1){ //no esta en la tlb
-        direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
-        uint32_t as =floor(floor(*direccionLogicaW/tamanioPagina) / paginasPorTabla);
-        agregar_a_tlb(as, direccionFisicaW);
+        direccionFisicaW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
+        uint32_t nroPagina =floor(floor(*direccionLogicaW/tamanioPagina) / paginasPorTabla);
+        agregar_a_tlb(nroPagina, direccionFisicaW);
     }else{
         direccionFisicaW = obtener_traduccion_tlb(indice);
     }
@@ -159,9 +157,9 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion, t_pcb* pcb,int socket_me
     uint32_t indice = obtener_indice_traduccion_tlb(*direccionMemoriaAObtener);
     uint32_t direccionFisicaR;
     if(indice==-1){ //no esta en la tlb
-        direccionFisicaR = traducir_direccion(*direccionMemoriaAObtener, tamanioPagina, paginasPorTabla,socket_memoria,pcb->tablaDePaginas);
-        uint32_t as =floor(floor(*direccionMemoriaAObtener/tamanioPagina) / paginasPorTabla);
-        agregar_a_tlb(as, direccionFisicaR);
+        direccionFisicaR = traducir_direccion(*direccionMemoriaAObtener, tamanioPagina, paginasPorTabla,socket_memoria);
+        uint32_t nroPagina =floor(floor(*direccionMemoriaAObtener/tamanioPagina) / paginasPorTabla);
+        agregar_a_tlb(nroPagina, direccionFisicaR);
     }else{
         direccionFisicaR = obtener_traduccion_tlb(indice);
     }
