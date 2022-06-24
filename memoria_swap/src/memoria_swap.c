@@ -72,12 +72,17 @@ void atender_peticiones_kernel(int socket_kernel){
     log_info(memoria_swapLogger, "Memoria: entre a recibir kernel");
     while(1){
         op_code opCode;
+        uint32_t PID;
         if(recv(socket_kernel, &opCode, sizeof(op_code), MSG_WAITALL)){
             switch(opCode){
                 case NEWTABLE:
                 ;
                 t_tablaSegundoNivel* tablaSegundoNivel = crear_tabla_segundo_nivel();
                 uint32_t indice = agregar_a_tabla_primer_nivel(tablaSegundoNivel);
+                if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
+                    generar_archivo(PID);
+                    log_info(memoria_swapLogger, "Memoria: Recibi PID: %i", PID);
+                }
                 if(send(socket_kernel, &indice, sizeof(uint32_t), 0)){
                     log_info(memoria_swapLogger, "Memoria: Envio de posicion de tabla correctamente");
                 }
@@ -107,8 +112,19 @@ void atender_peticiones_kernel(int socket_kernel){
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
                 }
-                //eliminar_archivo();
                 break;
+                case FREEPROCESO:
+                ;
+                uint32_t indiceParaFinalizar;
+                if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
+                    eliminar_archivo(PID);
+                }
+                if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
+                    log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a finalizar: %i", indiceParaFinalizar);
+                    remover_tabla_primer_nivel(indiceParaFinalizar);
+                }else{
+                    log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a finalizar");
+                }
             }
         }
     }

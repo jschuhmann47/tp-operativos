@@ -97,12 +97,9 @@ void suspender_proceso(uint32_t indice, uint32_t pid){
     for(int i=0; i<list_size(tablaALiberar->marcos);i++){
         m=list_get(tablaALiberar->marcos,i);
         if(m->presencia){
-            
-            
-            // if(m->modificado){
-            //     char* lectura; //TODO
-            //     escribir_en_archivo(pid, lectura);
-            // }
+            if(m->modificado){
+                escribir_en_archivo(pid, m->marco);
+            }
             liberar_marco(m);
         }
     }

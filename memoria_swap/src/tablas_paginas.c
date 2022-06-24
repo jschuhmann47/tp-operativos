@@ -37,7 +37,7 @@ uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegNv)
     t_primerNivel* primerNivel;
     primerNivel = list_find(tablaPrimerNivel, lugar_libre);
     primerNivel->indiceTablaSegundoNivel = tablaSegNv->indice;
-    log_info(memoria_swapLogger, "Memoria: asigno %i - %i",primerNivel->indice,primerNivel->indiceTablaSegundoNivel);
+    //log_info(memoria_swapLogger, "Memoria: asigno %i - %i",primerNivel->indice,primerNivel->indiceTablaSegundoNivel);
     return primerNivel->indice;     
 }
 

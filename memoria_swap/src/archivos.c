@@ -52,6 +52,7 @@ void* leer_de_archivo(uint32_t pid,int nroMarco){
 char* obtener_path_archivo(uint32_t pid){
     char *path = string_new();
     string_append(&path, memoria_swapCfg->PATH_SWAP);
+    string_append(&path, "/");
     string_append(&path, string_itoa(pid));
     string_append(&path, ".swap");
     return path;
