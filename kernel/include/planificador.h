@@ -53,6 +53,7 @@ void log_transition(const char* entityName, const char* prev, const char* post, 
 void agregar_pcb_en_cola_new(int socket);
 uint32_t get_siguiente_id();
 void liberar_pcb_de_memoria(t_pcb* pcb);
+void finalizar_proceso_en_memoria(t_pcb* pcb);
 
 
 // Manejo de colas

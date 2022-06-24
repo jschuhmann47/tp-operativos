@@ -408,14 +408,12 @@ void* liberar_procesos_en_exit(void* _) {
         log_info(kernelLogger, "Largo Plazo: Se libera una instancia de Grado Multiprogramación");
         /* Aumenta el grado de multiprogramación al tener proceso en EXIT */
         
+        finalizar_proceso_en_memoria(pcbALiberar);
         enviar_finalizacion_consola("Finish", get_socket_de_pid(pcbALiberar->id));
         cerrar_socket_de_pid(pcbALiberar->id);
 
         pcb_destroy(pcbALiberar);
         
-        
-        
-
         sem_post(&gradoMultiprog);
     }
     pthread_exit(NULL);
@@ -427,6 +425,9 @@ void solicitar_nueva_tabla_memoria(t_pcb* pcb)
     uint32_t indice;
     if(send(SOCKET_MEMORIA, &opCode, sizeof(op_code), 0)){
         log_info(kernelLogger, "Largo Plazo: Solicitud de tabla inicializada");
+    }
+    if(send(SOCKET_MEMORIA, &(pcb->id), sizeof(uint32_t), 0)){
+        log_info(kernelLogger, "Largo Plazo: Se envia el ID del PCB");
     }
     if(recv(SOCKET_MEMORIA, &indice, sizeof(uint32_t), MSG_WAITALL)){
         log_info(kernelLogger, "Largo Plazo: Recibi el indice de tabla %i correctamente para el PCB: %i ", indice ,pcb->id);
@@ -447,6 +448,24 @@ void liberar_pcb_de_memoria(t_pcb* pcb){
     }
     log_info(kernelLogger, "Largo Plazo: Enviada liberacion de PCB a Memoria %i",pcb->tablaDePaginas);
 
+}
+
+void finalizar_proceso_en_memoria(t_pcb* pcb)
+{
+    op_code opCode = FREEPROCESO;
+
+    if(send(SOCKET_MEMORIA, &opCode, sizeof(op_code), 0)<0){
+        log_error(kernelLogger, "Largo Plazo: Error al finalizar proceso");
+    }
+
+    if(send(SOCKET_MEMORIA, &(pcb->id), sizeof(uint32_t), 0)){
+        log_info(kernelLogger, "Largo Plazo: Envio de PID para eliminar archivo");
+    }
+
+    uint32_t indiceAEliminar = pcb->tablaDePaginas;
+    if(send(SOCKET_MEMORIA, &indiceAEliminar, sizeof(uint32_t), 0)<0){
+        log_error(kernelLogger, "Largo Plazo: Error al enviar el indice de tabla");
+    }
 }
     
 
