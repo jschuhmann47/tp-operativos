@@ -83,22 +83,10 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     case WRITE:
         ;
         uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
-        uint32_t nroPaginaW = floor(*direccionLogicaW/tamanioPagina);
-        indice = obtener_indice_traduccion_tlb(nroPaginaW);
-        uint32_t marcoW;
-        uint32_t desplazamientoW;
-        if(indice==-1){ //no esta en la tlb
-            log_info(cpuLogger, "CPU: Fallo en la TLB, traduciendo direccion");
-            marcoW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
-            agregar_traduccion_a_tabla_tlb(nroPaginaW, marcoW);
-        }else{
-            marcoW = obtener_traduccion_tlb(indice);
-        }
-        desplazamientoW=obtener_desplazamiento(*direccionLogicaW,nroPaginaW);
         uint32_t* valor = list_get(instruccion->parametros, 1);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
-        if(mandar_instruccion(WRITE,obtener_direccion_fisica(marcoW,desplazamientoW),*valor,socket_memoria)>0){
+        if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger),*valor,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
         }else{
             log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
@@ -108,20 +96,8 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     case READ:
         ;
         uint32_t* direccionLogicaR = list_get(instruccion->parametros, 0);
-        uint32_t nroPaginaR = floor(*direccionLogicaR/tamanioPagina);
-        indice = obtener_indice_traduccion_tlb(nroPaginaR);
-        uint32_t marcoR;
-        uint32_t desplazamientoR;
-        if(indice==-1){ //no esta en la tlb
-            log_info(cpuLogger, "CPU: Fallo en la TLB, traduciendo direccion");
-            marcoR = traducir_direccion(*direccionLogicaR, tamanioPagina, paginasPorTabla,socket_memoria);
-            agregar_traduccion_a_tabla_tlb(nroPaginaR, marcoR);
-        }else{
-            marcoR = obtener_traduccion_tlb(indice);
-        }
-        desplazamientoR=obtener_desplazamiento(*direccionLogicaR,nroPaginaR);
         log_info(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
-        if(mandar_instruccion(READ,obtener_direccion_fisica(marcoR,desplazamientoR),0,socket_memoria)>0){
+        if(mandar_instruccion(READ,traducir_direccion_logica(*direccionLogicaR, socket_memoria,cpuLogger),0,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
         }
         else{
@@ -139,45 +115,21 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
 
 void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t operando, int socket_memoria){
     uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
-        uint32_t nroPagina = floor(*direccionLogicaW/tamanioPagina);
-        uint32_t indice = obtener_indice_traduccion_tlb(nroPagina);
-        uint32_t marcoW;
-        uint32_t desplazamiento;
-        if(indice==-1){ //no esta en la tlb
-            log_info(cpuLogger, "CPU: Fallo en la TLB, traduciendo direccion");
-            marcoW = traducir_direccion(*direccionLogicaW, tamanioPagina, paginasPorTabla,socket_memoria);
-            agregar_traduccion_a_tabla_tlb(nroPagina, marcoW);
-        }else{
-            marcoW = obtener_traduccion_tlb(indice);
-        }
-        desplazamiento=obtener_desplazamiento(*direccionLogicaW,nroPagina);
-        uint32_t* valor = list_get(instruccion->parametros, 1);
-        log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
-        log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
-        if(mandar_instruccion(WRITE,obtener_direccion_fisica(marcoW,desplazamiento),*valor,socket_memoria)>0){
-            log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
-        }else{
-            log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
-        }
+    uint32_t* valor = list_get(instruccion->parametros, 1);
+    log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
+    log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
+    if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger),*valor,socket_memoria)>0){
+        log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
+    }else{
+        log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
+    }
     
 }
 
 uint32_t cpu_fetch_operands(t_instruccion* instruccion, t_pcb* pcb,int socket_memoria){
     uint32_t* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
-    uint32_t nroPagina = floor(*direccionMemoriaAObtener/tamanioPagina);
-    uint32_t indice = obtener_indice_traduccion_tlb(nroPagina);
-    uint32_t marcoR;
-    uint32_t desplazamiento;
-    if(indice==-1){ //no esta en la tlb
-        log_info(cpuLogger, "CPU: Fallo en la TLB, traduciendo direccion");
-        marcoR = traducir_direccion(*direccionMemoriaAObtener, tamanioPagina, paginasPorTabla,socket_memoria);
-        agregar_traduccion_a_tabla_tlb(nroPagina, marcoR);
-    }else{
-        marcoR = obtener_traduccion_tlb(indice);
-    }
-    desplazamiento=obtener_desplazamiento(*direccionMemoriaAObtener,nroPagina);
-    log_info(cpuLogger, "CPU: Fetch operands: %i ", obtener_direccion_fisica(marcoR,desplazamiento));
-    if(mandar_instruccion(READ,obtener_direccion_fisica(marcoR,desplazamiento),0,socket_memoria)){
+    //log_info(cpuCfg,"CPU: Ejecute COPY: %i ", *direccionMemoriaAObtener);
+    if(mandar_instruccion(READ,traducir_direccion_logica(*direccionMemoriaAObtener, socket_memoria,cpuLogger),0,socket_memoria)){
         log_info(cpuLogger, "CPU: Se mando instruccion COPY/READ a Memoria.");
     }
     else{
