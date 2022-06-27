@@ -14,9 +14,9 @@ t_list* tablasSegundoNivel;
 
 typedef struct {
     int marco;
-    bool presencia; //bit de presencia
-    bool uso; //bit de uso
-    bool modificado; //bit de modificado
+    bool presencia;
+    bool uso;
+    bool modificado;
 } t_marco;
 
 typedef struct t_tablaSegundoNivel t_tablaSegundoNivel;
@@ -30,7 +30,7 @@ struct t_tablaSegundoNivel{
 typedef struct t_primerNivel t_primerNivel;
 struct t_primerNivel{
     uint32_t indice;
-    int indiceTablaSegundoNivel; //creo que esto hay que cambiarlo a un indice en la lista de tablasSegundoNivel
+    int indiceTablaSegundoNivel;
 };
 
 #include "algoritmos_reemplazo.h"

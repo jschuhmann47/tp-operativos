@@ -37,7 +37,7 @@ uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegNv)
     t_primerNivel* primerNivel;
     primerNivel = list_find(tablaPrimerNivel, lugar_libre);
     primerNivel->indiceTablaSegundoNivel = tablaSegNv->indice;
-    //log_info(memoria_swapLogger, "Memoria: asigno %i - %i",primerNivel->indice,primerNivel->indiceTablaSegundoNivel);
+    log_info(memoria_swapLogger, "Memoria: asigno %i - %i",primerNivel->indice,primerNivel->indiceTablaSegundoNivel);
     return primerNivel->indice;     
 }
 
@@ -105,7 +105,9 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu){
     t_primerNivel* entradaTabla = list_get(tablaPrimerNivel, requestPrimerTabla);
     uint32_t indiceSegundoNivel = entradaTabla->indiceTablaSegundoNivel;
 
-    if(send(socket_cpu,&indiceSegundoNivel,sizeof(uint32_t),0) == -1){
+    log_info(memoria_swapLogger, "Memoria: INDICE %i",indiceSegundoNivel);
+    
+    if(send(socket_cpu,&indiceSegundoNivel,sizeof(uint32_t),0) == -1){ //aca se rompe
         log_error(memoria_swapLogger, "Memoria: Error al enviar indiceSegundoNivel a CPU: %s", strerror(errno));
         exit(-1);
     }
