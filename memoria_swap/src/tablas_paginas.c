@@ -119,6 +119,7 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         log_error(memoria_swapLogger, "Memoria: Error al recibir nroTabla de CPU: %s", strerror(errno));
         exit(-1);
     }
+    log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de segundo nivel RECIBI %i",nroTabla);
     
     t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, nroTabla); //encuentra la tabla correspondiente
     

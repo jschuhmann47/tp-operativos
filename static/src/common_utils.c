@@ -428,7 +428,7 @@ int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,in
     memcpy(buffer + offset, &param1, sizeof(uint32_t));
     offset += sizeof(uint32_t);
 
-    if(codOp == 2){
+    if(codOp == WRITE){
         memcpy(buffer + offset, &param2, sizeof(uint32_t));
         offset += sizeof(uint32_t);
     }

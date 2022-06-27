@@ -22,10 +22,8 @@ void liberar_tlb()
 
 void limpiar_tlb()
 {
-    list_destroy_and_destroy_elements(tlb->direcciones, free);
-    tlb->direcciones = list_create();
-    list_destroy_and_destroy_elements(reemplazoLru, free);
-    reemplazoLru = list_create();
+    list_clean(tlb->direcciones);
+    list_clean(reemplazoLru);
 }
 
 int obtener_indice_traduccion_tlb(uint32_t pagina) //devuelve el indice, o -1 si no esta traducida
