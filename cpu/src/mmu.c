@@ -3,8 +3,7 @@
 uint32_t traducir_direccion(uint32_t direccionLogica, //DEVUELVE EL MARCO
                           uint32_t tamanioPagina, 
                           uint32_t paginasPorTabla,
-                          int socket_memoria,
-                          uint32_t *desplazamiento){
+                          int socket_memoria){
 
     uint32_t numeroDePagina = floor(direccionLogica/tamanioPagina);
 
@@ -14,12 +13,9 @@ uint32_t traducir_direccion(uint32_t direccionLogica, //DEVUELVE EL MARCO
 
     uint32_t rtaTablaPrimerNivel,marco;
 
-    uint32_t desplazamientoM = direccionLogica - numeroDePagina * tamanioPagina;
-
     // log_info(cpuLogger, "CPU: Numero de Pagina: %i", numeroDePagina);
     // log_info(cpuLogger, "CPU: Tabla Primer Nivel: %i", entradaTablaPrimerNivel);
     // log_info(cpuLogger, "CPU: Tabla Segundo Nivel: %i", entradaTablaSegundoNivel);
-    // log_info(cpuLogger, "CPU: Desplazamiento: %i", desplazamientoM);
 
     op_code opCode = TABLAUNO;
     if(send(socket_memoria,&opCode,sizeof(op_code),0)<0){
@@ -58,7 +54,6 @@ uint32_t traducir_direccion(uint32_t direccionLogica, //DEVUELVE EL MARCO
                 }
                 else{
                     //log_info(cpuLogger, "CPU: Se recibio rtaTablaSegundoNivel de Memoria.");
-                    *desplazamiento = desplazamientoM;
                     return marco;
                 }
             }
@@ -72,4 +67,8 @@ uint32_t traducir_direccion(uint32_t direccionLogica, //DEVUELVE EL MARCO
 
 uint32_t obtener_direccion_fisica(uint32_t marco, uint32_t desplazamiento){
     return (marco * tamanioPagina) + desplazamiento;
+}
+
+uint32_t obtener_desplazamiento(uint32_t direccionLogica, uint32_t numeroDePagina){
+    return direccionLogica - numeroDePagina * tamanioPagina;
 }

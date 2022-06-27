@@ -14,8 +14,7 @@
 uint32_t traducir_direccion(uint32_t direccionLogica, 
                           uint32_t tamanioPagina, 
                           uint32_t paginasPorTabla,
-                          int socket_memoria,
-                          uint32_t *desplazamiento);
+                          int socket_memoria);
 
 uint32_t obtener_direccion_fisica(uint32_t marco, uint32_t desplazamiento);
 
