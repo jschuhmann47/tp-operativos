@@ -45,6 +45,7 @@ void remover_tabla_primer_nivel(uint32_t indice);
 uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
 t_marco* crear_marco();
 void liberar_marco(t_marco* marco);
+int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indicePagina);
 
 
 #endif
