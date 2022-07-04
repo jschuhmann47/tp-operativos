@@ -56,7 +56,7 @@ bool lugar_libre(t_entradaPrimerNivel* filaPrimerNivel)
 
 t_tablaSegundoNivel* crear_tabla_segundo_nivel(){
     t_tablaSegundoNivel* entrada = malloc(sizeof(t_tablaSegundoNivel));
-        //entrada->indice=get_siguiente_indice(); //TODO cambiar esta funcion
+        entrada->indice=get_siguiente_indice_segundo_nivel();
         entrada->puntero=0;
         entrada->marcos = list_create();
         for(int j = 0; j < cantTablas; j++){
@@ -64,7 +64,7 @@ t_tablaSegundoNivel* crear_tabla_segundo_nivel(){
             list_add(entrada->marcos, nuevoMarco);
         }
     list_add(tablasSegundoNivel, entrada);
-    return entrada; //devuelve el puntero a la tabla
+    return entrada;
 }
 
 t_marco* crear_marco(){

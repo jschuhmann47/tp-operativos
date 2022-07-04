@@ -3,7 +3,8 @@
 uint32_t obtener_marco_de_memoria(uint32_t direccionLogica, //DEVUELVE EL MARCO
                           uint32_t tamanioPagina, 
                           uint32_t paginasPorTabla,
-                          int socket_memoria){
+                          int socket_memoria,
+                          uint32_t nroTablaPrimerNivel){
 
     uint32_t numeroDePagina = floor(direccionLogica/tamanioPagina);
 
@@ -74,14 +75,14 @@ uint32_t obtener_desplazamiento(uint32_t direccionLogica, uint32_t numeroDePagin
     return direccionLogica - numeroDePagina * tamanioPagina;
 }
 
-uint32_t traducir_direccion_logica(uint32_t direccionLogica, int socket_memoria,t_log* cpuLogger){
+uint32_t traducir_direccion_logica(uint32_t direccionLogica, int socket_memoria,t_log* cpuLogger, uint32_t nroTablaPrimerNv){
     uint32_t nroPagina = floor(direccionLogica/tamanioPagina);
     uint32_t indice = obtener_indice_traduccion_tlb(nroPagina);
     uint32_t marcoR;
     uint32_t desplazamientoR;
     if(indice==-1){ //no esta en la tlb
         log_info(cpuLogger, "CPU: Fallo en la TLB, traduciendo direccion");
-        marcoR = obtener_marco_de_memoria(direccionLogica, tamanioPagina, paginasPorTabla,socket_memoria);
+        marcoR = obtener_marco_de_memoria(direccionLogica, tamanioPagina, paginasPorTabla,socket_memoria,nroTablaPrimerNv);
         agregar_traduccion_a_tabla_tlb(nroPagina, marcoR);
         log_info(cpuLogger, "MMU: Se agrega nro pagina %i con el marco %i",nroPagina,marcoR);
     }else{

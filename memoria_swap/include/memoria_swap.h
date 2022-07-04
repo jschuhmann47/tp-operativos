@@ -14,7 +14,8 @@
 t_log* memoria_swapLogger;
 t_memoria_swap_config* memoria_swapCfg;
 void* MEMORIA_PRINCIPAL;
-static uint32_t nextIndice;
+static uint32_t nextIndicePrimerNv;
+static uint32_t nextIndiceSegundoNv;
 
 int aceptar_conexion_memoria(conexion* con);
 void atender_peticiones_kernel(int socket_kernel);
