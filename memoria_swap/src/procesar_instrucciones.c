@@ -1,5 +1,6 @@
 #include "procesar_instrucciones.h"
 
+
 void recibir_instrucciones_cpu(int socket_cpu){
     while(1){
         

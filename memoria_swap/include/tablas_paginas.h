@@ -42,6 +42,7 @@ struct t_entradaPrimerNivel{
 void inicializar_tabla_paginas();
 void reemplazar_pagina(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
 t_tablaPrimerNivel* crear_tabla_primer_nivel();
+t_tablaSegundoNivel* crear_tabla_segundo_nivel();
 uint32_t agregar_a_tabla_primer_nivel(t_tablaPrimerNivel* tablaPrimerNv, t_tablaSegundoNivel* tablaSegNv);
 bool lugar_libre(t_entradaPrimerNivel* filaPrimerNivel);
 void procesar_entrada_tabla_primer_nv(int socket_cpu);

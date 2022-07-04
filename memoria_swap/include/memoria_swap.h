@@ -20,6 +20,7 @@ static uint32_t nextIndiceSegundoNv;
 int aceptar_conexion_memoria(conexion* con);
 void atender_peticiones_kernel(int socket_kernel);
 void recibir_handshake(int socketCPu);
-uint32_t get_siguiente_indice();
+uint32_t get_siguiente_indice_primer_nivel();
+uint32_t get_siguiente_indice_segundo_nivel();
 
 #endif

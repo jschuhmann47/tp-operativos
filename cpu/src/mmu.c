@@ -15,8 +15,9 @@ uint32_t obtener_marco_de_memoria(uint32_t direccionLogica, //DEVUELVE EL MARCO
     uint32_t rtaTablaPrimerNivel,marco;
 
     log_info(cpuLogger, "CPU: Numero de Pagina: %i", numeroDePagina);
-    log_info(cpuLogger, "CPU: Tabla Primer Nivel: %i", entradaTablaPrimerNivel);
-    log_info(cpuLogger, "CPU: Tabla Segundo Nivel: %i", entradaTablaSegundoNivel);
+    log_info(cpuLogger, "CPU: Tabla Primer Nivel: %i", nroTablaPrimerNivel);
+    log_info(cpuLogger, "CPU: Entrada Tabla Primer Nivel: %i", entradaTablaPrimerNivel);
+    log_info(cpuLogger, "CPU: Entrada Tabla Segundo Nivel: %i", entradaTablaSegundoNivel);
 
     op_code opCode = TABLAUNO;
     if(send(socket_memoria,&opCode,sizeof(op_code),0)<0){
@@ -34,13 +35,14 @@ uint32_t obtener_marco_de_memoria(uint32_t direccionLogica, //DEVUELVE EL MARCO
         exit(-1);
     }
     
-    //log_info(cpuLogger, "CPU: Se mando entradaTablaPrimerNivel a Memoria.");
-    if(recv(socket_memoria,&rtaTablaPrimerNivel,sizeof(uint32_t),MSG_WAITALL)==-1){ //rompe
+    int bytes;
+    if((bytes=recv(socket_memoria,&rtaTablaPrimerNivel,sizeof(uint32_t),MSG_WAITALL))==-1){ //rompe
         log_error(cpuLogger, "CPU: No se pudo recibir rtaTablaPrimerNivel de Memoria.");
         exit(-1);
     }
     
-    log_info(cpuLogger, "CPU:RTA TABLA (INDICE) %i",rtaTablaPrimerNivel);
+    log_info(cpuLogger, "CPU:Tabla de segundo nivel %i",rtaTablaPrimerNivel);
+    log_info(cpuLogger, "CPU:bytes %i",bytes);
     //log_info(cpuLogger, "CPU: Se recibio rtaTablaPrimerNivel de Memoria.");
 
     op_code opCodeDos = TABLADOS;

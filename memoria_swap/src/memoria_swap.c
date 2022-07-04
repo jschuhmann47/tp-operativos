@@ -110,7 +110,7 @@ void atender_peticiones_kernel(int socket_kernel){
                 uint32_t indiceALiberar;
                 if(recv(socket_kernel, &indiceALiberar, sizeof(uint32_t), MSG_WAITALL)){
                     log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a liberar: %i", indiceALiberar);
-                    remover_tabla_primer_nivel(indiceALiberar); //no hace falta
+                    //remover_tabla_primer_nivel(indiceALiberar); //no hace falta
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
                 }
@@ -123,7 +123,8 @@ void atender_peticiones_kernel(int socket_kernel){
                 }
                 if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
                     log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a finalizar: %i", indiceParaFinalizar);
-                    remover_tabla_primer_nivel(indiceParaFinalizar); //no hace falta
+                    //remover_tabla_primer_nivel(indiceParaFinalizar); //no hace falta
+                    liberar_marcos(indiceParaFinalizar);
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a finalizar");
                 }

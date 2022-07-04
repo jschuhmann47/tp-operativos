@@ -92,14 +92,16 @@ uint32_t obtener_indice_tabla_primer_nivel(t_tablaPrimerNivel* tabla){
 
 
 
-// void remover_tabla_primer_nivel(uint32_t indice){ no hace falta liberarlas
-//     t_list* primerNivel;
-//     primerNivel = list_get(tablasPrimerNivel, indice);
-//     t_tablaSegundoNivel* tablaSegNvALiberar = list_get(tablasSegundoNivel,primerNivel->indiceTablaSegundoNivel);
-    
-//     list_map(tablaSegNvALiberar->marcos,liberar_marco);
-//     primerNivel->indiceTablaSegundoNivel = -1;
-// }
+void liberar_marcos(uint32_t indice){
+    t_tablaPrimerNivel* primerNivel;
+    primerNivel = list_get(tablasPrimerNivel, indice);
+    for(int i = 0; i < list_size(primerNivel->entradasPrimerNivel); i++){
+        t_entradaPrimerNivel* entradaPrimerNv = list_get(primerNivel->entradasPrimerNivel,i);
+        t_tablaSegundoNivel* tablaSegNvALiberar = list_get(tablasSegundoNivel,entradaPrimerNv->indiceTablaSegundoNivel);
+        list_map(tablaSegNvALiberar->marcos,liberar_marco);
+    }
+    //primerNivel->indiceTablaSegundoNivel = -1;
+}
 
 void liberar_marco(t_marco* marco){
     if(marco->presencia){
@@ -121,21 +123,26 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu){
 
     t_tablaPrimerNivel* tablaPrimerNv = list_get(tablasPrimerNivel, nroTablaPrimerNv);
 
+    log_info(memoria_swapLogger, "Memoria: Recibi nroTablaPrimerNv %i",nroTablaPrimerNv);
+
     uint32_t requestPrimerTabla;
     if(recv(socket_cpu, &requestPrimerTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al recibir requestPrimerTabla de CPU: %s", strerror(errno));
         exit(-1);
     }
     //hay que recibir el indice de la tabla de primer nivel, y luego la entrada
+    log_info(memoria_swapLogger, "Memoria: Llego requestPrimerTabla %i",requestPrimerTabla);
+
     t_entradaPrimerNivel* entrada = list_get(tablaPrimerNv->entradasPrimerNivel, requestPrimerTabla);
     uint32_t indiceSegundoNivel = entrada->indiceTablaSegundoNivel;
 
     log_info(memoria_swapLogger, "Memoria: INDICE %i",indiceSegundoNivel);
-    
-    if(send(socket_cpu,&indiceSegundoNivel,sizeof(uint32_t),0) == -1){ //aca se rompe
+    int bytes;
+    if((bytes=send(socket_cpu,&indiceSegundoNivel,sizeof(uint32_t),0)) == -1){ //aca se rompe
         log_error(memoria_swapLogger, "Memoria: Error al enviar indiceSegundoNivel a CPU: %s", strerror(errno));
         exit(-1);
     }
+    log_info(memoria_swapLogger, "Memoria: bytes de indice %i",bytes);
 }
 
 void procesar_entrada_tabla_segundo_nv(int socket_cpu){
