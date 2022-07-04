@@ -3,18 +3,26 @@
 int cantTablas;
 
 void inicializar_tabla_paginas(){
-    tablaPrimerNivel = list_create();
+    tablasPrimerNivel = list_create();
     tablasSegundoNivel = list_create();
     
     cantTablas = memoria_swapCfg->PAGINAS_POR_TABLA; //ambas tienen el mismo tamaño
-    log_info(memoria_swapLogger, "Cantidad de tablas: %i",cantTablas);
-    for (int i = 0; i < cantTablas; i++) {
-        t_primerNivel* entradaPrimerNivel = malloc(sizeof(t_primerNivel));
-        entradaPrimerNivel->indice = i;
-        entradaPrimerNivel->indiceTablaSegundoNivel = -1;
-        list_add(tablaPrimerNivel, entradaPrimerNivel);
-    }
     log_info(memoria_swapLogger, "Inicializadas las tablas correctamente");
+}
+
+t_tablaPrimerNivel* crear_tabla_primer_nivel(){
+    t_tablaPrimerNivel* tablaPrimerNv = malloc(sizeof(t_tablaPrimerNivel));
+    tablaPrimerNv->entradasPrimerNivel = list_create();
+    tablaPrimerNv->nroTabla = get_siguiente_indice_primer_nivel(); 
+    for (int i = 0; i < cantTablas; i++) {
+        t_entradaPrimerNivel* entradaPrimerNivel = malloc(sizeof(t_entradaPrimerNivel));
+        entradaPrimerNivel->indice = i;
+        t_tablaSegundoNivel* tablaSegNv = crear_tabla_segundo_nivel();
+        entradaPrimerNivel->indiceTablaSegundoNivel = tablaSegNv->indice;
+        list_add(tablaPrimerNv->entradasPrimerNivel, entradaPrimerNivel);
+    }
+    list_add(tablasPrimerNivel, tablaPrimerNv);
+    return tablaPrimerNv;
 }
 
 
@@ -32,23 +40,23 @@ void reemplazar_pagina(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundo
     }
 }
 
-uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegNv)
+uint32_t agregar_a_tabla_primer_nivel(t_tablaPrimerNivel* tablaPrimerNv, t_tablaSegundoNivel* tablaSegNv)
 {
-    t_primerNivel* primerNivel;
-    primerNivel = list_find(tablaPrimerNivel, lugar_libre);
+    t_entradaPrimerNivel* primerNivel;
+    primerNivel = list_find(tablaPrimerNv->entradasPrimerNivel, lugar_libre);
     primerNivel->indiceTablaSegundoNivel = tablaSegNv->indice;
     log_info(memoria_swapLogger, "Memoria: asigno %i - %i",primerNivel->indice,primerNivel->indiceTablaSegundoNivel);
     return primerNivel->indice;     
 }
 
-bool lugar_libre(t_primerNivel* filaPrimerNivel)
+bool lugar_libre(t_entradaPrimerNivel* filaPrimerNivel)
 {
     return filaPrimerNivel->indiceTablaSegundoNivel == -1;
 }
 
 t_tablaSegundoNivel* crear_tabla_segundo_nivel(){
     t_tablaSegundoNivel* entrada = malloc(sizeof(t_tablaSegundoNivel));
-        entrada->indice=get_siguiente_indice();
+        //entrada->indice=get_siguiente_indice(); //TODO cambiar esta funcion
         entrada->puntero=0;
         entrada->marcos = list_create();
         for(int j = 0; j < cantTablas; j++){
@@ -73,16 +81,25 @@ uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel){
     return sizeof(int)+sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_marco);
 }
 
-
-
-void remover_tabla_primer_nivel(uint32_t indice){
-    t_primerNivel* primerNivel;
-    primerNivel = list_get(tablaPrimerNivel, indice);
-    t_tablaSegundoNivel* tablaSegNvALiberar = list_get(tablasSegundoNivel,primerNivel->indiceTablaSegundoNivel);
-    
-    list_map(tablaSegNvALiberar->marcos,liberar_marco);
-    primerNivel->indiceTablaSegundoNivel = -1;
+uint32_t obtener_indice_tabla_primer_nivel(t_tablaPrimerNivel* tabla){
+    for(int i = 0; i < list_size(tablasPrimerNivel); i++){
+        if(tabla == list_get(tablasPrimerNivel, i)){
+            return i;
+        }
+    }
+    exit(-1);
 }
+
+
+
+// void remover_tabla_primer_nivel(uint32_t indice){ no hace falta liberarlas
+//     t_list* primerNivel;
+//     primerNivel = list_get(tablasPrimerNivel, indice);
+//     t_tablaSegundoNivel* tablaSegNvALiberar = list_get(tablasSegundoNivel,primerNivel->indiceTablaSegundoNivel);
+    
+//     list_map(tablaSegNvALiberar->marcos,liberar_marco);
+//     primerNivel->indiceTablaSegundoNivel = -1;
+// }
 
 void liberar_marco(t_marco* marco){
     if(marco->presencia){
@@ -96,14 +113,22 @@ void liberar_marco(t_marco* marco){
 void procesar_entrada_tabla_primer_nv(int socket_cpu){
     
     log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de primer nivel");
+    uint32_t nroTablaPrimerNv; //NO ESTA HECHO EN EL MMU
+    if(recv(socket_cpu, &nroTablaPrimerNv, sizeof(uint32_t), MSG_WAITALL) == -1){
+        log_error(memoria_swapLogger, "Memoria: Error al recibir requestPrimerTabla de CPU: %s", strerror(errno));
+        exit(-1);
+    }
+
+    t_tablaPrimerNivel* tablaPrimerNv = list_get(tablasPrimerNivel, nroTablaPrimerNv);
+
     uint32_t requestPrimerTabla;
     if(recv(socket_cpu, &requestPrimerTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al recibir requestPrimerTabla de CPU: %s", strerror(errno));
         exit(-1);
     }
-
-    t_primerNivel* entradaTabla = list_get(tablaPrimerNivel, requestPrimerTabla);
-    uint32_t indiceSegundoNivel = entradaTabla->indiceTablaSegundoNivel;
+    //hay que recibir el indice de la tabla de primer nivel, y luego la entrada
+    t_entradaPrimerNivel* entrada = list_get(tablaPrimerNv->entradasPrimerNivel, requestPrimerTabla);
+    uint32_t indiceSegundoNivel = entrada->indiceTablaSegundoNivel;
 
     log_info(memoria_swapLogger, "Memoria: INDICE %i",indiceSegundoNivel);
     

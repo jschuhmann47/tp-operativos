@@ -90,8 +90,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
             log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
         }else{
             log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
-        }
-        
+        }        
         break;
     case READ:
         ;

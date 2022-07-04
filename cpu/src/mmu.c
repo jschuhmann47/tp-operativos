@@ -22,6 +22,11 @@ uint32_t obtener_marco_de_memoria(uint32_t direccionLogica, //DEVUELVE EL MARCO
         log_error(cpuLogger, "CPU: No se pudo enviar opCode a Memoria.");
         exit(-1);
     }
+
+    if(send(socket_memoria,&nroTablaPrimerNivel,sizeof(uint32_t),0)<0){ //este numero es pcb->tablaPagina
+        log_error(cpuLogger, "CPU: No se pudo enviar nroTablaPrimerNivel a Memoria.");
+        exit(-1);
+    }
     
     if(send(socket_memoria,&entradaTablaPrimerNivel,sizeof(uint32_t),0)<0){
         log_error(cpuLogger, "CPU: No se pudo enviar entradaTablaPrimerNivel a Memoria.");

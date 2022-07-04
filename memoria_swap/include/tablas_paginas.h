@@ -9,7 +9,7 @@
 #include <commons/collections/list.h>
 #include "marcos_libres.h"
 
-t_list* tablaPrimerNivel;
+t_list* tablasPrimerNivel; //lista de t_tablaPrimerNivel
 t_list* tablasSegundoNivel;
 
 typedef struct {
@@ -23,12 +23,16 @@ typedef struct t_tablaSegundoNivel t_tablaSegundoNivel;
 struct t_tablaSegundoNivel{
     int indice;
     t_list* marcos; //lista de t_marco
-    //pthread_mutex_t mutex;
     uint32_t puntero;
 };
 
-typedef struct t_primerNivel t_primerNivel;
-struct t_primerNivel{
+typedef struct t_tablaPrimerNivel{
+    int nroTabla;
+    t_list* entradasPrimerNivel; //lista de t_entradaPrimerNivel
+}t_tablaPrimerNivel;
+
+typedef struct t_entradaPrimerNivel t_entradaPrimerNivel;
+struct t_entradaPrimerNivel{
     uint32_t indice;
     int indiceTablaSegundoNivel;
 };
@@ -37,11 +41,12 @@ struct t_primerNivel{
 
 void inicializar_tabla_paginas();
 void reemplazar_pagina(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
-uint32_t agregar_a_tabla_primer_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
-bool lugar_libre(t_primerNivel* filaPrimerNivel);
+t_tablaPrimerNivel* crear_tabla_primer_nivel();
+uint32_t agregar_a_tabla_primer_nivel(t_tablaPrimerNivel* tablaPrimerNv, t_tablaSegundoNivel* tablaSegNv);
+bool lugar_libre(t_entradaPrimerNivel* filaPrimerNivel);
 void procesar_entrada_tabla_primer_nv(int socket_cpu);
 void procesar_entrada_tabla_segundo_nv(int socket_cpu);
-void remover_tabla_primer_nivel(uint32_t indice);
+//void remover_tabla_primer_nivel(uint32_t indice);
 uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
 t_marco* crear_marco();
 void liberar_marco(t_marco* marco);
