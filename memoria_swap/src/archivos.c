@@ -39,7 +39,7 @@ void* leer_de_archivo(uint32_t pid,int nroMarco){
     pthread_mutex_lock(&accesoAArchivo);
     char* path = obtener_path_archivo(pid);
     FILE *archivo = fopen(path, "r");
-    void* lectura;
+    void* lectura = malloc(memoria_swapCfg->TAM_PAGINA);
     fseek(archivo,nroMarco*memoria_swapCfg->TAM_PAGINA,SEEK_SET);
     fread(lectura,memoria_swapCfg->TAM_PAGINA,1,archivo);
     fseek(archivo,0,SEEK_SET);

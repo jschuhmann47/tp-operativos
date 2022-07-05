@@ -1,10 +1,11 @@
 #include "memoria_swap.h"
 
-pthread_mutex_t mutexIndice;
+pthread_mutex_t mutexIndice,mutexIndice2doNivel;
 
 int main(int argc, char *argv[]){
 
     pthread_mutex_init(&mutexIndice, NULL);
+    pthread_mutex_init(&mutexIndice2doNivel, NULL);
 
     memoria_swapLogger = log_create(MEMORIA_SWAP_LOG_DEST, MEMORIA_SWAP_MODULE_NAME, true, LOG_LEVEL_INFO);
     memoria_swapCfg = memoria_swap_cfg_create();
@@ -14,7 +15,8 @@ int main(int argc, char *argv[]){
     inicializar_lista_marcos_libres();
     MEMORIA_PRINCIPAL = crear_espacio_de_memoria();
 
-    nextIndice = 0; //se inicia el indice para tabla de segundo nivel.
+    nextIndicePrimerNv = 0; //se inicia el indice para tabla de segundo nivel.
+    nextIndiceSegundoNv = 0; //se inicia el indice para tabla de segundo nivel.
 
     int socket_servidor = iniciar_servidor(memoria_swapCfg->IP_MEMORIA, memoria_swapCfg->PUERTO_ESCUCHA);
     struct sockaddr cliente;
@@ -77,14 +79,14 @@ void atender_peticiones_kernel(int socket_kernel){
             switch(opCode){
                 case NEWTABLE:
                 ;
-                t_tablaSegundoNivel* tablaSegundoNivel = crear_tabla_segundo_nivel();
-                uint32_t indice = agregar_a_tabla_primer_nivel(tablaSegundoNivel);
+                t_tablaPrimerNivel* nuevaTablaPrimerNv = crear_tabla_primer_nivel();
+                uint32_t nroTablaPrimerNv = nuevaTablaPrimerNv->nroTabla; //obtener indice ver si se borra o no
                 if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
                     generar_archivo(PID);
                     log_info(memoria_swapLogger, "Memoria: Recibi PID: %i", PID);
                 }
-                if(send(socket_kernel, &indice, sizeof(uint32_t), 0)){
-                    log_info(memoria_swapLogger, "Memoria: Envio de posicion de tabla correctamente");
+                if(send(socket_kernel, &nroTablaPrimerNv, sizeof(uint32_t), 0)){
+                    log_info(memoria_swapLogger, "Memoria: Envio de numero de tabla correctamente");
                 }
                 break;
                 case SUSPENSION: //que reciba solo el indice de tabla de 2do nivel
@@ -108,7 +110,7 @@ void atender_peticiones_kernel(int socket_kernel){
                 uint32_t indiceALiberar;
                 if(recv(socket_kernel, &indiceALiberar, sizeof(uint32_t), MSG_WAITALL)){
                     log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a liberar: %i", indiceALiberar);
-                    remover_tabla_primer_nivel(indiceALiberar);
+                    //remover_tabla_primer_nivel(indiceALiberar); //no hace falta
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
                 }
@@ -121,7 +123,8 @@ void atender_peticiones_kernel(int socket_kernel){
                 }
                 if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
                     log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a finalizar: %i", indiceParaFinalizar);
-                    remover_tabla_primer_nivel(indiceParaFinalizar);
+                    //remover_tabla_primer_nivel(indiceParaFinalizar); //no hace falta
+                    liberar_marcos(indiceParaFinalizar);
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a finalizar");
                 }
@@ -145,11 +148,21 @@ void recibir_handshake(int socketCPu)
     free(bytes);
 }
 
-uint32_t get_siguiente_indice() 
+uint32_t get_siguiente_indice_primer_nivel() 
 {
     pthread_mutex_lock(&mutexIndice);
-    uint32_t id = nextIndice;
-    nextIndice++;
+    uint32_t id = nextIndicePrimerNv;
+    nextIndicePrimerNv++;
     pthread_mutex_unlock(&mutexIndice);
     return id;
 }
+
+uint32_t get_siguiente_indice_segundo_nivel() 
+{
+    pthread_mutex_lock(&mutexIndice2doNivel);
+    uint32_t id = nextIndiceSegundoNv;
+    nextIndiceSegundoNv++;
+    pthread_mutex_unlock(&mutexIndice2doNivel);
+    return id;
+}
+
