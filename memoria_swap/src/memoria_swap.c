@@ -99,7 +99,6 @@ void atender_peticiones_kernel(int socket_kernel){
                     if (recv(socket_kernel, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
                         t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
                         log_info(memoria_swapLogger, "MEMORIA: Recibi el PCB con ID: %i", pcb->id);
-                        
                         suspender_proceso(pcb->tablaDePaginas, pcb->id);
                         free(pcb);
                     }

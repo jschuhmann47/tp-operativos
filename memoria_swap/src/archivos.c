@@ -1,9 +1,6 @@
 #include "archivos.h"
 
-
 pthread_mutex_t accesoAArchivo;
-
-
 
 void generar_archivo(uint32_t pid)
 {
@@ -22,11 +19,13 @@ void eliminar_archivo(uint32_t pid)
     pthread_mutex_unlock(&accesoAArchivo);
 }
 
-void escribir_en_archivo(uint32_t pid, int nroMarco){
+void escribir_en_archivo(uint32_t pid, int nroMarco)
+{
     char* path = obtener_path_archivo(pid);
     pthread_mutex_lock(&accesoAArchivo);
     FILE *archivo = fopen(path, "w");
     void* paqueteAEscribir = leer_de_memoria(MEMORIA_PRINCIPAL,nroMarco,0,memoria_swapCfg->TAM_PAGINA);
+    log_info(memoria_swapLogger,"MARCO RECIBIDO %i",nroMarco);
     fseek(archivo,nroMarco*memoria_swapCfg->TAM_PAGINA,SEEK_SET);
     fwrite(paqueteAEscribir,memoria_swapCfg->TAM_PAGINA,1,archivo);
     //ver si esto anda, tmb existe mmap() pero hay que ver como se usa

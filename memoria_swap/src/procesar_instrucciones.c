@@ -1,6 +1,5 @@
 #include "procesar_instrucciones.h"
 
-
 void recibir_instrucciones_cpu(int socket_cpu){
     while(1){
         
@@ -90,20 +89,22 @@ void procesar_write(uint32_t direccionFisica, uint32_t valor){ //write no dice, 
     log_info(memoria_swapLogger, "Memoria: WRITE terminado");
 }
 
-
 void suspender_proceso(uint32_t indice, uint32_t pid){
     log_info(memoria_swapLogger,"Entre a Liberar marcos para el proceso %i",pid);
-    t_tablaSegundoNivel* tablaALiberar = list_get(tablasSegundoNivel,indice);
-    t_marco* m;
-    for(int i=0; i<list_size(tablaALiberar->marcos);i++){
-        m=list_get(tablaALiberar->marcos,i);
-        if(m->presencia){
-            if(m->modificado){
-                escribir_en_archivo(pid, m->marco);
+    t_tablaPrimerNivel* tablaALiberar = list_get(tablasPrimerNivel,indice);
+    t_entradaPrimerNivel* entradaPrimerNivel;
+    for(int i=0; i<list_size(tablaALiberar->entradasPrimerNivel);i++){
+        entradaPrimerNivel=list_get(tablaALiberar->entradasPrimerNivel,i);
+        t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, entradaPrimerNivel->indiceTablaSegundoNivel);
+        for(int j=0; j<list_size(tablaSegundoNivel->marcos); j++){
+            t_marco* m = list_get(tablaSegundoNivel->marcos, j);
+            if(m->presencia == true){
+                //if(m->modificado){
+                    escribir_en_archivo(pid, m->marco);
+                //}
+                liberar_marco(m);
             }
-            liberar_marco(m);
         }
     }
     log_info(memoria_swapLogger,"Marcos liberados para el proceso %i",pid);
-
 }

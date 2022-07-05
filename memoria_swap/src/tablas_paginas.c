@@ -169,7 +169,6 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         nroMarco = conseguir_marco_libre(tablaSegundoNivel, nroPagina); //esta por dentro va a reemplazar de ser necesario, y/o mandar a swap
         marcar_marco_ocupado(nroMarco);
     }
-    
 
     if(send(socket_cpu,&nroMarco,sizeof(uint32_t),0) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al enviar marco a CPU: %s", strerror(errno));
