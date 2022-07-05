@@ -98,6 +98,12 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         log_info(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
         if(mandar_instruccion(READ,traducir_direccion_logica(*direccionLogicaR, socket_memoria,cpuLogger,pcb->tablaDePaginas),0,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
+            uint32_t leido;
+            if(recv(socket_memoria,&leido,sizeof(uint32_t),MSG_WAITALL)<0){
+                log_error(cpuLogger,"No se pudo recibir el valor leido por READ");
+                exit(-1);
+            }
+            log_info(cpuLogger,"CPU: Instruccion READ finalizada, valor leido %i",leido);
         }
         else{
             log_info(cpuLogger, "CPU: No se pudo mandar instruccion READ a Memoria.");
