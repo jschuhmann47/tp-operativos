@@ -442,12 +442,17 @@ void liberar_pcb_de_memoria(t_pcb* pcb){
         log_error(kernelLogger, "Largo Plazo: Error al enviar el codigo de operacion");
     }
 
-    uint32_t indiceAEliminar = pcb->tablaDePaginas;
-    if(send(SOCKET_MEMORIA, &indiceAEliminar, sizeof(uint32_t), 0)<0){
-        log_error(kernelLogger, "Largo Plazo: Error al enviar el indice de tabla");
+    uint32_t pid = pcb->id;
+    if(send(SOCKET_MEMORIA, &pid, sizeof(uint32_t), 0)<0){
+        log_error(kernelLogger, "Largo Plazo: Error al enviar el PID");
     }
-    log_info(kernelLogger, "Largo Plazo: Enviada liberacion de PCB a Memoria %i",pcb->tablaDePaginas);
+    log_info(kernelLogger, "Largo Plazo: Enviado PID de PCB a Memoria %i",pcb->id);
 
+    // uint32_t indiceALeer = pcb->tablaDePaginas;
+    // if(send(SOCKET_MEMORIA, &indiceALeer, sizeof(uint32_t), 0)<0){
+    //     log_error(kernelLogger, "Largo Plazo: Error al enviar el indice de tabla");
+    // }
+    // log_info(kernelLogger, "Largo Plazo: Enviado indice de PCB a Memoria %i",pcb->tablaDePaginas);
 }
 
 void finalizar_proceso_en_memoria(t_pcb* pcb)
