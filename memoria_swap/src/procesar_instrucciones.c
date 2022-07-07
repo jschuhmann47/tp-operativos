@@ -30,6 +30,9 @@ void recibir_instrucciones_cpu(int socket_cpu){
             case TABLADOS:
                 procesar_entrada_tabla_segundo_nv(socket_cpu);
                 break;
+            default:
+                log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
+                break;    
         }
 
         
@@ -82,18 +85,12 @@ void procesar_write(uint32_t direccionFisica, uint32_t valor){ //write no dice, 
     log_info(memoria_swapLogger, "Memoria: Marco %i", marco);
     escribir_en_memoria(MEMORIA_PRINCIPAL, &valor, marco, desplazamiento, sizeof(uint32_t));
     marcar_marco_ocupado(marco);
-    //TODO Que reciba el PID para que pueda seguir utilizandolo. Chequear si con Tabla de Paginas funciona el IF.
-    /*if(marco_libre(marco)){
-        escribir_en_memoria(MEMORIA_PRINCIPAL, &valor, marco, desplazamiento, sizeof(uint32_t));
-        marcar_marco_ocupado(marco);
-    }*/
     log_info(memoria_swapLogger, "Memoria: WRITE terminado");
 }
 
 void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
-    log_info(memoria_swapLogger, "Memoria: Actualizando bit de marco %i", marco);
     uint32_t nroTablaPrimerNv, entradaTablaPrimerNv;
     if(recv(socket_cpu, &nroTablaPrimerNv, sizeof(uint32_t), MSG_WAITALL) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al recibir marco de CPU: %s", strerror(errno));
@@ -126,7 +123,9 @@ void suspender_proceso(uint32_t indice, uint32_t pid){
             t_marco* m = list_get(tablaSegundoNivel->marcos, j);
             if(m->presencia){
                 if(m->modificado){
-                    escribir_en_archivo(pid, m->marco);
+                    escribir_en_archivo(pid, m->marco, 4*i+j);
+                    char* valor = leer_de_archivo(pid, 4*i+j);
+                    log_info(memoria_swapLogger,"VALOR SWAP %s",valor);
                 }
                 liberar_marco(m);
             }
