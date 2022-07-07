@@ -106,10 +106,10 @@ void atender_peticiones_kernel(int socket_kernel){
                 break;
                 case FREEPCB:
                 ;
-                uint32_t indiceALiberar;
-                if(recv(socket_kernel, &indiceALiberar, sizeof(uint32_t), MSG_WAITALL)){
-                    log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a liberar: %i", indiceALiberar);
-                    //remover_tabla_primer_nivel(indiceALiberar); //no hace falta
+                uint32_t pid;
+                if(recv(socket_kernel, &pid, sizeof(uint32_t), MSG_WAITALL)){
+                    log_info(memoria_swapLogger, "MEMORIA: Recibi el PID: %i", pid);
+                    //leer_de_archivo(pid,);
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
                 }
