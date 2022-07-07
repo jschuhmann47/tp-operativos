@@ -56,6 +56,7 @@ void procesar_instruccion(void* buffer, int socket_cpu){
         memcpy(&param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
         log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", param1, param2);
         procesar_write(param1, param2);
+        actualizar_bit_de_marco(socket_cpu, param1);
         break;
     default:
         log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
@@ -89,6 +90,31 @@ void procesar_write(uint32_t direccionFisica, uint32_t valor){ //write no dice, 
     log_info(memoria_swapLogger, "Memoria: WRITE terminado");
 }
 
+void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
+    uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
+    uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
+    log_info(memoria_swapLogger, "Memoria: Actualizando bit de marco %i", marco);
+    uint32_t nroTablaPrimerNv, entradaTablaPrimerNv;
+    if(recv(socket_cpu, &nroTablaPrimerNv, sizeof(uint32_t), MSG_WAITALL) == -1){
+        log_error(memoria_swapLogger, "Memoria: Error al recibir marco de CPU: %s", strerror(errno));
+    }
+    if(recv(socket_cpu, &entradaTablaPrimerNv, sizeof(uint32_t), MSG_WAITALL) == -1){
+        log_error(memoria_swapLogger, "Memoria: Error al recibir marco de CPU: %s", strerror(errno));
+    }
+    t_tablaPrimerNivel* tUno = list_get(tablasPrimerNivel, nroTablaPrimerNv);
+    t_entradaPrimerNivel* eUno = list_get(tUno->entradasPrimerNivel, entradaTablaPrimerNv);
+    t_tablaSegundoNivel* tabla = list_get(tablasSegundoNivel, eUno->indiceTablaSegundoNivel);
+    for(int i = 0; i < list_size(tabla->marcos); i++){
+        t_marco* entradaMarco = list_get(tabla->marcos, i);
+        if(entradaMarco->marco == marco && entradaMarco->presencia){
+            log_info(memoria_swapLogger, "Memoria: Actualizando bit de marco %i", marco);
+            entradaMarco->modificado = true;
+            break;
+        }
+    }
+    
+}
+
 void suspender_proceso(uint32_t indice, uint32_t pid){
     log_info(memoria_swapLogger,"Entre a Liberar marcos para el proceso %i",pid);
     t_tablaPrimerNivel* tablaALiberar = list_get(tablasPrimerNivel,indice);
@@ -98,10 +124,10 @@ void suspender_proceso(uint32_t indice, uint32_t pid){
         t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, entradaPrimerNivel->indiceTablaSegundoNivel);
         for(int j=0; j<list_size(tablaSegundoNivel->marcos); j++){
             t_marco* m = list_get(tablaSegundoNivel->marcos, j);
-            if(m->presencia == true){
-                //if(m->modificado){
+            if(m->presencia){
+                if(m->modificado){
                     escribir_en_archivo(pid, m->marco);
-                //}
+                }
                 liberar_marco(m);
             }
         }

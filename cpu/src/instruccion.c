@@ -88,6 +88,13 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
         if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),*valor,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
+            if(send(socket_memoria,&pcb->tablaDePaginas,sizeof(uint32_t),0)<0){
+                log_error(cpuLogger, "CPU: Error al enviar nro de tabla de primer nivel a Memoria.");
+            }
+            uint32_t entradaTablaPrimerNivel = floor(floor(*direccionLogicaW/tamanioPagina) / paginasPorTabla);
+            if(send(socket_memoria,&entradaTablaPrimerNivel,sizeof(uint32_t),0)<0){
+                log_error(cpuLogger, "CPU: Error al enviar entrada de tabla de primer nivel a Memoria.");
+            }
         }else{
             log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
         }        
@@ -125,6 +132,13 @@ void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t ope
     log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
     if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),*valor,socket_memoria)>0){
         log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
+        if(send(socket_memoria,&pcb->tablaDePaginas,sizeof(uint32_t),0)<0){
+            log_error(cpuLogger, "CPU: Error al enviar nro de tabla de primer nivel a Memoria.");
+        }
+        uint32_t entradaTablaPrimerNivel = floor(floor(*direccionLogicaW/tamanioPagina) / paginasPorTabla);
+        if(send(socket_memoria,&entradaTablaPrimerNivel,sizeof(uint32_t),0)<0){
+            log_error(cpuLogger, "CPU: Error al enviar entrada de tabla de primer nivel a Memoria.");
+        }
     }else{
         log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
     }
