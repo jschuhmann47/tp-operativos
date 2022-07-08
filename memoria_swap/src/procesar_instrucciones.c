@@ -104,7 +104,7 @@ void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
     for(int i = 0; i < list_size(tabla->marcos); i++){
         t_marco* entradaMarco = list_get(tabla->marcos, i);
         if(entradaMarco->marco == marco && entradaMarco->presencia){
-            log_info(memoria_swapLogger, "Memoria: Actualizando bit de marco %i", marco);
+            log_info(memoria_swapLogger, "Memoria: Actualizando bit de modificado de marco %i", marco);
             entradaMarco->modificado = true;
             break;
         }

@@ -5,23 +5,30 @@ int cantTablas;
 void inicializar_tabla_paginas(){
     tablasPrimerNivel = list_create();
     tablasSegundoNivel = list_create();
+    marcosAsignadosPorProceso = list_create();
     
     cantTablas = memoria_swapCfg->PAGINAS_POR_TABLA; //ambas tienen el mismo tamaño
     log_info(memoria_swapLogger, "Inicializadas las tablas correctamente");
 }
 
-t_tablaPrimerNivel* crear_tabla_primer_nivel(){
+t_tablaPrimerNivel* crear_tabla_primer_nivel(uint32_t pid){
+
     t_tablaPrimerNivel* tablaPrimerNv = malloc(sizeof(t_tablaPrimerNivel));
     tablaPrimerNv->entradasPrimerNivel = list_create();
     tablaPrimerNv->nroTabla = get_siguiente_indice_primer_nivel(); 
     for (int i = 0; i < cantTablas; i++) {
         t_entradaPrimerNivel* entradaPrimerNivel = malloc(sizeof(t_entradaPrimerNivel));
         entradaPrimerNivel->indice = i;
-        t_tablaSegundoNivel* tablaSegNv = crear_tabla_segundo_nivel();
+        t_tablaSegundoNivel* tablaSegNv = crear_tabla_segundo_nivel(pid);
         entradaPrimerNivel->indiceTablaSegundoNivel = tablaSegNv->indice;
         list_add(tablaPrimerNv->entradasPrimerNivel, entradaPrimerNivel);
     }
+    t_marcoAsignado* marcosAsignadosAlProceso = malloc(sizeof(t_marcoAsignado));
+    marcosAsignadosAlProceso->pid = pid;
+    marcosAsignadosAlProceso->marcosAsignados = list_create();
+    list_add(marcosAsignadosPorProceso, marcosAsignadosAlProceso);
     list_add(tablasPrimerNivel, tablaPrimerNv);
+    tablaPrimerNv->pid = pid;
     return tablaPrimerNv;
 }
 
@@ -54,7 +61,7 @@ bool lugar_libre(t_entradaPrimerNivel* filaPrimerNivel)
     return filaPrimerNivel->indiceTablaSegundoNivel == -1;
 }
 
-t_tablaSegundoNivel* crear_tabla_segundo_nivel(){
+t_tablaSegundoNivel* crear_tabla_segundo_nivel(uint32_t pid){
     t_tablaSegundoNivel* entrada = malloc(sizeof(t_tablaSegundoNivel));
         entrada->indice=get_siguiente_indice_segundo_nivel();
         entrada->puntero=0;
@@ -63,6 +70,7 @@ t_tablaSegundoNivel* crear_tabla_segundo_nivel(){
             t_marco* nuevoMarco = crear_marco();
             list_add(entrada->marcos, nuevoMarco);
         }
+    entrada->pid = pid; //chequear si esto esta bien
     list_add(tablasSegundoNivel, entrada);
     return entrada;
 }
@@ -115,7 +123,7 @@ void liberar_marco(t_marco* marco){
 void procesar_entrada_tabla_primer_nv(int socket_cpu){
     
     log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de primer nivel");
-    uint32_t nroTablaPrimerNv; //NO ESTA HECHO EN EL MMU
+    uint32_t nroTablaPrimerNv;
     if(recv(socket_cpu, &nroTablaPrimerNv, sizeof(uint32_t), MSG_WAITALL) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al recibir requestPrimerTabla de CPU: %s", strerror(errno));
         exit(-1);
@@ -178,8 +186,11 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
 }
 
 int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indicePagina){ //busca un lugar libre y sino reemplaza segun algoritmo
-    int marcoLibre = encontrar_marco_libre();
-    if(marcoLibre == -1){
+    
+    t_marcoAsignado* marcosAsig = buscar_marcos_asignados_al_proceso(*(tablaSegundoNivel->pid)); // lo apuntado por el puntero
+    
+    int marcoLibre;
+    if(list_size(marcosAsig->marcosAsignados) == memoria_swapCfg->MARCOS_POR_PROCESO){
         t_marco* nuevoMarco = malloc(sizeof(t_marco)); //el nro de marco va a ser el de la victima
         nuevoMarco->presencia=true;
         nuevoMarco->uso=true;
@@ -191,14 +202,20 @@ int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indic
             reemplazo_clock_modificado(nuevoMarco,tablaSegundoNivel);
             marcoLibre = nuevoMarco->marco;
         }
-        //ver cuándo tiene que swapear y qué TODO !!
         return marcoLibre;
-    }
-    else{
+    }else{
+        marcoLibre = encontrar_marco_libre();
         t_marco* m = list_get(tablaSegundoNivel->marcos,indicePagina);
         m->marco=marcoLibre;
         m->presencia=true;
         m->uso=true;
         return marcoLibre;
     }
+
+    
+    
+}
+
+t_marcoAsignado* buscar_marcos_asignados_al_proceso(uint32_t pid){
+    return list_get(marcosAsignadosPorProceso, pid-1); //el pid empezaba en 1 no? si esto funca se puede sacar pid del struct
 }
