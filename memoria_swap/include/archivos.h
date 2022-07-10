@@ -18,7 +18,7 @@ typedef struct t_procesoSuspendido{
 
 t_list* procesosSuspendidos;
 
-void generar_archivo(uint32_t pid);
+void generar_archivo(uint32_t pid, uint32_t tamanioArchivo);
 void eliminar_archivo(uint32_t pid);
 void escribir_en_archivo(uint32_t pid, int nroMarco, int nroPagina);
 void* leer_de_archivo(uint32_t pid,int nroMarco);

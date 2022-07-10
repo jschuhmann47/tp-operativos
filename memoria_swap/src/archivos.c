@@ -3,12 +3,12 @@
 
 pthread_mutex_t accesoAArchivo;
 
-void generar_archivo(uint32_t pid)
+void generar_archivo(uint32_t pid, uint32_t tamanioArchivo)
 {
     pthread_mutex_lock(&accesoAArchivo);
     char* path = obtener_path_archivo(pid);
     FILE* archivo = fopen(path, "w");
-    if (ftruncate(fileno(archivo), memoria_swapCfg->TAM_PAGINA*memoria_swapCfg->PAGINAS_POR_TABLA*memoria_swapCfg->PAGINAS_POR_TABLA+1) != 0){
+    if (ftruncate(fileno(archivo),tamanioArchivo+1) != 0){
         log_error(memoria_swapLogger,"Error al truncate");
         exit(-1);
     }
@@ -37,7 +37,7 @@ void escribir_en_archivo(uint32_t pid, int nroMarco, int nroPagina)
     fwrite(paqueteAEscribir,memoria_swapCfg->TAM_PAGINA,1,archivo);
     fseek(archivo,0,SEEK_SET);
     fclose(archivo);
-    sleep(memoria_swapCfg->RETARDO_SWAP);
+    sleep(memoria_swapCfg->RETARDO_SWAP/1000);
     pthread_mutex_unlock(&accesoAArchivo);
 }
 
@@ -50,7 +50,7 @@ void* leer_de_archivo(uint32_t pid,int nroPagina){
     fread(lectura,memoria_swapCfg->TAM_PAGINA,1,archivo);
     fseek(archivo,0,SEEK_SET);
     fclose(archivo);
-    sleep(memoria_swapCfg->RETARDO_SWAP);
+    sleep(memoria_swapCfg->RETARDO_SWAP/1000);
     pthread_mutex_unlock(&accesoAArchivo);
     return lectura;
 }

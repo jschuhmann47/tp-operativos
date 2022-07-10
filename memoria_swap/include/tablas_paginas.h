@@ -55,13 +55,12 @@ t_tablaPrimerNivel* crear_tabla_primer_nivel(uint32_t pid);
 t_tablaSegundoNivel* crear_tabla_segundo_nivel(uint32_t pid);
 uint32_t agregar_a_tabla_primer_nivel(t_tablaPrimerNivel* tablaPrimerNv, t_tablaSegundoNivel* tablaSegNv);
 bool lugar_libre(t_entradaPrimerNivel* filaPrimerNivel);
-void procesar_entrada_tabla_primer_nv(int socket_cpu);
-void procesar_entrada_tabla_segundo_nv(int socket_cpu);
+
 //void remover_tabla_primer_nivel(uint32_t indice);
 uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
 t_marco* crear_marco();
 void liberar_marco(t_marco* marco);
-int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indicePagina);
+
 
 
 #endif

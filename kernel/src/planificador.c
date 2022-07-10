@@ -429,6 +429,9 @@ void solicitar_nueva_tabla_memoria(t_pcb* pcb)
     if(send(SOCKET_MEMORIA, &(pcb->id), sizeof(uint32_t), 0)){
         log_info(kernelLogger, "Largo Plazo: Se envia el ID del PCB");
     }
+    if(send(SOCKET_MEMORIA, &(pcb->tamanio), sizeof(uint32_t), 0)){
+        log_info(kernelLogger, "Largo Plazo: Se envia el Tamanio del PCB");
+    }
     if(recv(SOCKET_MEMORIA, &indice, sizeof(uint32_t), MSG_WAITALL)){
         log_info(kernelLogger, "Largo Plazo: Recibi el indice de tabla %i correctamente para el PCB: %i ", indice ,pcb->id);
         pcb->tablaDePaginas = indice;
