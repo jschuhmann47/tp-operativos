@@ -8,6 +8,7 @@
 #include "memoria_swap_config.h"
 #include <commons/collections/list.h>
 #include "marcos_libres.h"
+#include "archivos.h"
 
 t_list* tablasPrimerNivel; //lista de t_tablaPrimerNivel
 t_list* tablasSegundoNivel; 
@@ -26,7 +27,7 @@ struct t_tablaSegundoNivel{
     int indice;
     t_list* marcos; //lista de t_marco
     uint32_t puntero;
-    uint32_t* pid;
+    uint32_t pid;
 };
 
 typedef struct t_tablaPrimerNivel{
