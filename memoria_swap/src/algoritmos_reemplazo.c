@@ -10,12 +10,13 @@ void reemplazo_clock(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNi
         t_marco* pagina = list_get(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero);
         
         if(!pagina->uso){
-           victima = list_remove(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero);
-           paginaAAgregar->marco = victima->marco;
-           list_add_in_index(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero, paginaAAgregar);
-           tablaSegundoNivel->puntero++;
-           log_info(memoria_swapLogger,"Se reemplazo una pagina (Clock), marco: %i",paginaAAgregar->marco);
-           break;
+            victima = list_remove(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero);
+            paginaAAgregar->marco = victima->marco;
+            list_add_in_index(tablaSegundoNivel->marcos, tablaSegundoNivel->puntero, paginaAAgregar);
+            tablaSegundoNivel->puntero++;
+            log_info(memoria_swapLogger,"Se reemplazo una pagina (Clock), marco: %i",paginaAAgregar->marco);
+            //TODO victima a swap si M=1
+            break;
         }else{
             pagina->uso = false;
             tablaSegundoNivel->puntero++;

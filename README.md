@@ -1,3 +1,5 @@
-# tp-2022-1c-EnCasaAndaba
+# TP SO 1C 2022
 
-Enunciado: https://docs.google.com/document/d/17WP76Vsi6ZrYlpYT8xOPXzLf42rQgtyKsOdVkyL5Jj0/edit#
+Grupo: EnCasaAndaba
+
+## [Enunciado](https://docs.google.com/document/d/17WP76Vsi6ZrYlpYT8xOPXzLf42rQgtyKsOdVkyL5Jj0/edit# "Enunciado")

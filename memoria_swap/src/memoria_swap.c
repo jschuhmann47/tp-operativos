@@ -17,6 +17,8 @@ int main(int argc, char *argv[]){
 
     nextIndicePrimerNv = 0; //se inicia el indice para tabla de segundo nivel.
     nextIndiceSegundoNv = 0; //se inicia el indice para tabla de segundo nivel.
+    marcosPorProceso = memoria_swapCfg->MARCOS_POR_PROCESO;
+    procesosSuspendidos = list_create();
 
     int socket_servidor = iniciar_servidor(memoria_swapCfg->IP_MEMORIA, memoria_swapCfg->PUERTO_ESCUCHA);
     struct sockaddr cliente;
@@ -79,12 +81,17 @@ void atender_peticiones_kernel(int socket_kernel){
             switch(opCode){
                 case NEWTABLE:
                 ;
-                t_tablaPrimerNivel* nuevaTablaPrimerNv = crear_tabla_primer_nivel();
-                uint32_t nroTablaPrimerNv = nuevaTablaPrimerNv->nroTabla; //obtener indice ver si se borra o no
                 if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
-                    generar_archivo(PID);
-                    log_info(memoria_swapLogger, "Memoria: Recibi PID: %i", PID);
+                    uint32_t tamanioArchivo;
+                    if(recv(socket_kernel, &tamanioArchivo, sizeof(uint32_t), MSG_WAITALL)){
+                        generar_archivo(PID,tamanioArchivo);
+                        log_info(memoria_swapLogger, "Memoria: Generado archivo del PID: %i", PID);
+                    }
+                    
                 }
+                t_tablaPrimerNivel* nuevaTablaPrimerNv = crear_tabla_primer_nivel(PID);
+                uint32_t nroTablaPrimerNv = nuevaTablaPrimerNv->nroTabla;
+
                 if(send(socket_kernel, &nroTablaPrimerNv, sizeof(uint32_t), 0)){
                     log_info(memoria_swapLogger, "Memoria: Envio de numero de tabla correctamente");
                 }

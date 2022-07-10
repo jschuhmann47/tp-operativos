@@ -104,7 +104,7 @@ void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
     for(int i = 0; i < list_size(tabla->marcos); i++){
         t_marco* entradaMarco = list_get(tabla->marcos, i);
         if(entradaMarco->marco == marco && entradaMarco->presencia){
-            log_info(memoria_swapLogger, "Memoria: Actualizando bit de marco %i", marco);
+            log_info(memoria_swapLogger, "Memoria: Actualizando bit de modificado de marco %i", marco);
             entradaMarco->modificado = true;
             break;
         }
@@ -113,18 +113,19 @@ void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
 }
 
 void suspender_proceso(uint32_t indice, uint32_t pid){
-    log_info(memoria_swapLogger,"Entre a Liberar marcos para el proceso %i",pid);
+    log_info(memoria_swapLogger,"Memoria: Pasando a SWAP proceso de id %i",pid);
     t_tablaPrimerNivel* tablaALiberar = list_get(tablasPrimerNivel,indice);
     t_entradaPrimerNivel* entradaPrimerNivel;
     for(int i=0; i<list_size(tablaALiberar->entradasPrimerNivel);i++){
         entradaPrimerNivel=list_get(tablaALiberar->entradasPrimerNivel,i);
         t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, entradaPrimerNivel->indiceTablaSegundoNivel);
         for(int j=0; j<list_size(tablaSegundoNivel->marcos); j++){
+            int nroPagina = 4*i+j;
             t_marco* m = list_get(tablaSegundoNivel->marcos, j);
             if(m->presencia){
                 if(m->modificado){
-                    escribir_en_archivo(pid, m->marco, 4*i+j);
-                    char* valor = leer_de_archivo(pid, 4*i+j);
+                    escribir_en_archivo(pid, m->marco, nroPagina);
+                    char* valor = leer_de_archivo(pid, nroPagina);
                     log_info(memoria_swapLogger,"VALOR SWAP %s",valor);
                 }
                 liberar_marco(m);
