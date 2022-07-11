@@ -26,7 +26,7 @@ typedef struct t_tablaSegundoNivel t_tablaSegundoNivel;
 struct t_tablaSegundoNivel{
     int indice;
     t_list* marcos; //lista de t_marco
-    uint32_t puntero;
+    //uint32_t puntero;
     uint32_t pid;
 };
 
@@ -45,12 +45,12 @@ struct t_entradaPrimerNivel{
 typedef struct t_marcoAsignado{
     uint32_t pid;
     t_list* marcosAsignados;
+    int puntero;
 }t_marcoAsignado;
 
 #include "algoritmos_reemplazo.h"
 
 void inicializar_tabla_paginas();
-void reemplazar_pagina(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel);
 t_tablaPrimerNivel* crear_tabla_primer_nivel(uint32_t pid);
 t_tablaSegundoNivel* crear_tabla_segundo_nivel(uint32_t pid);
 uint32_t agregar_a_tabla_primer_nivel(t_tablaPrimerNivel* tablaPrimerNv, t_tablaSegundoNivel* tablaSegNv);

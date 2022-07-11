@@ -37,16 +37,6 @@ t_tablaPrimerNivel* crear_tabla_primer_nivel(uint32_t pid){
 //     *nroPagina = indice % tamanioSegundaTabla;
 // }
 
-
-void reemplazar_pagina(t_marco* paginaAAgregar,t_tablaSegundoNivel* tablaSegundoNivel){
-    if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO, "CLOCK") == 0){
-        reemplazo_clock(paginaAAgregar, tablaSegundoNivel);
-    }
-    if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO, "CLOCK-M") == 0){
-        reemplazo_clock_modificado(paginaAAgregar, tablaSegundoNivel);
-    }
-}
-
 uint32_t agregar_a_tabla_primer_nivel(t_tablaPrimerNivel* tablaPrimerNv, t_tablaSegundoNivel* tablaSegNv)
 {
     t_entradaPrimerNivel* primerNivel;
@@ -64,7 +54,7 @@ bool lugar_libre(t_entradaPrimerNivel* filaPrimerNivel)
 t_tablaSegundoNivel* crear_tabla_segundo_nivel(uint32_t pid){
     t_tablaSegundoNivel* entrada = malloc(sizeof(t_tablaSegundoNivel));
         entrada->indice=get_siguiente_indice_segundo_nivel();
-        entrada->puntero=0;
+        //entrada->puntero=0;
         entrada->marcos = list_create();
         for(int j = 0; j < cantTablas; j++){
             t_marco* nuevoMarco = crear_marco();

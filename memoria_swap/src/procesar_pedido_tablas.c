@@ -72,33 +72,41 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
 int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indicePagina){
     
     t_marcoAsignado* marcosAsig = buscar_marcos_asignados_al_proceso(tablaSegundoNivel->pid); 
-    
+    int nroPagina = (tablaSegundoNivel->indice % memoria_swapCfg->PAGINAS_POR_TABLA)*memoria_swapCfg->PAGINAS_POR_TABLA+indicePagina;
     int marcoLibre;
     if(list_size(marcosAsig->marcosAsignados) == memoria_swapCfg->MARCOS_POR_PROCESO){
-        t_marco* nuevoMarco = malloc(sizeof(t_marco));
-        nuevoMarco->presencia=true;
-        nuevoMarco->uso=true;
-        if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK")==0){
-            reemplazo_clock(nuevoMarco,tablaSegundoNivel); //falta testear
-            marcoLibre = nuevoMarco->marco;
-        }
-        if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK-M")==0){
-            reemplazo_clock_modificado(nuevoMarco,tablaSegundoNivel); //falta testear
-            marcoLibre = nuevoMarco->marco;
-        }
+        marcoLibre = reemplazar_pagina(tablaSegundoNivel, marcosAsig, nroPagina);
         return marcoLibre;
     }else{
         marcoLibre = encontrar_marco_libre();
-        t_marco* m = list_get(tablaSegundoNivel->marcos,indicePagina);
-        m->marco=marcoLibre;
-        m->presencia=true;
-        m->uso=true;
-        int *nroMarco = malloc(sizeof(int));
-        list_add(marcosAsig->marcosAsignados,nroMarco);
-        return marcoLibre;
+        if(marcoLibre != -1){
+            t_marco* m = list_get(tablaSegundoNivel->marcos,indicePagina);
+            m->marco=marcoLibre;
+            m->presencia=true;
+            m->uso=true;
+            list_add(marcosAsig->marcosAsignados,m);
+            return marcoLibre; 
+        }else{
+            marcoLibre = reemplazar_pagina(tablaSegundoNivel, marcosAsig, nroPagina);
+            return marcoLibre;
+        }
     }
+}
 
-    
+int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcoAsignado* marcosAsig, int nroPagina){
+    t_marco* victima = NULL;
+    t_marco* nuevoMarco = malloc(sizeof(t_marco));
+    nuevoMarco->presencia=true;
+    nuevoMarco->uso=true;
+    if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK")==0){
+        victima = reemplazo_clock(tablaSegundoNivel,nuevoMarco,marcosAsig); //falta testear
+    }
+    if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK-M")==0){
+        victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig); //falta testear
+    }
+    escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, nroPagina);
+    free(victima);
+    return nuevoMarco->marco;
 }
 
 t_marcoAsignado* buscar_marcos_asignados_al_proceso(uint32_t pid){

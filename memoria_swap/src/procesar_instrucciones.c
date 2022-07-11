@@ -120,13 +120,12 @@ void suspender_proceso(uint32_t indice, uint32_t pid){
         entradaPrimerNivel=list_get(tablaALiberar->entradasPrimerNivel,i);
         t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, entradaPrimerNivel->indiceTablaSegundoNivel);
         for(int j=0; j<list_size(tablaSegundoNivel->marcos); j++){
-            int nroPagina = 4*i+j;
+            int nroPagina = memoria_swapCfg->PAGINAS_POR_TABLA*i+j;
             t_marco* m = list_get(tablaSegundoNivel->marcos, j);
             if(m->presencia){
                 if(m->modificado){
                     escribir_en_archivo(pid, m->marco, nroPagina);
-                    char* valor = leer_de_archivo(pid, nroPagina);
-                    log_info(memoria_swapLogger,"VALOR SWAP %s",valor);
+                    log_info(memoria_swapLogger, "Memoria: Escribiendo pagina %i  en SWAP del proceso %i en el marco %i", nroPagina, pid, m->marco);
                 }
                 liberar_marco(m);
             }

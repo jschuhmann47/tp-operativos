@@ -20,6 +20,7 @@ void marcar_marco_ocupado(uint32_t marco);
 void marcar_marco_libre(uint32_t marco);
 t_marco_libre* encontrar_marco_en_lista_libre(uint32_t marcoABuscar);
 int encontrar_marco_libre();
+void crear_lista_marcos_asignados(uint32_t pid);
 
 
 #endif
