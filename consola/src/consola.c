@@ -46,7 +46,7 @@ char *leer_archivo(char *nombre)
 {
     int posicion;
     int cantidadLineas = 0;
-    char temp[16];
+    char temp[20];
     char delimitador[] = " ";
 
     FILE *file = fopen(nombre, "r");
@@ -58,17 +58,17 @@ char *leer_archivo(char *nombre)
 
     while (!feof(file))
     {
-        fgets(temp, 15, file);
+        fgets(temp, 19, file);
         cantidadLineas++;
     }
 
     rewind(file);
 
-    char palabras[cantidadLineas][16];
+    char palabras[cantidadLineas][20];
     posicion = 0;
     while (!feof(file))
     {
-        fgets(palabras[posicion], 15, file);
+        fgets(palabras[posicion], 19, file);
         posicion++;
     }
     char *mensaje = string_new();
