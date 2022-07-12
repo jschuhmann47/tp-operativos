@@ -107,11 +107,10 @@ void* iniciar_corto_plazo(void* _) {
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
         
-
-        log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
         log_info(kernelLogger, "Corto Plazo: Mando con rafaga %f",pcbQuePasaAExec->est_rafaga_actual);
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
+        log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
         sem_post(&(pcbsExec->instanciasDisponibles));
 
     }
