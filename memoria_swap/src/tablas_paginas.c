@@ -26,6 +26,7 @@ t_tablaPrimerNivel* crear_tabla_primer_nivel(uint32_t pid){
     t_marcoAsignado* marcosAsignadosAlProceso = malloc(sizeof(t_marcoAsignado));
     marcosAsignadosAlProceso->pid = pid;
     marcosAsignadosAlProceso->marcosAsignados = list_create();
+    marcosAsignadosAlProceso->puntero = 0;
     list_add(marcosAsignadosPorProceso, marcosAsignadosAlProceso);
     list_add(tablasPrimerNivel, tablaPrimerNv);
     tablaPrimerNv->pid = pid;
@@ -96,14 +97,18 @@ void liberar_marcos(uint32_t indice){
     for(int i = 0; i < list_size(primerNivel->entradasPrimerNivel); i++){
         t_entradaPrimerNivel* entradaPrimerNv = list_get(primerNivel->entradasPrimerNivel,i);
         t_tablaSegundoNivel* tablaSegNvALiberar = list_get(tablasSegundoNivel,entradaPrimerNv->indiceTablaSegundoNivel);
-        list_map(tablaSegNvALiberar->marcos,liberar_marco);
+        for(int j = 0; j < list_size(tablaSegNvALiberar->marcos);j++){
+            t_marco* m = list_get(tablaSegNvALiberar->marcos,j);
+            liberar_marco(m);
+        }
+        //list_map(tablaSegNvALiberar->marcos,liberar_marco);
     }
     //primerNivel->indiceTablaSegundoNivel = -1;
 }
 
-void* liberar_marco(t_marco* marco){
-    if(marco->presencia){
-        marco->presencia=0;
+void liberar_marco(t_marco* marco){
+    if(marco->presencia == true){
+        marco->presencia=false;
         marco->marco=-1;
         marcar_marco_libre(marco->marco);
     }

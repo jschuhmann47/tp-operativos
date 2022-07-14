@@ -131,7 +131,6 @@ void atender_peticiones_kernel(int socket_kernel){
                 }
                 if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
                     log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a finalizar: %i", indiceParaFinalizar);
-                    //remover_tabla_primer_nivel(indiceParaFinalizar); //no hace falta
                     liberar_marcos(indiceParaFinalizar);
                 }else{
                     log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a finalizar");

@@ -98,11 +98,13 @@ int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcoAsignado* m
     t_marco* nuevoMarco = malloc(sizeof(t_marco));
     nuevoMarco->presencia=true;
     nuevoMarco->uso=true;
+    nuevoMarco->modificado=false;
+    nuevoMarco->marco=-1;
     if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK")==0){
-        victima = reemplazo_clock(tablaSegundoNivel,nuevoMarco,marcosAsig); //falta testear
+        victima = reemplazo_clock(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina); //falta testear
     }
     if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK-M")==0){
-        victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig); //falta testear
+        victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina); //falta testear
     }
     escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, nroPagina);
     free(victima);
