@@ -128,10 +128,10 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
 void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t operando, int socket_memoria){
     uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
     uint32_t* valor = list_get(instruccion->parametros, 1);
-    log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
-    log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
-    if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),*valor,socket_memoria)>0){
-        log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
+    log_info(cpuLogger, "CPU: Ejecute COPY/WRITE: %i ", *direccionLogicaW);
+    log_info(cpuLogger, "CPU: Ejecute COPY/WRITE: %i ", *valor);
+    if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),operando,socket_memoria)>0){
+        log_info(cpuLogger, "CPU: Se mando instruccion COPY/WRITE a Memoria.");
         if(send(socket_memoria,&pcb->tablaDePaginas,sizeof(uint32_t),0)<0){
             log_error(cpuLogger, "CPU: Error al enviar nro de tabla de primer nivel a Memoria.");
         }
@@ -140,16 +140,16 @@ void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t ope
             log_error(cpuLogger, "CPU: Error al enviar entrada de tabla de primer nivel a Memoria.");
         }
     }else{
-        log_info(cpuLogger, "CPU: No se pudo mandar instruccion WRITE a Memoria.");
+        log_info(cpuLogger, "CPU: No se pudo mandar instruccion COPY/WRITE a Memoria.");
     }
 }
 
 uint32_t cpu_fetch_operands(t_instruccion* instruccion, t_pcb* pcb,int socket_memoria){
     uint32_t* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
+    uint32_t leido;
     //log_info(cpuCfg,"CPU: Ejecute COPY: %i ", *direccionMemoriaAObtener);
     if(mandar_instruccion(READ,traducir_direccion_logica(*direccionMemoriaAObtener, socket_memoria,cpuLogger,pcb->tablaDePaginas),0,socket_memoria)){
         log_info(cpuLogger, "CPU: Se mando instruccion COPY/READ a Memoria.");
-        uint32_t leido;
         if(recv(socket_memoria,&leido,sizeof(uint32_t),MSG_WAITALL)<0){
             log_error(cpuLogger,"No se pudo recibir el valor leido por READ");
             exit(-1);
@@ -158,7 +158,7 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion, t_pcb* pcb,int socket_me
     else{
         log_info(cpuLogger, "CPU: No se pudo mandar instruccion COPY/READ a Memoria.");
     }
-    return 1;
+    return leido;
 }
 
 bool cpu_check_interrupcion(){

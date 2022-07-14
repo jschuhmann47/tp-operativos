@@ -101,7 +101,7 @@ void liberar_marcos(uint32_t indice){
     //primerNivel->indiceTablaSegundoNivel = -1;
 }
 
-void liberar_marco(t_marco* marco){
+void* liberar_marco(t_marco* marco){
     if(marco->presencia){
         marco->presencia=0;
         marco->marco=-1;

@@ -59,7 +59,7 @@ bool lugar_libre(t_entradaPrimerNivel* filaPrimerNivel);
 //void remover_tabla_primer_nivel(uint32_t indice);
 uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel);
 t_marco* crear_marco();
-void liberar_marco(t_marco* marco);
+void* liberar_marco(t_marco* marco);
 
 
 
