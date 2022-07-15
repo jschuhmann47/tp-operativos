@@ -73,6 +73,7 @@ int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indic
     
     t_marcoAsignado* marcosAsig = buscar_marcos_asignados_al_proceso(tablaSegundoNivel->pid); 
     int nroPagina = (tablaSegundoNivel->indice % memoria_swapCfg->PAGINAS_POR_TABLA)*memoria_swapCfg->PAGINAS_POR_TABLA+indicePagina;
+    log_info(memoria_swapLogger, "Memoria :nroPagina %i - nroIndice %i",nroPagina,indicePagina);
     int marcoLibre;
     if(list_size(marcosAsig->marcosAsignados) == memoria_swapCfg->MARCOS_POR_PROCESO){
         marcoLibre = reemplazar_pagina(tablaSegundoNivel, marcosAsig, nroPagina);
