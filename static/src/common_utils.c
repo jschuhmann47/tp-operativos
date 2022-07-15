@@ -383,22 +383,24 @@ uint32_t tamanioInstruccion(code_instruccion codOp){
 	{
 		case NO_OP:
 			return sizeof(code_instruccion);
-			break;
+		break;
 		case I_O:
 			return sizeof(uint32_t)+sizeof(code_instruccion);
-			break;
+		break;
 		case WRITE:
 			return (sizeof(uint32_t)*2)+sizeof(code_instruccion);
-			break;
+		break;
 		case COPY:
 			return (sizeof(uint32_t)*2)+sizeof(code_instruccion);
-			break;
+		break;
         case READ:
 			return sizeof(uint32_t)+sizeof(code_instruccion);
-			break;
+		break;
         case EXIT_I:
 			return sizeof(code_instruccion);
-			break;
+		break;
+        default:
+        break;
 	}
 }
 
