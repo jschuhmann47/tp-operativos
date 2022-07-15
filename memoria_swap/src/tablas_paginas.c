@@ -23,7 +23,7 @@ t_tablaPrimerNivel* crear_tabla_primer_nivel(uint32_t pid){
         entradaPrimerNivel->indiceTablaSegundoNivel = tablaSegNv->indice;
         list_add(tablaPrimerNv->entradasPrimerNivel, entradaPrimerNivel);
     }
-    t_marcoAsignado* marcosAsignadosAlProceso = malloc(sizeof(t_marcoAsignado));
+    t_marcosAsignadoPorProceso* marcosAsignadosAlProceso = malloc(sizeof(t_marcosAsignadoPorProceso));
     marcosAsignadosAlProceso->pid = pid;
     marcosAsignadosAlProceso->marcosAsignados = list_create();
     marcosAsignadosAlProceso->puntero = 0;
