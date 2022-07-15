@@ -523,15 +523,15 @@ void agregar_pcb_en_cola_new(int socket)
                 mensaje = recibir_mensaje(socket);
                 tamanio = atoi(mensaje);
                 log_info(kernelLogger, "Me llego el mensaje %i", tamanio);
-                continue;
+            continue;
             case INSTRUCCION:
                 instrucciones = recibir_instrucciones(socket);
                 sem_post(&recibirInstruccion);
-                break;
+            break;
             default:
                 sem_wait(&pcbsEnExit);
 			    log_error(kernelLogger, "Se desconecto la Consola");
-                break;
+            break;
         }
 
         sem_wait(&recibirInstruccion);
