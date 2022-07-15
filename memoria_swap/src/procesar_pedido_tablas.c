@@ -86,7 +86,11 @@ int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indic
             m->presencia=true;
             m->uso=true;
             t_marcoAsignado* mA = malloc(sizeof(t_marcoAsignado));
-            mA->marco=m;
+            mA->marco = malloc(sizeof(t_marco));
+            mA->marco->marco=marcoLibre;
+            mA->marco->presencia=true;
+            mA->marco->uso=true;
+            mA->marco->modificado=false;
             mA->nroTablaSegundoNivel=tablaSegundoNivel->indice;
             list_add(marcosAsig->marcosAsignados,mA);
             return marcoLibre; 

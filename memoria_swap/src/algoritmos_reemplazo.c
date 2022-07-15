@@ -36,7 +36,7 @@ t_marco* reemplazo_clock_modificado(t_tablaSegundoNivel* tablaSegNv, t_marco* pa
     int limite = list_size(marcosAsig->marcosAsignados);
     int nroVuelta = 0;
     while (1){
-        t_marco* victima = NULL;
+        t_marcoAsignado* victima = NULL;
         t_marco* pagina = list_get(marcosAsig->marcosAsignados, marcosAsig->puntero);
         log_info(memoria_swapLogger,"Puntero actual: (Clock-M), marco: %i",marcosAsig->puntero);
 
@@ -50,7 +50,7 @@ t_marco* reemplazo_clock_modificado(t_tablaSegundoNivel* tablaSegNv, t_marco* pa
                     marcosAsig->puntero = 0;
                 }
                 log_info(memoria_swapLogger,"Se reemplazo una pagina (Clock-M), marco: %i",paginaAAgregar->marco);
-                return victima;
+                return victima->marco;
             }
             else{
                 pagina->uso = false;
@@ -65,14 +65,14 @@ t_marco* reemplazo_clock_modificado(t_tablaSegundoNivel* tablaSegNv, t_marco* pa
         else{
             if(!pagina->uso && !pagina->modificado){
 
-                actualizar_paginas(victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
-
+                actualizar_paginas(&victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
+                log_info(memoria_swapLogger,"Victima A(Clock-M), marco: %i",victima->marco->marco);
                 log_info(memoria_swapLogger,"Se reemplazo una pagina (Clock-M), marco: %i",paginaAAgregar->marco);
                 marcosAsig->puntero++;
                 if(marcosAsig->puntero == limite){
                     marcosAsig->puntero = 0;
                 }
-                return victima;
+                return victima->marco;
             } else{
                 contadorPasadas++;
                 marcosAsig->puntero++;
@@ -104,21 +104,24 @@ int buscar_nro_pagina(t_tablaSegundoNivel* tablaSegNv, t_marco* marco){
     exit(-1);
 }
 
-void actualizar_paginas(t_marcoAsignado* victima,t_marcosAsignadoPorProceso* marcosAsig,t_tablaSegundoNivel* tablaSegNv,t_marco* paginaAAgregar,int nroPagina,int* paginaVictima){
-    victima = list_replace(marcosAsig->marcosAsignados, marcosAsig->puntero, paginaAAgregar); //reemplazo en la de asignados
-    paginaAAgregar->marco = victima->marco;
+void actualizar_paginas(t_marcoAsignado** victima,t_marcosAsignadoPorProceso* marcosAsig,t_tablaSegundoNivel* tablaSegNv,t_marco* paginaAAgregar,int nroPagina,int* paginaVictima){
+    t_marcoAsignado* vict = list_replace(marcosAsig->marcosAsignados, marcosAsig->puntero, paginaAAgregar); //reemplazo en la de asignados
+    log_info(memoria_swapLogger,"Victima A(Clock-M), marco: %i",vict->marco->marco);
+
+    paginaAAgregar->marco = vict->marco->marco;
     t_marco* paginaAActualizarNueva = list_get(tablaSegNv->marcos, nroPagina % memoria_swapCfg->PAGINAS_POR_TABLA); //pongo en presencia la nueva
     paginaAActualizarNueva->marco = paginaAAgregar->marco;
     paginaAActualizarNueva->uso = paginaAAgregar->uso;
     paginaAActualizarNueva->presencia = paginaAAgregar->presencia;
     
-    t_tablaSegundoNivel* tablaVictima = list_get(tablasSegundoNivel, victima->nroTablaSegundoNivel);
-    int nroPaginaVictima = buscar_nro_pagina(tablaVictima,victima->marco);
+    t_tablaSegundoNivel* tablaVictima = list_get(tablasSegundoNivel, vict->nroTablaSegundoNivel);
+    int nroPaginaVictima = buscar_nro_pagina(tablaVictima,vict->marco);
     *paginaVictima = nroPaginaVictima;
     t_marco* paginaAActualizarVieja = list_get(tablaVictima->marcos, nroPaginaVictima % memoria_swapCfg->PAGINAS_POR_TABLA); //quito de presencia la victima
     paginaAActualizarVieja->presencia = false;
     paginaAActualizarVieja->uso = false;
     paginaAActualizarVieja->marco = -1; 
+    *victima = vict;
 }
 
 /* clock modificado:
