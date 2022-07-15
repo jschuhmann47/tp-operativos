@@ -11,6 +11,7 @@ int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indic
 bool proceso_fue_suspendido(uint32_t pid);
 void cargar_pagina_en_memoria(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t nroPagina, uint32_t nroMarco);
 int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPorProceso* marcosAsig, int nroPagina);
+void agregar_a_marcos_asignados(t_marcosAsignadoPorProceso* marcosAsig,int nroMarco, int indiceTablaSegNv);
 
 
 

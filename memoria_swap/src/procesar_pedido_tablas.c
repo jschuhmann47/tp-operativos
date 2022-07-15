@@ -85,14 +85,7 @@ int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indic
             m->marco=marcoLibre;
             m->presencia=true;
             m->uso=true;
-            t_marcoAsignado* mA = malloc(sizeof(t_marcoAsignado));
-            mA->marco = malloc(sizeof(t_marco));
-            mA->marco->marco=marcoLibre;
-            mA->marco->presencia=true;
-            mA->marco->uso=true;
-            mA->marco->modificado=false;
-            mA->nroTablaSegundoNivel=tablaSegundoNivel->indice;
-            list_add(marcosAsig->marcosAsignados,mA);
+            agregar_a_marcos_asignados(marcosAsig,marcoLibre, tablaSegundoNivel->indice);
             return marcoLibre; 
         }else{
             marcoLibre = reemplazar_pagina(tablaSegundoNivel, marcosAsig, nroPagina);
@@ -118,6 +111,7 @@ int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPo
     if(victima->modificado){
        escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, nroPagina); 
     }
+    nuevoMarco->marco=victima->marco;
     free(victima);
     return nuevoMarco->marco;
 }
@@ -151,4 +145,15 @@ void cargar_pagina_en_memoria(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t n
     void* lectura = leer_de_archivo(tablaSegundoNivel->pid, nroPagina);
     escribir_en_memoria(MEMORIA_PRINCIPAL,lectura,nroMarco,nroMarco*memoria_swapCfg->TAM_PAGINA,memoria_swapCfg->TAM_PAGINA);
     free(lectura);
+}
+
+void agregar_a_marcos_asignados(t_marcosAsignadoPorProceso* marcosAsig,int nroMarco, int indiceTablaSegNv){
+    t_marcoAsignado* mA = malloc(sizeof(t_marcoAsignado));
+    mA->marco = malloc(sizeof(t_marco));
+    mA->marco->marco=nroMarco;
+    mA->marco->presencia=true;
+    mA->marco->uso=true;
+    mA->marco->modificado=false;
+    mA->nroTablaSegundoNivel=indiceTablaSegNv;
+    list_add(marcosAsig->marcosAsignados,mA);
 }

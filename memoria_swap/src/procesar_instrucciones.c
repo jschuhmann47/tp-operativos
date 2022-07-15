@@ -123,9 +123,9 @@ void suspender_proceso(uint32_t indice, uint32_t pid){
             int nroPagina = memoria_swapCfg->PAGINAS_POR_TABLA*i+j;
             t_marco* m = list_get(tablaSegundoNivel->marcos, j);
             if(m->presencia){
-                if(m->modificado && m->marco != -1){
-                    escribir_en_archivo(pid, m->marco, nroPagina);
+                if(m->modificado){
                     log_info(memoria_swapLogger, "Memoria: Escribiendo pagina %i  en SWAP del proceso %i en el marco %i", nroPagina, pid, m->marco);
+                    escribir_en_archivo(pid, m->marco, nroPagina);
                 }
                 liberar_marco(m);
             }

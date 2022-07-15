@@ -110,7 +110,7 @@ void actualizar_paginas(t_marcoAsignado** victima,t_marcosAsignadoPorProceso* ma
 
     paginaAAgregar->marco = vict->marco->marco;
     t_marco* paginaAActualizarNueva = list_get(tablaSegNv->marcos, nroPagina % memoria_swapCfg->PAGINAS_POR_TABLA); //pongo en presencia la nueva
-    paginaAActualizarNueva->marco = paginaAAgregar->marco;
+    paginaAActualizarNueva->marco = vict->marco->marco;
     paginaAActualizarNueva->uso = paginaAAgregar->uso;
     paginaAActualizarNueva->presencia = paginaAAgregar->presencia;
     
@@ -121,6 +121,7 @@ void actualizar_paginas(t_marcoAsignado** victima,t_marcosAsignadoPorProceso* ma
     paginaAActualizarVieja->presencia = false;
     paginaAActualizarVieja->uso = false;
     paginaAActualizarVieja->marco = -1; 
+    
     *victima = vict;
 }
 
