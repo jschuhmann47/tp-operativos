@@ -89,54 +89,10 @@ uint32_t traducir_direccion_logica(uint32_t direccionLogica, int socket_memoria,
         log_info(cpuLogger, "MMU: Se agrega nro pagina %i con el marco %i",nroPagina,marcoR);
     }else{
         marcoR = obtener_traduccion_tlb(indice);
+        if(strcmp(cpuCfg->REEMPLAZO_TLB, "LRU")==0){
+            actualizar_tiempo_ultimo_uso_tlb(indice);
+        }
     }
     return obtener_direccion_fisica(marcoR, obtener_desplazamiento(direccionLogica, nroPagina));
 }
 
-
-/*
-op_code opCode = TABLAUNO;
-    if(send(socket_memoria,&opCode,sizeof(op_code),0)<0){
-        log_error(cpuLogger, "CPU: No se pudo enviar opCode a Memoria.");
-        
-    }
-    //log_info(cpuLogger, "CPU: Se mando opCode a Memoria.");
-    else{
-        if(send(socket_memoria,&entradaTablaPrimerNivel,sizeof(uint32_t),0)<0){
-            log_error(cpuLogger, "CPU: No se pudo enviar entradaTablaPrimerNivel a Memoria.");
-        }
-        else{
-            //log_info(cpuLogger, "CPU: Se mando entradaTablaPrimerNivel a Memoria.");
-            if(recv(socket_memoria,&rtaTablaPrimerNivel,sizeof(uint32_t),MSG_WAITALL)==-1){ //rompe
-                log_error(cpuLogger, "CPU: No se pudo recibir rtaTablaPrimerNivel de Memoria.");
-            }
-            else{
-                log_info(cpuLogger, "CPU:RTA TABLA (INDICE) %i",rtaTablaPrimerNivel);
-                //log_info(cpuLogger, "CPU: Se recibio rtaTablaPrimerNivel de Memoria.");
-
-                op_code opCodeDos = TABLADOS;
-                if(send(socket_memoria,&opCodeDos,sizeof(op_code),0)<0){
-                    log_error(cpuLogger, "CPU: No se pudo enviar opCodeDos a Memoria.");
-                }            
-                
-                if(send(socket_memoria,&rtaTablaPrimerNivel,sizeof(uint32_t),0)<0){
-                    log_error(cpuLogger, "CPU: No se pudo enviar rtaTablaPrimerNivel a Memoria.");
-                }
-                
-                if(send(socket_memoria,&entradaTablaSegundoNivel,sizeof(uint32_t),0)<0){
-                    log_error(cpuLogger, "CPU: No se pudo enviar entradaTablaSegundoNivel a Memoria.");
-                }
-                else{
-                    
-                    if(recv(socket_memoria,&marco,sizeof(uint32_t),MSG_WAITALL)<0){
-                        log_error(cpuLogger, "CPU: No se pudo recibir rtaTablaSegundoNivel de Memoria.");
-                    }
-                    else{
-                        //log_info(cpuLogger, "CPU: Se recibio rtaTablaSegundoNivel de Memoria.");
-                        return marco;
-                    }
-                }
-            }
-        }
-    }
-*/

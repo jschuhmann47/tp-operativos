@@ -13,7 +13,7 @@ t_marco* reemplazo_clock(t_tablaSegundoNivel* tablaSegNv, t_marco* paginaAAgrega
 
         
         if(!pagina->uso){
-            actualizar_paginas(victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
+            actualizar_paginas(&victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
             marcosAsig->puntero++;
             if(marcosAsig->puntero == limite){
                 marcosAsig->puntero = 0;
@@ -43,7 +43,7 @@ t_marco* reemplazo_clock_modificado(t_tablaSegundoNivel* tablaSegNv, t_marco* pa
         if(nroVuelta==1){
             if(!pagina->uso && pagina->modificado){
 
-                actualizar_paginas(victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
+                actualizar_paginas(&victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
 
                 marcosAsig->puntero++;
                 if(marcosAsig->puntero == limite){
