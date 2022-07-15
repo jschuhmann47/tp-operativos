@@ -23,5 +23,6 @@ void atender_peticiones_kernel(int socket_kernel);
 void recibir_handshake(int socketCPu);
 uint32_t get_siguiente_indice_primer_nivel();
 uint32_t get_siguiente_indice_segundo_nivel();
+void liberar_marcos(uint32_t indice);
 
 #endif

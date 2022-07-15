@@ -81,60 +81,64 @@ void atender_peticiones_kernel(int socket_kernel){
         if(recv(socket_kernel, &opCode, sizeof(op_code), MSG_WAITALL)){
             switch(opCode){
                 case NEWTABLE:
-                ;
-                if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
-                    uint32_t tamanioArchivo;
-                    if(recv(socket_kernel, &tamanioArchivo, sizeof(uint32_t), MSG_WAITALL)){
-                        generar_archivo(PID,tamanioArchivo);
-                        log_info(memoria_swapLogger, "Memoria: Generado archivo del PID: %i", PID);
+                    ;
+                    if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
+                        uint32_t tamanioArchivo;
+                        if(recv(socket_kernel, &tamanioArchivo, sizeof(uint32_t), MSG_WAITALL)){
+                            generar_archivo(PID,tamanioArchivo);
+                            log_info(memoria_swapLogger, "Memoria: Generado archivo del PID: %i", PID);
+                        }
+                        
                     }
-                    
-                }
-                t_tablaPrimerNivel* nuevaTablaPrimerNv = crear_tabla_primer_nivel(PID);
-                uint32_t nroTablaPrimerNv = nuevaTablaPrimerNv->nroTabla;
-                crear_lista_marcos_asignados(PID);
+                    t_tablaPrimerNivel* nuevaTablaPrimerNv = crear_tabla_primer_nivel(PID);
+                    uint32_t nroTablaPrimerNv = nuevaTablaPrimerNv->nroTabla;
+                    crear_lista_marcos_asignados(PID);
 
-                if(send(socket_kernel, &nroTablaPrimerNv, sizeof(uint32_t), 0)){
-                    log_info(memoria_swapLogger, "Memoria: Envio de numero de tabla correctamente");
-                }
+                    if(send(socket_kernel, &nroTablaPrimerNv, sizeof(uint32_t), 0)){
+                        log_info(memoria_swapLogger, "Memoria: Envio de numero de tabla correctamente");
+                    }
                 break;
                 case SUSPENSION: //que reciba solo el indice de tabla de 2do nivel
-                ;
-                void* buffer;
-                t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
-                if (recibir_tamanio_mensaje(tamanio_mensaje, socket_kernel)){
-                    buffer = malloc(tamanio_mensaje->tamanio);
-                    log_info(memoria_swapLogger, "MEMORIA: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
-                    if (recv(socket_kernel, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
-                        t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
-                        log_info(memoria_swapLogger, "MEMORIA: Recibi el PCB con ID: %i", pcb->id);
-                        suspender_proceso(pcb->tablaDePaginas, pcb->id);
-                        free(pcb);
+                    ;
+                    void* buffer;
+                    t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
+                    if (recibir_tamanio_mensaje(tamanio_mensaje, socket_kernel)){
+                        buffer = malloc(tamanio_mensaje->tamanio);
+                        log_info(memoria_swapLogger, "MEMORIA: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
+                        if (recv(socket_kernel, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
+                            t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
+                            log_info(memoria_swapLogger, "MEMORIA: Recibi el PCB con ID: %i", pcb->id);
+                            suspender_proceso(pcb->tablaDePaginas, pcb->id);
+                            free(pcb);
+                        }
                     }
-                }
                 break;
                 case FREEPCB:
-                ;
-                uint32_t pid;
-                if(recv(socket_kernel, &pid, sizeof(uint32_t), MSG_WAITALL)){
-                    log_info(memoria_swapLogger, "MEMORIA: Recibi el PID: %i", pid);
-                    //leer_de_archivo(pid,);
-                }else{
-                    log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
-                }
+                    ;
+                    uint32_t pid;
+                    if(recv(socket_kernel, &pid, sizeof(uint32_t), MSG_WAITALL)){
+                        log_info(memoria_swapLogger, "MEMORIA: Recibi el PID: %i", pid);
+                        //leer_de_archivo(pid,);
+                    }else{
+                        log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
+                    }
                 break;
                 case FREEPROCESO:
-                ;
-                uint32_t indiceParaFinalizar;
-                if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
-                    eliminar_archivo(PID);
-                }
-                if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
-                    log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a finalizar: %i", indiceParaFinalizar);
-                    liberar_marcos(indiceParaFinalizar);
-                }else{
-                    log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a finalizar");
-                }
+                    ;
+                    uint32_t indiceParaFinalizar;
+                    if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
+                        eliminar_archivo(PID);
+                    }
+                    if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
+                        log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a finalizar: %i", indiceParaFinalizar);
+                        liberar_marcos(indiceParaFinalizar);
+                    }else{
+                        log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a finalizar");
+                    }
+                break;
+                default:
+                    log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
+                break; 
             }
         }
     }
