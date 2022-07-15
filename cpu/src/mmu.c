@@ -81,7 +81,6 @@ uint32_t traducir_direccion_logica(uint32_t direccionLogica, int socket_memoria,
     uint32_t nroPagina = floor(direccionLogica/tamanioPagina);
     uint32_t indice = obtener_indice_traduccion_tlb(nroPagina);
     uint32_t marcoR;
-    uint32_t desplazamientoR;
     if(indice==-1){ //no esta en la tlb
         log_info(cpuLogger, "CPU: Fallo en la TLB, traduciendo direccion");
         marcoR = obtener_marco_de_memoria(direccionLogica, tamanioPagina, paginasPorTabla,socket_memoria,nroTablaPrimerNv);

@@ -69,7 +69,6 @@ bool cpu_decode(t_instruccion* instruccion){
 
 void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     code_instruccion codOp = instruccion->indicador;
-    uint32_t indice;
     switch (codOp)
     {
     case NO_OP:
