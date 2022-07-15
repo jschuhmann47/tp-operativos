@@ -71,7 +71,7 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
 
 int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indicePagina){
     
-    t_marcoAsignado* marcosAsig = buscar_marcos_asignados_al_proceso(tablaSegundoNivel->pid); 
+    t_marcosAsignadoPorProceso* marcosAsig = buscar_marcos_asignados_al_proceso(tablaSegundoNivel->pid); 
     int nroPagina = (tablaSegundoNivel->indice % memoria_swapCfg->PAGINAS_POR_TABLA)*memoria_swapCfg->PAGINAS_POR_TABLA+indicePagina;
     log_info(memoria_swapLogger, "Memoria :nroPagina %i - nroIndice %i",nroPagina,indicePagina);
     int marcoLibre;
@@ -85,7 +85,7 @@ int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indic
             m->marco=marcoLibre;
             m->presencia=true;
             m->uso=true;
-            list_add(marcosAsig->marcosAsignados,m);
+            agregar_a_marcos_asignados(marcosAsig,marcoLibre, tablaSegundoNivel->indice);
             return marcoLibre; 
         }else{
             marcoLibre = reemplazar_pagina(tablaSegundoNivel, marcosAsig, nroPagina);
@@ -94,28 +94,32 @@ int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indic
     }
 }
 
-int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcoAsignado* marcosAsig, int nroPagina){
+int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPorProceso* marcosAsig, int nroPagina){
     t_marco* victima = NULL;
     t_marco* nuevoMarco = malloc(sizeof(t_marco));
     nuevoMarco->presencia=true;
     nuevoMarco->uso=true;
     nuevoMarco->modificado=false;
     nuevoMarco->marco=-1;
+    int paginaVictima = -1;
     if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK")==0){
-        victima = reemplazo_clock(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina); //falta testear
+        victima = reemplazo_clock(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima); //falta testear
     }
     if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK-M")==0){
-        victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina); //falta testear
+        victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima); //falta testear
     }
-    escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, nroPagina);
+    if(victima->modificado){
+       escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, nroPagina); 
+    }
+    nuevoMarco->marco=victima->marco;
     free(victima);
     return nuevoMarco->marco;
 }
 
-t_marcoAsignado* buscar_marcos_asignados_al_proceso(uint32_t pid){
+t_marcosAsignadoPorProceso* buscar_marcos_asignados_al_proceso(uint32_t pid){
     //return list_get(marcosAsignadosPorProceso, pid-1); //el pid empezaba en 1 no? si esto funca se puede sacar pid del struct
     for (int i = 0; i < list_size(marcosAsignadosPorProceso); i++) {
-        t_marcoAsignado* marcosAsig = list_get(marcosAsignadosPorProceso, i);
+        t_marcosAsignadoPorProceso* marcosAsig = list_get(marcosAsignadosPorProceso, i);
         if(marcosAsig->pid == pid){
             return marcosAsig;
         }
@@ -141,4 +145,15 @@ void cargar_pagina_en_memoria(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t n
     void* lectura = leer_de_archivo(tablaSegundoNivel->pid, nroPagina);
     escribir_en_memoria(MEMORIA_PRINCIPAL,lectura,nroMarco,nroMarco*memoria_swapCfg->TAM_PAGINA,memoria_swapCfg->TAM_PAGINA);
     free(lectura);
+}
+
+void agregar_a_marcos_asignados(t_marcosAsignadoPorProceso* marcosAsig,int nroMarco, int indiceTablaSegNv){
+    t_marcoAsignado* mA = malloc(sizeof(t_marcoAsignado));
+    mA->marco = malloc(sizeof(t_marco));
+    mA->marco->marco=nroMarco;
+    mA->marco->presencia=true;
+    mA->marco->uso=true;
+    mA->marco->modificado=false;
+    mA->nroTablaSegundoNivel=indiceTablaSegNv;
+    list_add(marcosAsig->marcosAsignados,mA);
 }

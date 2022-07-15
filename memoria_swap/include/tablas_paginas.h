@@ -42,10 +42,15 @@ struct t_entradaPrimerNivel{
     int indiceTablaSegundoNivel;
 };
 
-typedef struct t_marcoAsignado{
+typedef struct t_marcosAsignadoPorProceso{
     uint32_t pid;
-    t_list* marcosAsignados;
+    t_list* marcosAsignados; //lista de t_marcoAsignado
     int puntero;
+}t_marcosAsignadoPorProceso;
+
+typedef struct t_marcoAsignado{
+    t_marco* marco;
+    int nroTablaSegundoNivel;
 }t_marcoAsignado;
 
 #include "algoritmos_reemplazo.h"

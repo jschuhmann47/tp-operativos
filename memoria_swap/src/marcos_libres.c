@@ -62,7 +62,7 @@ int encontrar_marco_libre(){
 }
 
 void crear_lista_marcos_asignados(uint32_t pid){
-    t_marcoAsignado* marcoAsignado = malloc(sizeof(t_marcoAsignado));
+    t_marcosAsignadoPorProceso* marcoAsignado = malloc(sizeof(t_marcosAsignadoPorProceso));
     marcoAsignado->pid = pid;
     marcoAsignado->marcosAsignados = list_create();
     marcoAsignado->puntero = 0;
