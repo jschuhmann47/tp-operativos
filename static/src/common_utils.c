@@ -459,3 +459,12 @@ void destruir_instruccion(t_instruccion* instruccion) {
     free(instruccion);
 }
 
+t_log_level determinar_nivel_de_log(char* arg){
+    if(strcmp("info",arg)==0){
+        return LOG_LEVEL_INFO;
+    }
+    if(strcmp("debug",arg)==0){
+        return LOG_LEVEL_DEBUG;
+    }
+}
+

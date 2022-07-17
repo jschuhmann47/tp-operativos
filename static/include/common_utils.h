@@ -32,6 +32,7 @@ int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,in
 
 void pcb_destroy(t_pcb *pcb);
 void destruir_instruccion(t_instruccion* instruccion);
+t_log_level determinar_nivel_de_log(char* arg);
 
 
 #endif
