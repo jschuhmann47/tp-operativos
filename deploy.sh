@@ -2,8 +2,10 @@
 CWD=$PWD
 cd ..
 mkdir utnso
+sudo chmod 777 utnso
 cd utnso
 mkdir swap
+sudo chmod 777 swap
 cd ..
 echo -e "\n\nInstalando las commons...\n\n"
 COMMONS="so-commons-library"
