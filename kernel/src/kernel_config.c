@@ -69,7 +69,7 @@ char* recibir_mensaje(int socket_cliente)
 t_list* recibir_instrucciones(int socket_cliente)
 {
     char* buffer = recibir_buffer(socket_cliente);
-    log_info(kernelLogger, "Me llego el mensaje %s", buffer);
+    log_debug(kernelLogger, "Me llego el mensaje %s", buffer);
 
     t_list* instrucciones = convertir_instruccion(buffer);
 

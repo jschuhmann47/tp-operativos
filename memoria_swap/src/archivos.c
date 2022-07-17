@@ -9,7 +9,7 @@ void generar_archivo(uint32_t pid, uint32_t tamanioArchivo)
     char* path = obtener_path_archivo(pid);
     FILE* archivo = fopen(path, "w");
     if (ftruncate(fileno(archivo),tamanioArchivo+1) != 0){
-        log_error(memoria_swapLogger,"Error al truncate");
+        log_error(memoria_swapLogger,"Error al truncar el archivo del proceso %i",pid);
         exit(-1);
     }
     fseek(archivo, 1, SEEK_END);

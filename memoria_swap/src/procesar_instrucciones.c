@@ -44,20 +44,19 @@ void procesar_instruccion(void* buffer, int socket_cpu){
     memcpy(&codOp, buffer, sizeof(code_instruccion));
     uint32_t param1;
     uint32_t param2;
-    log_info(memoria_swapLogger, "Memoria: Recibi el codigo de operacion: %i", codOp);
     uint32_t leido;
     switch (codOp)
     {
     case READ:
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
-        log_info(memoria_swapLogger, "Memoria: Recibi READ con parametro: %i", param1);
+        log_debug(memoria_swapLogger, "Memoria: Recibi READ con direccion fisica: %i", param1);
         leido = procesar_read(param1);
         send(socket_cpu, &leido, sizeof(uint32_t), 0);
         break;
     case WRITE:
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         memcpy(&param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
-        log_info(memoria_swapLogger, "Memoria: Recibi WRITE con parametros: %i, %i", param1, param2);
+        log_debug(memoria_swapLogger, "Memoria: Recibi WRITE con direccion fisica: %i, valor a escribir:%i", param1, param2);
         procesar_write(param1, param2);
         actualizar_bit_de_marco(socket_cpu, param1);
         break;
@@ -65,24 +64,23 @@ void procesar_instruccion(void* buffer, int socket_cpu){
         log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
         break;
     }
-    //devolver a cpu un ok o ver que devuelve en cada caso
 }
 
 uint32_t procesar_read(uint32_t direccionFisica){ //READ devuelve el valor leido
-    log_info(memoria_swapLogger, "Memoria: Procesando READ");
+    log_debug(memoria_swapLogger, "Memoria: Procesando READ");
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
     uint32_t* leido = leer_de_memoria(MEMORIA_PRINCIPAL, marco, desplazamiento, sizeof(uint32_t));
     marcar_marco_ocupado(marco);
-    log_info(memoria_swapLogger, "Memoria: READ terminado %i", *leido);
+    log_info(memoria_swapLogger, "Memoria: READ terminado, se leyo %i", *leido);
     return *leido;
 }
 
 void procesar_write(uint32_t direccionFisica, uint32_t valor){ //write no dice, devolver ok o error?
-    log_info(memoria_swapLogger, "Memoria: Procesando WRITE");
+    log_debug(memoria_swapLogger, "Memoria: Procesando WRITE");
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
-    log_info(memoria_swapLogger, "Memoria: Marco %i", marco);
+    log_debug(memoria_swapLogger, "Memoria: Marco %i", marco);
     escribir_en_memoria(MEMORIA_PRINCIPAL, &valor, marco, desplazamiento, sizeof(uint32_t));
     marcar_marco_ocupado(marco);
     log_info(memoria_swapLogger, "Memoria: WRITE terminado");
@@ -124,7 +122,7 @@ void suspender_proceso(uint32_t indice, uint32_t pid){
             t_marco* m = list_get(tablaSegundoNivel->marcos, j);
             if(m->presencia){
                 if(m->modificado){
-                    log_info(memoria_swapLogger, "Memoria: Escribiendo pagina %i  en SWAP del proceso %i en el marco %i", nroPagina, pid, m->marco);
+                    log_info(memoria_swapLogger, "Memoria: Escribiendo pagina %i en SWAP del proceso %i", nroPagina, pid);
                     escribir_en_archivo(pid, m->marco, nroPagina);
                 }
                 liberar_marco(m);

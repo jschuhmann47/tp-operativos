@@ -7,7 +7,7 @@ void inicializar_tabla_paginas(){
     tablasSegundoNivel = list_create();
     marcosAsignadosPorProceso = list_create();
     
-    cantTablas = memoria_swapCfg->PAGINAS_POR_TABLA; //ambas tienen el mismo tamaño
+    cantTablas = memoria_swapCfg->PAGINAS_POR_TABLA;
     log_info(memoria_swapLogger, "Inicializadas las tablas correctamente");
 }
 
@@ -33,10 +33,6 @@ t_tablaPrimerNivel* crear_tabla_primer_nivel(uint32_t pid){
     return tablaPrimerNv;
 }
 
-
-// void obtener_nro_pagina_segunda_tabla(uint32_t indice, uint32_t* nroPagina){
-//     *nroPagina = indice % tamanioSegundaTabla;
-// }
 
 uint32_t agregar_a_tabla_primer_nivel(t_tablaPrimerNivel* tablaPrimerNv, t_tablaSegundoNivel* tablaSegNv)
 {
@@ -76,9 +72,6 @@ t_marco* crear_marco(){
 }
 
 
-uint32_t size_tabla_segundo_nivel(t_tablaSegundoNivel* tablaSegundoNivel){
-    return sizeof(int)+sizeof(uint32_t)+list_size(tablaSegundoNivel->marcos)*sizeof(t_marco);
-}
 
 uint32_t obtener_indice_tabla_primer_nivel(t_tablaPrimerNivel* tabla){
     for(int i = 0; i < list_size(tablasPrimerNivel); i++){
@@ -101,9 +94,7 @@ void liberar_marcos(uint32_t indice){
             t_marco* m = list_get(tablaSegNvALiberar->marcos,j);
             liberar_marco(m);
         }
-        //list_map(tablaSegNvALiberar->marcos,liberar_marco);
     }
-    //primerNivel->indiceTablaSegundoNivel = -1;
 }
 
 void liberar_marco(t_marco* marco){

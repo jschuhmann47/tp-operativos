@@ -3,8 +3,10 @@
 int SOCKET_MEMORIA;
 
 int main(int argc, char* argv[]) {
+    char* log_level = "debug";
+    
     cpuCfg = cpu_cfg_create();
-    cpuLogger = log_create(CPU_LOG_DEST, CPU_MODULE_NAME, true, LOG_LEVEL_INFO);
+    cpuLogger = log_create(CPU_LOG_DEST, CPU_MODULE_NAME, true, determinar_nivel_de_log(log_level));
     cargar_configuracion(CPU_MODULE_NAME, cpuCfg, CPU_CFG_PATH, cpuLogger, cpu_config_initialize);
     generar_tlb(cpuCfg->ENTRADAS_TLB, cpuCfg->REEMPLAZO_TLB);
     log_info(cpuLogger, "CPU: TLB inicializada");
@@ -24,8 +26,8 @@ int main(int argc, char* argv[]) {
 
     log_info(cpuLogger, "CPU: Realizando Handshake a Memoria");
     handshake_a_memoria(SOCKET_MEMORIA, &tamanioPagina, &paginasPorTabla);
-    log_info(cpuLogger, "CPU: Recibi tamanio de pagina: %i", tamanioPagina);
-    log_info(cpuLogger, "CPU: Recibi paginas por tabla: %i", paginasPorTabla);
+    log_debug(cpuLogger, "CPU: Recibi tamanio de pagina: %i", tamanioPagina);
+    log_debug(cpuLogger, "CPU: Recibi paginas por tabla: %i", paginasPorTabla);
 
     struct sockaddr clienteDispatch;
     socklen_t lenCliD = sizeof(clienteDispatch);
@@ -70,14 +72,14 @@ void aceptar_conexiones_cpu(conexion* conexion) {
 
 
 void aceptar_conexiones_cpu_interrupcion(conexion* conexion) {
-    log_info(cpuLogger, "CPU: A la escucha de nuevas conexiones en puerto %d", conexion->socket);
+    log_info(cpuLogger, "CPU: A la escucha de nuevas conexiones en puerto interrupt %d", conexion->socket);
     for(;;) {
         cpuCfg->KERNEL_INTERRUPT = accept(conexion->socket, &(conexion->sockAddr), &(conexion->sockrAddrLen));
         if(cpuCfg->KERNEL_INTERRUPT > 0) {
             log_info(cpuLogger, "CPU: Acepto la conexión del socket: %d", cpuCfg->KERNEL_INTERRUPT);
             check_interrupt();
         } else {
-            log_error(cpuLogger, "CPU: Error al aceptar conexión: %s", strerror(errno));
+            log_error(cpuLogger, "CPU: Error al aceptar conexión interrupt: %s", strerror(errno));
         }
     }
 }
@@ -89,7 +91,7 @@ void recibir_pcb_de_kernel(int socketKernelDispatch){
         t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
         if (recibir_tamanio_mensaje(tamanio_mensaje, socketKernelDispatch)){
             buffer = malloc(tamanio_mensaje->tamanio);
-            log_info(cpuLogger, "CPU: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
+            log_debug(cpuLogger, "CPU: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
             if (recv(socketKernelDispatch, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
                 t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
                 log_info(cpuLogger, "CPU: Recibi el PCB con ID: %i", pcb->id);
@@ -106,7 +108,7 @@ void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelD
     void* buffer = serializar_pcb(pcb,&bytesPcb);
     bytes->tamanio=bytesPcb;
     if (enviar_tamanio_mensaje(bytes, socketKernelDispatch)){
-        log_info(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
+        log_debug(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
         if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
             log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
             free(buffer);
@@ -115,29 +117,29 @@ void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelD
     }
     else{
         log_error(cpuLogger, "CPU: Error al enviar PCB a Kernel");
+        exit(-1);
     }
 }
 
 void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelDispatch,uint32_t tiempoABloquearse){
-    log_info(cpuLogger, "CPU: Mando el PCB con tiempo de IO a Kernel");
+    log_info(cpuLogger, "CPU: Mandando el PCB con tiempo de IO a Kernel");
     uint32_t bytesPcb=0;
     void* buffer = serializar_pcb(pcb,&bytesPcb);
     bytes->tamanio=bytesPcb;
     if (enviar_tamanio_mensaje(bytes, socketKernelDispatch)){
-        log_info(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
+        log_debug(cpuLogger, "CPU: Envie tamaño a Kernel de proceso %i", pcb->id);
         if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
-            log_info(cpuLogger, "CPU: Mande el PCB a Kernel");
+            log_debug(cpuLogger, "CPU: Mande el PCB a Kernel");
             if(send(socketKernelDispatch, &tiempoABloquearse, sizeof(uint32_t), 0)){ 
                 log_info(cpuLogger, "CPU: Mande el tiempo de IO a Kernel. Tiempo mandado IO %i",tiempoABloquearse);
-                log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
                 free(buffer);
                 free(bytes);
                 pcb_destroy(pcb);
             }
             else{
                 log_error(cpuLogger, "CPU: Error al enviar tiempo de bloqueo a Kernel");
+                exit(-1);
             }
-            //free(pcb);-> creo que no alcanza, hay q liberar la lista de instrucciones tmb
         }
     }
     else{
@@ -153,11 +155,12 @@ void* check_interrupt(){
         if(mensaje==1){
             log_warning(cpuLogger, "CPU: Recibi una interrupcion");
             pthread_mutex_lock(&mutex_interrupciones);
-            hayInterrupcion=1; //y que se ponga en 0 en instruccion.c cuando se haga el ciclo
+            hayInterrupcion=1;
             pthread_mutex_unlock(&mutex_interrupciones);
         }
     else{
         log_error(cpuLogger, "CPU: Error al recibir una interrupcion");
+        exit(-1);
         }  
     }
     

@@ -2,12 +2,14 @@
 
 pthread_mutex_t mutexIndice,mutexIndice2doNivel;
 
-int main(int argc, char *argv[]){
+int main(int argc, char **argv){
+
+    char* log_level = "debug";
 
     pthread_mutex_init(&mutexIndice, NULL);
     pthread_mutex_init(&mutexIndice2doNivel, NULL);
 
-    memoria_swapLogger = log_create(MEMORIA_SWAP_LOG_DEST, MEMORIA_SWAP_MODULE_NAME, true, LOG_LEVEL_INFO);
+    memoria_swapLogger = log_create(MEMORIA_SWAP_LOG_DEST, MEMORIA_SWAP_MODULE_NAME, true, determinar_nivel_de_log(log_level));
     memoria_swapCfg = memoria_swap_cfg_create();
     cargar_configuracion(MEMORIA_SWAP_MODULE_NAME, memoria_swapCfg, MEMORIA_SWAP_CFG_PATH, memoria_swapLogger, memoria_swap_config_initialize);
 
@@ -15,8 +17,8 @@ int main(int argc, char *argv[]){
     inicializar_lista_marcos_libres();
     MEMORIA_PRINCIPAL = crear_espacio_de_memoria();
 
-    nextIndicePrimerNv = 0; //se inicia el indice para tabla de segundo nivel.
-    nextIndiceSegundoNv = 0; //se inicia el indice para tabla de segundo nivel.
+    nextIndicePrimerNv = 0;
+    nextIndiceSegundoNv = 0; 
     marcosPorProceso = memoria_swapCfg->MARCOS_POR_PROCESO;
     procesosSuspendidos = list_create();
     marcosAsignadosPorProceso = list_create();
@@ -56,8 +58,6 @@ int main(int argc, char *argv[]){
     } else {
         log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
     }
-    
-    //pthread_create(&atenderKernel, NULL, aceptar_conexiones_memoria, conexionCpu);
 
     pthread_join(atenderCpu, NULL);
     pthread_join(atenderKernel, NULL);
@@ -113,7 +113,7 @@ void atender_peticiones_kernel(int socket_kernel){
                         }
                     }
                 break;
-                case FREEPCB:
+                case FREEPCB: //sacar
                     ;
                     uint32_t pid;
                     if(recv(socket_kernel, &pid, sizeof(uint32_t), MSG_WAITALL)){
@@ -130,7 +130,7 @@ void atender_peticiones_kernel(int socket_kernel){
                         eliminar_archivo(PID);
                     }
                     if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
-                        log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a finalizar: %i", indiceParaFinalizar);
+                        log_info(memoria_swapLogger, "MEMORIA: Recibi el indice de tabla de primer nivel a finalizar: %i", indiceParaFinalizar);
                         liberar_marcos(indiceParaFinalizar);
                     }else{
                         log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a finalizar");

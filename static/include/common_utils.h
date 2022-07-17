@@ -28,10 +28,11 @@ t_pcb* recibir_pcb(void* buffer,uint32_t bytes);
 
 //Utilities//
 uint32_t tamanioInstruccion(code_instruccion codOp);
-int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket);
+int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket, t_log* logger);
 
 void pcb_destroy(t_pcb *pcb);
 void destruir_instruccion(t_instruccion* instruccion);
+t_log_level determinar_nivel_de_log(char* arg);
 
 
 #endif
