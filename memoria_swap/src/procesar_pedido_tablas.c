@@ -11,7 +11,7 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu){
 
     t_tablaPrimerNivel* tablaPrimerNv = list_get(tablasPrimerNivel, nroTablaPrimerNv);
 
-    log_info(memoria_swapLogger, "Memoria: Recibi nroTablaPrimerNv %i",nroTablaPrimerNv);
+    log_debug(memoria_swapLogger, "Memoria: Recibi nroTablaPrimerNv: %i",nroTablaPrimerNv);
 
     uint32_t requestPrimerTabla;
     if(recv(socket_cpu, &requestPrimerTabla, sizeof(uint32_t), MSG_WAITALL) == -1){
@@ -19,18 +19,17 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu){
         exit(-1);
     }
     
-    log_info(memoria_swapLogger, "Memoria: Llego requestPrimerTabla %i",requestPrimerTabla);
+    log_debug(memoria_swapLogger, "Memoria: Llego pedido de entrada en tabla de primer nivel: %i",requestPrimerTabla);
 
     t_entradaPrimerNivel* entrada = list_get(tablaPrimerNv->entradasPrimerNivel, requestPrimerTabla);
     uint32_t indiceSegundoNivel = entrada->indiceTablaSegundoNivel;
 
-    log_info(memoria_swapLogger, "Memoria: INDICE %i",indiceSegundoNivel);
-    int bytes;
-    if((bytes=send(socket_cpu,&indiceSegundoNivel,sizeof(uint32_t),0)) == -1){ 
+    if(send(socket_cpu,&indiceSegundoNivel,sizeof(uint32_t),0) == -1){ 
         log_error(memoria_swapLogger, "Memoria: Error al enviar indiceSegundoNivel a CPU: %s", strerror(errno));
         exit(-1);
     }
-    log_info(memoria_swapLogger, "Memoria: bytes de indice %i",bytes);
+    log_info(memoria_swapLogger, "Memoria: Enviando indice de tabla de Segundo Nivel: %i",indiceSegundoNivel);
+    
 }
 
 void procesar_entrada_tabla_segundo_nv(int socket_cpu){
@@ -41,7 +40,7 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         log_error(memoria_swapLogger, "Memoria: Error al recibir nroTabla de CPU: %s", strerror(errno));
         exit(-1);
     }
-    log_info(memoria_swapLogger, "Memoria: Procesando entrada de tabla de segundo nivel RECIBI %i",nroTabla);
+    log_debug(memoria_swapLogger, "Memoria: Recibi numero de tabla de segundo nivel %i",nroTabla);
     
     t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, nroTabla);
     
@@ -50,6 +49,7 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         log_error(memoria_swapLogger, "Memoria: Error al recibir nroPagina de CPU: %s", strerror(errno));
         exit(-1);
     }
+    log_debug(memoria_swapLogger, "Memoria: Recibi numero de pagina %i",nroPagina);
 
     t_marco* marcoEncontrado = list_get(tablaSegundoNivel->marcos, nroPagina);
     uint32_t nroMarco = marcoEncontrado->marco;
@@ -66,6 +66,7 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         log_error(memoria_swapLogger, "Memoria: Error al enviar marco a CPU: %s", strerror(errno));
         exit(-1);
     }
+    log_info(memoria_swapLogger, "Memoria: Enviando marco de numero %i",nroMarco);
 
 }
 
@@ -73,9 +74,10 @@ int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indic
     
     t_marcosAsignadoPorProceso* marcosAsig = buscar_marcos_asignados_al_proceso(tablaSegundoNivel->pid); 
     int nroPagina = (tablaSegundoNivel->indice % memoria_swapCfg->PAGINAS_POR_TABLA)*memoria_swapCfg->PAGINAS_POR_TABLA+indicePagina;
-    log_info(memoria_swapLogger, "Memoria :nroPagina %i - nroIndice %i",nroPagina,indicePagina);
+    log_debug(memoria_swapLogger, "Memoria :nroPagina %i - nroIndice %i",nroPagina,indicePagina);
     int marcoLibre;
     if(list_size(marcosAsig->marcosAsignados) == memoria_swapCfg->MARCOS_POR_PROCESO){
+        log_info(memoria_swapLogger, "Memoria: Los marcos asignados al proceso %i estan llenos, reemplazando",tablaSegundoNivel->pid);
         marcoLibre = reemplazar_pagina(tablaSegundoNivel, marcosAsig, nroPagina);
         return marcoLibre;
     }else{
@@ -88,6 +90,7 @@ int conseguir_marco_libre(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t indic
             agregar_a_marcos_asignados(marcosAsig,marcoLibre, tablaSegundoNivel->indice);
             return marcoLibre; 
         }else{
+            log_info(memoria_swapLogger, "Memoria: No hay marcos libres, reemplazando");
             marcoLibre = reemplazar_pagina(tablaSegundoNivel, marcosAsig, nroPagina);
             return marcoLibre;
         }
@@ -109,7 +112,8 @@ int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPo
         victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima); //falta testear
     }
     if(victima->modificado){
-       escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, nroPagina); 
+        log_debug(memoria_swapLogger, "Memoria: Pagina victima modificada, guardando en SWAP");
+        escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, nroPagina); 
     }
     nuevoMarco->marco=victima->marco;
     free(victima);
@@ -117,7 +121,6 @@ int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPo
 }
 
 t_marcosAsignadoPorProceso* buscar_marcos_asignados_al_proceso(uint32_t pid){
-    //return list_get(marcosAsignadosPorProceso, pid-1); //el pid empezaba en 1 no? si esto funca se puede sacar pid del struct
     for (int i = 0; i < list_size(marcosAsignadosPorProceso); i++) {
         t_marcosAsignadoPorProceso* marcosAsig = list_get(marcosAsignadosPorProceso, i);
         if(marcosAsig->pid == pid){

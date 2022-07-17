@@ -36,7 +36,7 @@ t_marco* reemplazo_clock_modificado(t_tablaSegundoNivel* tablaSegNv, t_marco* pa
     while (1){
         t_marcoAsignado* victima = NULL;
         t_marco* pagina = list_get(marcosAsig->marcosAsignados, marcosAsig->puntero);
-        log_info(memoria_swapLogger,"Puntero actual: (Clock-M), marco: %i",marcosAsig->puntero);
+        log_debug(memoria_swapLogger,"Puntero actual: (Clock-M), marco: %i",marcosAsig->puntero);
 
         if(nroVuelta==1){
             if(!pagina->uso && pagina->modificado){
@@ -104,7 +104,7 @@ int buscar_nro_pagina(t_tablaSegundoNivel* tablaSegNv, t_marco* marco){
 
 void actualizar_paginas(t_marcoAsignado** victima,t_marcosAsignadoPorProceso* marcosAsig,t_tablaSegundoNivel* tablaSegNv,t_marco* paginaAAgregar,int nroPagina,int* paginaVictima){
     t_marcoAsignado* vict = list_replace(marcosAsig->marcosAsignados, marcosAsig->puntero, paginaAAgregar); //reemplazo en la de asignados
-    log_info(memoria_swapLogger,"Victima A(Clock-M), marco: %i",vict->marco->marco);
+    log_debug(memoria_swapLogger,"Victima marco: %i",vict->marco->marco);
 
     paginaAAgregar->marco = vict->marco->marco;
     t_marco* paginaAActualizarNueva = list_get(tablaSegNv->marcos, nroPagina % memoria_swapCfg->PAGINAS_POR_TABLA); //pongo en presencia la nueva

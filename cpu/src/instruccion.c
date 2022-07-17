@@ -82,7 +82,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
         uint32_t* valor = list_get(instruccion->parametros, 1);
         log_debug(cpuLogger, "CPU: Ejecute WRITE: direccion logica: %i , valor %i", *direccionLogicaW,*valor);
-        if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),*valor,socket_memoria)>0){
+        if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),*valor,socket_memoria,cpuLogger)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
             if(send(socket_memoria,&pcb->tablaDePaginas,sizeof(uint32_t),0)<0){
                 log_error(cpuLogger, "CPU: Error al enviar nro de tabla de primer nivel a Memoria.");
@@ -99,7 +99,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         ;
         uint32_t* direccionLogicaR = list_get(instruccion->parametros, 0);
         log_debug(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
-        if(mandar_instruccion(READ,traducir_direccion_logica(*direccionLogicaR, socket_memoria,cpuLogger,pcb->tablaDePaginas),0,socket_memoria)>0){
+        if(mandar_instruccion(READ,traducir_direccion_logica(*direccionLogicaR, socket_memoria,cpuLogger,pcb->tablaDePaginas),0,socket_memoria,cpuLogger)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
             uint32_t leido;
             if(recv(socket_memoria,&leido,sizeof(uint32_t),MSG_WAITALL)<0){
@@ -126,7 +126,7 @@ void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t ope
     uint32_t* valor = list_get(instruccion->parametros, 1);
     log_debug(cpuLogger, "CPU: Ejecute COPY (ejecucion), direccion logica:%i, operando: %i ", *direccionLogicaW,operando);
 
-    if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),operando,socket_memoria)>0){
+    if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),operando,socket_memoria,cpuLogger)>0){
         if(send(socket_memoria,&pcb->tablaDePaginas,sizeof(uint32_t),0)<0){
             log_error(cpuLogger, "CPU: Error al enviar nro de tabla de primer nivel a Memoria.");
         }
@@ -144,7 +144,7 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion, t_pcb* pcb,int socket_me
     uint32_t* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
     uint32_t leido;
     log_debug(cpuLogger,"CPU: Ejecute COPY (fetch operands): %i ", *direccionMemoriaAObtener);
-    if(mandar_instruccion(READ,traducir_direccion_logica(*direccionMemoriaAObtener, socket_memoria,cpuLogger,pcb->tablaDePaginas),0,socket_memoria)){
+    if(mandar_instruccion(READ,traducir_direccion_logica(*direccionMemoriaAObtener, socket_memoria,cpuLogger,pcb->tablaDePaginas),0,socket_memoria,cpuLogger)){
         if(recv(socket_memoria,&leido,sizeof(uint32_t),MSG_WAITALL)<0){
             log_error(cpuLogger,"No se pudo recibir el valor leido por READ");
             exit(-1);

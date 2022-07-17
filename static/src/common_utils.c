@@ -321,21 +321,22 @@ t_pcb* recibir_pcb(void* buffer,uint32_t bytes)
         switch (instruccion->indicador){
             case NO_OP:
                 list_add(pcb->instrucciones, instruccion);
-                // free(param1);
-                // free(param2);
+                free(param1);
+                free(param2);
                 continue;
             case I_O:
                 memcpy(param1, buffer + offset, tmp_len = sizeof(uint32_t));
                 offset += tmp_len;
-                //printf("llego io %ld",*param1);
                 list_add(instruccion->parametros, param1);
                 list_add(pcb->instrucciones, instruccion);
+                free(param2);
                 continue;
             case READ:
                 memcpy(param1, buffer + offset, tmp_len = sizeof(uint32_t));
                 offset += tmp_len;
                 list_add(instruccion->parametros, param1);
                 list_add(pcb->instrucciones, instruccion);
+                free(param2);
                 continue;
             case WRITE:
                 memcpy(param1, buffer + offset, tmp_len = sizeof(uint32_t));
@@ -357,6 +358,8 @@ t_pcb* recibir_pcb(void* buffer,uint32_t bytes)
                 continue;
             case EXIT_I:
                 list_add(pcb->instrucciones, instruccion);
+                free(param1);
+                free(param2);
                 continue;
         }
     }
@@ -371,7 +374,6 @@ t_pcb* recibir_pcb(void* buffer,uint32_t bytes)
     offset += tmp_len;
 
     memcpy(&pcb->tablaDePaginas, buffer + offset, tmp_len = sizeof(typeof(pcb->tablaDePaginas)));
-    //offset += tmp_len;
 
     free(buffer);
 
@@ -404,21 +406,21 @@ uint32_t tamanioInstruccion(code_instruccion codOp){
 	}
 }
 
-int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket){
+int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,int socket,t_log* logger){
     if(codOp != WRITE && codOp != READ){
-        printf("\nSe envia una instruccion que no es valida\n"); //NO HAY LOGGER ACA
+        log_error(logger, "Error al mandar instruccion a memoria, codigo de operacion invalido");
         return -1;
     }
     
     op_code opCode = INSTRUCCION;
     if(send(socket,&opCode,sizeof(op_code),0)<0){
-        printf("\nError al enviar el opCode al ejecutar instruccion\n");
+        log_error(logger, "Error al mandar instruccion a memoria, no se pudo enviar el codigo de operacion");
     }
     
     uint32_t bytes = tamanioInstruccion(codOp);
 
     if(send(socket,&bytes,sizeof(uint32_t),0)<0){
-        printf("\nError al enviar el tamanio de la instruccion\n"); //NO HAY LOGGER ACA
+        log_error(logger, "Error al mandar instruccion a memoria, no se pudo enviar el tamanio de la instruccion");
         return -1;
     }
 
@@ -436,12 +438,12 @@ int mandar_instruccion(code_instruccion codOp,uint32_t param1,uint32_t param2,in
     }
 
     if(send(socket, buffer, bytes, 0)){
-        printf("\nEnviada instruccion OK\n");
+        log_info(logger, "Se mando instruccion a memoria");
         free(buffer);
         return 1;
     }
     else {
-        printf("\nFallo an enviar instruccion (not OK :( )\n");
+        log_error(logger, "Error al mandar instruccion a memoria");
         free(buffer);
         return -1;
     }

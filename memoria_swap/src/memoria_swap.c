@@ -56,8 +56,6 @@ int main(int argc, char *argv[]){
     } else {
         log_error(memoria_swapLogger, "Memoria: Error al aceptar conexión: %s", strerror(errno));
     }
-    
-    //pthread_create(&atenderKernel, NULL, aceptar_conexiones_memoria, conexionCpu);
 
     pthread_join(atenderCpu, NULL);
     pthread_join(atenderKernel, NULL);
@@ -113,7 +111,7 @@ void atender_peticiones_kernel(int socket_kernel){
                         }
                     }
                 break;
-                case FREEPCB:
+                case FREEPCB: //sacar
                     ;
                     uint32_t pid;
                     if(recv(socket_kernel, &pid, sizeof(uint32_t), MSG_WAITALL)){
@@ -130,7 +128,7 @@ void atender_peticiones_kernel(int socket_kernel){
                         eliminar_archivo(PID);
                     }
                     if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
-                        log_info(memoria_swapLogger, "MEMORIA: Recibi el indice a finalizar: %i", indiceParaFinalizar);
+                        log_info(memoria_swapLogger, "MEMORIA: Recibi el indice de tabla de primer nivel a finalizar: %i", indiceParaFinalizar);
                         liberar_marcos(indiceParaFinalizar);
                     }else{
                         log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a finalizar");
