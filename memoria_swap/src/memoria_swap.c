@@ -4,7 +4,7 @@ pthread_mutex_t mutexIndice,mutexIndice2doNivel;
 
 int main(int argc, char **argv){
 
-    char* log_level = "info";
+    char* log_level = "debug";
 
     pthread_mutex_init(&mutexIndice, NULL);
     pthread_mutex_init(&mutexIndice2doNivel, NULL);
@@ -17,8 +17,8 @@ int main(int argc, char **argv){
     inicializar_lista_marcos_libres();
     MEMORIA_PRINCIPAL = crear_espacio_de_memoria();
 
-    nextIndicePrimerNv = 0; //se inicia el indice para tabla de segundo nivel.
-    nextIndiceSegundoNv = 0; //se inicia el indice para tabla de segundo nivel.
+    nextIndicePrimerNv = 0;
+    nextIndiceSegundoNv = 0; 
     marcosPorProceso = memoria_swapCfg->MARCOS_POR_PROCESO;
     procesosSuspendidos = list_create();
     marcosAsignadosPorProceso = list_create();

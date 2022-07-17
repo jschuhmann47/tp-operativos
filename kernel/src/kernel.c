@@ -1,8 +1,10 @@
 #include "kernel.h"
 
 int main(int argc, char* argv[]) {
+    char* log_level = "debug";
+    
     kernelCfg = kernel_cfg_create();
-    kernelLogger = log_create(KERNEL_LOG_DEST, KERNEL_MODULE_NAME, true, LOG_LEVEL_INFO);
+    kernelLogger = log_create(KERNEL_LOG_DEST, KERNEL_MODULE_NAME, true, determinar_nivel_de_log(log_level));
     cargar_configuracion(KERNEL_MODULE_NAME, kernelCfg, KERNEL_CFG_PATH, kernelLogger, kernel_config_initialize);
 
     int socketEscucha = iniciar_servidor(kernelCfg->IP_KERNEL, kernelCfg->PUERTO_ESCUCHA);
