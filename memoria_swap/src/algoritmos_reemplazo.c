@@ -4,14 +4,12 @@
 
 t_marco* reemplazo_clock(t_tablaSegundoNivel* tablaSegNv, t_marco* paginaAAgregar,t_marcosAsignadoPorProceso* marcosAsig,int nroPagina,int* paginaVictima){
     int limite = list_size(marcosAsig->marcosAsignados);
-    log_info(memoria_swapLogger,"Limite (Clock), marco: %i",limite);
     
     while (1){
         t_marcoAsignado* victima = NULL;
         t_marco* pagina = list_get(marcosAsig->marcosAsignados, marcosAsig->puntero);
-        log_info(memoria_swapLogger,"Puntero actual: (Clock), marco: %i",marcosAsig->puntero);
+        log_debug(memoria_swapLogger,"Puntero actual: (Clock), marco: %i",marcosAsig->puntero);
 
-        
         if(!pagina->uso){
             actualizar_paginas(&victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
             marcosAsig->puntero++;

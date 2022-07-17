@@ -4,7 +4,6 @@ pthread_mutex_t mutex_cpu;
 
 
 void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKernelDispatch, int socket_memoria){
-    log_info(cpuLogger, "CPU: Ejecutando instruccion");
    
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
@@ -36,7 +35,6 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
             limpiar_tlb();
             uint32_t* tiempoABloquearPorIO=list_get(instruccionAEjecutar->parametros,0);
             mandar_pcb_a_kernel_con_io(pcb,bytes,socketKernelDispatch,*tiempoABloquearPorIO);
-            //free(tiempoABloquearPorIO);
             break;
         }
         if(salirPorInterrupcion){
@@ -49,10 +47,10 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
     }
 }
 
-void calcularTiempoEnMs(t_pcb* pcb,struct timespec start,struct timespec end){ //la nueva rafaga se la asigna aca
+void calcularTiempoEnMs(t_pcb* pcb,struct timespec start,struct timespec end){
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     uint32_t tiempoEnNs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
-    log_info(cpuLogger, "El tiempo en ejecucion fue de %d ms", tiempoEnNs/1000);
+    log_info(cpuLogger, "El tiempo en ejecucion fue de %i segundos", tiempoEnNs/1000000);
     pcb->dur_ultima_rafaga=tiempoEnNs/1000;
 }
 
@@ -83,8 +81,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
         ;
         uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
         uint32_t* valor = list_get(instruccion->parametros, 1);
-        log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *direccionLogicaW);
-        log_info(cpuLogger, "CPU: Ejecute WRITE: %i ", *valor);
+        log_debug(cpuLogger, "CPU: Ejecute WRITE: direccion logica: %i , valor %i", *direccionLogicaW,*valor);
         if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),*valor,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion WRITE a Memoria.");
             if(send(socket_memoria,&pcb->tablaDePaginas,sizeof(uint32_t),0)<0){
@@ -101,7 +98,7 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
     case READ:
         ;
         uint32_t* direccionLogicaR = list_get(instruccion->parametros, 0);
-        log_info(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
+        log_debug(cpuLogger, "CPU: Ejecute READ: %i ", *direccionLogicaR);
         if(mandar_instruccion(READ,traducir_direccion_logica(*direccionLogicaR, socket_memoria,cpuLogger,pcb->tablaDePaginas),0,socket_memoria)>0){
             log_info(cpuLogger, "CPU: Se mando instruccion READ a Memoria.");
             uint32_t leido;
@@ -127,10 +124,9 @@ void cpu_execute(t_instruccion* instruccion,t_pcb* pcb, int socket_memoria){
 void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t operando, int socket_memoria){
     uint32_t* direccionLogicaW = list_get(instruccion->parametros, 0);
     uint32_t* valor = list_get(instruccion->parametros, 1);
-    log_info(cpuLogger, "CPU: Ejecute COPY/WRITE: %i ", *direccionLogicaW);
-    log_info(cpuLogger, "CPU: Ejecute COPY/WRITE: %i ", *valor);
+    log_debug(cpuLogger, "CPU: Ejecute COPY (ejecucion), direccion logica:%i, operando: %i ", *direccionLogicaW,operando);
+
     if(mandar_instruccion(WRITE,traducir_direccion_logica(*direccionLogicaW, socket_memoria,cpuLogger,pcb->tablaDePaginas),operando,socket_memoria)>0){
-        log_info(cpuLogger, "CPU: Se mando instruccion COPY/WRITE a Memoria.");
         if(send(socket_memoria,&pcb->tablaDePaginas,sizeof(uint32_t),0)<0){
             log_error(cpuLogger, "CPU: Error al enviar nro de tabla de primer nivel a Memoria.");
         }
@@ -138,6 +134,7 @@ void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t ope
         if(send(socket_memoria,&entradaTablaPrimerNivel,sizeof(uint32_t),0)<0){
             log_error(cpuLogger, "CPU: Error al enviar entrada de tabla de primer nivel a Memoria.");
         }
+        log_info(cpuLogger, "CPU: Se mando instruccion COPY (ejecucion) a Memoria.");
     }else{
         log_info(cpuLogger, "CPU: No se pudo mandar instruccion COPY/WRITE a Memoria.");
     }
@@ -146,13 +143,13 @@ void cpu_execute_con_operando(t_instruccion* instruccion,t_pcb* pcb,uint32_t ope
 uint32_t cpu_fetch_operands(t_instruccion* instruccion, t_pcb* pcb,int socket_memoria){
     uint32_t* direccionMemoriaAObtener = list_get(instruccion->parametros,1); //COPY dirección_lógica_destino dirección_lógica_origen
     uint32_t leido;
-    //log_info(cpuCfg,"CPU: Ejecute COPY: %i ", *direccionMemoriaAObtener);
+    log_debug(cpuLogger,"CPU: Ejecute COPY (fetch operands): %i ", *direccionMemoriaAObtener);
     if(mandar_instruccion(READ,traducir_direccion_logica(*direccionMemoriaAObtener, socket_memoria,cpuLogger,pcb->tablaDePaginas),0,socket_memoria)){
-        log_info(cpuLogger, "CPU: Se mando instruccion COPY/READ a Memoria.");
         if(recv(socket_memoria,&leido,sizeof(uint32_t),MSG_WAITALL)<0){
             log_error(cpuLogger,"No se pudo recibir el valor leido por READ");
             exit(-1);
         }
+        log_info(cpuLogger, "CPU: Se recibio operando de COPY de Memoria.");
     }
     else{
         log_info(cpuLogger, "CPU: No se pudo mandar instruccion COPY/READ a Memoria.");
@@ -161,7 +158,7 @@ uint32_t cpu_fetch_operands(t_instruccion* instruccion, t_pcb* pcb,int socket_me
 }
 
 bool cpu_check_interrupcion(){
-    pthread_mutex_lock(&mutex_interrupciones);//este mutex comparte con cpu.c
+    pthread_mutex_lock(&mutex_interrupciones);
     if(hayInterrupcion){
         hayInterrupcion=0;
         pthread_mutex_unlock(&mutex_interrupciones);

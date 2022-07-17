@@ -35,7 +35,7 @@ int obtener_indice_traduccion_tlb(uint32_t pagina) //devuelve el indice, o -1 si
             break;
         }
         if(d->pagina == pagina){
-            printf("La direccion esta traducida en el marco %d\n", d->marco);
+            log_info(cpuLogger, "TLB: La pagina %i esta traducida",pagina);
             return i;
         }
     }
@@ -78,7 +78,7 @@ void agregar_a_tlb_en_indice(uint32_t pagina, uint32_t marco, int indice){
     }
 }
 
-void agregar_traduccion_a_tabla_tlb(uint32_t pagina, uint32_t marco){ //El algoritmo de reemplazo, que puede ser FIFO o LRU.
+void agregar_traduccion_a_tabla_tlb(uint32_t pagina, uint32_t marco){
     if(list_size(tlb->direcciones)==cpuCfg->ENTRADAS_TLB){
         if(strcmp(cpuCfg->REEMPLAZO_TLB, "LRU")==0){
             reemplazar_tlb_lru(pagina, marco);
@@ -96,16 +96,18 @@ void reemplazar_tlb_lru(uint32_t pagina, uint32_t marco){
     int indiceVictimaLru = obtener_indice_victima_lru();
     t_direccion* victima = list_remove(tlb->direcciones, indiceVictimaLru);
     agregar_a_tlb_en_indice(pagina, marco, indiceVictimaLru);
+    free(victima);
 }
 
 void reemplazar_tlb_fifo(uint32_t pagina, uint32_t marco){
     log_info(cpuLogger, "CPU: FIFO");
-    t_direccion* victima = list_remove(tlb->direcciones, indiceReemplazoFifo); //la guarde ahi, no se si se usa
+    t_direccion* victima = list_remove(tlb->direcciones, indiceReemplazoFifo);
     agregar_a_tlb_en_indice(pagina, marco, indiceReemplazoFifo);
     indiceReemplazoFifo++;
     if(indiceReemplazoFifo==cpuCfg->ENTRADAS_TLB){
         indiceReemplazoFifo=0;
     }
+    free(victima);
 }
 
 int obtener_indice_victima_lru(){

@@ -138,7 +138,6 @@ void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socket
                 log_error(cpuLogger, "CPU: Error al enviar tiempo de bloqueo a Kernel");
                 exit(-1);
             }
-            pcb_destroy(pcb);
         }
     }
     else{
@@ -154,11 +153,12 @@ void* check_interrupt(){
         if(mensaje==1){
             log_warning(cpuLogger, "CPU: Recibi una interrupcion");
             pthread_mutex_lock(&mutex_interrupciones);
-            hayInterrupcion=1; //y que se ponga en 0 en instruccion.c cuando se haga el ciclo
+            hayInterrupcion=1;
             pthread_mutex_unlock(&mutex_interrupciones);
         }
     else{
         log_error(cpuLogger, "CPU: Error al recibir una interrupcion");
+        exit(-1);
         }  
     }
     
