@@ -49,21 +49,23 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         log_error(memoria_swapLogger, "Memoria: Error al recibir nroPagina de CPU: %s", strerror(errno));
         exit(-1);
     }
-    log_debug(memoria_swapLogger, "Memoria: Recibi numero de pagina %i",nroPagina);
+    uint32_t pag = (tablaSegundoNivel->indice % memoria_swapCfg->PAGINAS_POR_TABLA)*memoria_swapCfg->PAGINAS_POR_TABLA+nroPagina;
+    log_debug(memoria_swapLogger, "Memoria: Recibi indice de pagina %i, pagina: %i",nroPagina,pag);
 
     t_marco* marcoEncontrado = list_get(tablaSegundoNivel->marcos, nroPagina);
-    log_debug(memoria_swapLogger, "Memoria: Marco encontrado: %i",marcoEncontrado->marco);
+    log_debug(memoria_swapLogger, "Memoria: Marco asignado actualmente a la pagina solicitada: %i",marcoEncontrado->marco);
 
     uint32_t nroMarco = marcoEncontrado->marco;
+
+
     if(!marcoEncontrado->presencia){
         nroMarco = conseguir_marco_libre(tablaSegundoNivel, nroPagina);
         marcar_marco_ocupado(nroMarco);
     }
-
-    if(pagina_fue_suspendida(tablaSegundoNivel->pid,nroPagina)){
-        log_debug(memoria_swapLogger, "Memoria: Cargando de swap pagina: %i",nroPagina);
-        remover_de_lista_paginas_suspendidas(tablaSegundoNivel->pid,nroPagina);
-        cargar_pagina_en_memoria(tablaSegundoNivel, nroPagina, nroMarco);
+    if(pagina_fue_suspendida(tablaSegundoNivel->pid,pag)){
+        log_debug(memoria_swapLogger, "Memoria: Cargando de swap pagina: %i",pag);
+        remover_de_lista_paginas_suspendidas(tablaSegundoNivel->pid,pag);
+        cargar_pagina_en_memoria(tablaSegundoNivel, pag, nroMarco);
     }
 
     if(send(socket_cpu,&nroMarco,sizeof(uint32_t),0) == -1){
@@ -136,7 +138,7 @@ t_marcosAsignadoPorProceso* buscar_marcos_asignados_al_proceso(uint32_t pid){
 
 void cargar_pagina_en_memoria(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t nroPagina, uint32_t nroMarco){
     void* lectura = leer_de_archivo(tablaSegundoNivel->pid, nroPagina);
-    escribir_en_memoria(MEMORIA_PRINCIPAL,lectura,nroMarco,nroMarco*memoria_swapCfg->TAM_PAGINA,memoria_swapCfg->TAM_PAGINA);
+    escribir_en_memoria(MEMORIA_PRINCIPAL,lectura,nroMarco,0,memoria_swapCfg->TAM_PAGINA);
     free(lectura);
 }
 

@@ -105,7 +105,7 @@ void remover_tabla_suspendidas(uint32_t pid){
      for (int i = 0; i < list_size(procesosSuspendidos); i++) {
         t_procesoSuspendido* procesoSusp = list_get(procesosSuspendidos, i);
         if(procesoSusp->pid == pid){
-            t_paginaSuspendida* p = procesoSusp->paginasSuspendidas;
+            t_paginaSuspendida* p = procesoSusp->paginasSuspendidas; //todo
             sem_destroy(&(p->semaforo));
             free(p);
             list_remove(procesosSuspendidos, i);

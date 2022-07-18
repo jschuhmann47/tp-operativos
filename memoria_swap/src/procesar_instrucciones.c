@@ -69,17 +69,17 @@ void procesar_instruccion(void* buffer, int socket_cpu){
     }
 }
 
-uint32_t procesar_read(uint32_t direccionFisica){ //READ devuelve el valor leido
+uint32_t procesar_read(uint32_t direccionFisica){ 
     log_debug(memoria_swapLogger, "Memoria: Procesando READ");
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
     uint32_t* leido = leer_de_memoria(MEMORIA_PRINCIPAL, marco, desplazamiento, sizeof(uint32_t));
-    marcar_marco_ocupado(marco);
+    //marcar_marco_ocupado(marco);
     log_info(memoria_swapLogger, "Memoria: READ terminado, se leyo %i", *leido);
     return *leido;
 }
 
-void procesar_write(uint32_t direccionFisica, uint32_t valor){ //write no dice, devolver ok o error?
+void procesar_write(uint32_t direccionFisica, uint32_t valor){
     log_debug(memoria_swapLogger, "Memoria: Procesando WRITE");
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;

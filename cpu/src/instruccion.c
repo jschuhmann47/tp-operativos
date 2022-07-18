@@ -50,7 +50,7 @@ void hacer_ciclo_de_instruccion(t_pcb* pcb,t_mensaje_tamanio* bytes,int socketKe
 void calcularTiempoEnMs(t_pcb* pcb,struct timespec start,struct timespec end){
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
     uint32_t tiempoEnNs = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
-    log_info(cpuLogger, "El tiempo en ejecucion fue de %i segundos", tiempoEnNs/1000000);
+    log_info(cpuLogger, "El tiempo en ejecucion fue de %i ms", tiempoEnNs/1000);
     pcb->dur_ultima_rafaga=tiempoEnNs/1000;
 }
 

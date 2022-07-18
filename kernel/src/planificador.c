@@ -270,11 +270,11 @@ void* contar_tiempo_bloqueado(t_pcb* pcb){ //usar como HILO, porque sino la va a
     sleep(kernelCfg->TIEMPO_MAXIMO_BLOQUEADO/1000);
     pthread_mutex_lock(&suspensionDePCB);
     if(pcb->status==BLOCKED){
-        enviar_suspension_de_pcb_a_memoria(pcb);
         cambiar_estado_pcb(pcb, SUSBLOCKED);
-        log_info(kernelLogger, "Mediano Plazo: Se libera una instancia de Grado de Multiprogramación");
         log_transition("Mediano Plazo", "BLOCKED", "SUSP/BLOCKED", pcb->id);
+        log_info(kernelLogger, "Mediano Plazo: Se libera una instancia de Grado de Multiprogramación");
         /* Aumenta el grado de multiprogramción al suspender a un proceso */  
+        enviar_suspension_de_pcb_a_memoria(pcb);
         sem_post(&gradoMultiprog); 
     }
     pthread_mutex_unlock(&suspensionDePCB);

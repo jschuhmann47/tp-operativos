@@ -7,7 +7,7 @@ void* crear_espacio_de_memoria()
     return malloc(memoria_swapCfg->TAM_MEMORIA);
 }
 
-void escribir_en_memoria(void* memoria, void* contenido, uint32_t marco, uint32_t desplazamiento,int size){ //valido si el marco esta libre antes de llamar a esto
+void escribir_en_memoria(void* memoria, void* contenido, uint32_t marco, uint32_t desplazamiento,int size){
     uint32_t offset = (marco * memoria_swapCfg->TAM_PAGINA) + desplazamiento;
     memcpy(memoria + offset, contenido, size);
 }

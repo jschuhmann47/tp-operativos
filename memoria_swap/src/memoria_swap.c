@@ -134,7 +134,7 @@ void atender_peticiones_kernel(int socket_kernel){
                     uint32_t indiceParaFinalizar;
                     if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
                         eliminar_archivo(PID);
-                        remover_tabla_suspendidas(PID);
+                        //remover_tabla_suspendidas(PID);
                     }
                     if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
                         log_info(memoria_swapLogger, "Memoria: Recibi el indice de tabla de primer nivel a finalizar: %i", indiceParaFinalizar);
