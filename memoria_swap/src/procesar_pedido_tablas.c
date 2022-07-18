@@ -60,8 +60,9 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         marcar_marco_ocupado(nroMarco);
     }
 
-    if(proceso_fue_suspendido(tablaSegundoNivel->pid)){
+    if(pagina_fue_suspendida(tablaSegundoNivel->pid,nroPagina)){
         cargar_pagina_en_memoria(tablaSegundoNivel, nroPagina, nroMarco);
+        remover_de_lista_paginas_suspendidas(tablaSegundoNivel->pid,nroPagina);
     }
 
     if(send(socket_cpu,&nroMarco,sizeof(uint32_t),0) == -1){
@@ -131,20 +132,6 @@ t_marcosAsignadoPorProceso* buscar_marcos_asignados_al_proceso(uint32_t pid){
     }
 }
 
-bool proceso_fue_suspendido(uint32_t pid){
-    for (int i = 0; i < list_size(procesosSuspendidos); i++) {
-        t_procesoSuspendido* procesoSusp = list_get(procesosSuspendidos, i);
-        if(procesoSusp->pid == pid){
-            if(procesoSusp->fueSuspendido){
-                procesoSusp->fueSuspendido = false;
-                return true;
-            }else{
-                return false;
-            }
-        }
-    }
-    return false;
-}
 
 void cargar_pagina_en_memoria(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t nroPagina, uint32_t nroMarco){
     void* lectura = leer_de_archivo(tablaSegundoNivel->pid, nroPagina);

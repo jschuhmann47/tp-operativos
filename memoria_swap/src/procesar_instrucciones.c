@@ -110,24 +110,5 @@ void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
     
 }
 
-void suspender_proceso(uint32_t indice, uint32_t pid){
-    log_info(memoria_swapLogger,"Memoria: Pasando a SWAP proceso de id %i",pid);
-    t_tablaPrimerNivel* tablaALiberar = list_get(tablasPrimerNivel,indice);
-    t_entradaPrimerNivel* entradaPrimerNivel;
-    for(int i=0; i<list_size(tablaALiberar->entradasPrimerNivel);i++){
-        entradaPrimerNivel=list_get(tablaALiberar->entradasPrimerNivel,i);
-        t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, entradaPrimerNivel->indiceTablaSegundoNivel);
-        for(int j=0; j<list_size(tablaSegundoNivel->marcos); j++){
-            int nroPagina = memoria_swapCfg->PAGINAS_POR_TABLA*i+j;
-            t_marco* m = list_get(tablaSegundoNivel->marcos, j);
-            if(m->presencia){
-                if(m->modificado){
-                    log_info(memoria_swapLogger, "Memoria: Escribiendo pagina %i en SWAP del proceso %i", nroPagina, pid);
-                    escribir_en_archivo(pid, m->marco, nroPagina);
-                }
-                liberar_marco(m);
-            }
-        }
-    }
-    log_info(memoria_swapLogger,"Marcos liberados para el proceso %i",pid);
-}
+
+
