@@ -109,6 +109,7 @@ void atender_peticiones_kernel(int socket_kernel){
                             t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
                             log_info(memoria_swapLogger, "MEMORIA: Recibi el PCB con ID: %i", pcb->id);
                             suspender_proceso(pcb->tablaDePaginas, pcb->id);
+                            vaciar_lista_marcos_asignados(pcb->id);
                             free(pcb);
                         }
                     }

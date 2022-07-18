@@ -12,6 +12,7 @@ bool proceso_fue_suspendido(uint32_t pid);
 void cargar_pagina_en_memoria(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t nroPagina, uint32_t nroMarco);
 int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPorProceso* marcosAsig, int nroPagina);
 void agregar_a_marcos_asignados(t_marcosAsignadoPorProceso* marcosAsig,int nroMarco, int indiceTablaSegNv);
+void vaciar_lista_marcos_asignados(uint32_t pid);
 
 
 
