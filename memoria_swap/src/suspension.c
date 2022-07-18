@@ -14,6 +14,7 @@ void suspender_proceso(uint32_t indice, uint32_t pid){
             if(m->presencia){
                 if(m->modificado){
                     log_info(memoria_swapLogger, "Memoria: Escribiendo pagina %i en SWAP del proceso %i", nroPagina, pid);
+                    log_debug(memoria_swapLogger, "Memoria: Marco a swappear %i", m->marco);
                     escribir_en_archivo(pid, m->marco, nroPagina);
                     agregar_a_lista_paginas_suspendidas(pid, nroPagina);
                 }

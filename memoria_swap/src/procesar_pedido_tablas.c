@@ -118,8 +118,8 @@ int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPo
         victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima); //falta testear
     }
     if(victima->modificado){
-        log_debug(memoria_swapLogger, "Memoria: Pagina victima modificada, guardando en SWAP");
-        escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, nroPagina); 
+        log_debug(memoria_swapLogger, "Memoria: Pagina victima %i modificada, guardando en SWAP",paginaVictima);
+        escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, paginaVictima); 
     }
     nuevoMarco->marco=victima->marco;
     free(victima);

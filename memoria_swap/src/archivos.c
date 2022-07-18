@@ -7,7 +7,7 @@ void generar_archivo(uint32_t pid, uint32_t tamanioArchivo)
 {
     pthread_mutex_lock(&accesoAArchivo);
     char* path = obtener_path_archivo(pid);
-    FILE* archivo = fopen(path, "w");
+    FILE* archivo = fopen(path, "wb");
     if (ftruncate(fileno(archivo),tamanioArchivo+1) != 0){
         log_error(memoria_swapLogger,"Error al truncar el archivo del proceso %i",pid);
         exit(-1);
@@ -39,6 +39,7 @@ void escribir_en_archivo(uint32_t pid, int nroMarco, int nroPagina)
     fclose(archivo);
     sleep(memoria_swapCfg->RETARDO_SWAP/1000);
     pthread_mutex_unlock(&accesoAArchivo);
+    free(paqueteAEscribir);
 }
 
 void* leer_de_archivo(uint32_t pid,int nroPagina){
