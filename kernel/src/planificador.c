@@ -315,12 +315,16 @@ void enviar_suspension_de_pcb_a_memoria(t_pcb* pcb) {
     
     if(send(SOCKET_MEMORIA, buffer, bytes, 0) == -1) {
         log_error(kernelLogger, "Kernel: No se pudo enviar el PCB a Memoria. Valor conexión %d", SOCKET_MEMORIA);
-        //return -1;
+        exit(-1);
     }
     log_info(kernelLogger,"Kernel: Enviada PCB para suspension a Memoria");
     free(buffer);
     free(mensaje);
-
+    uint32_t respuesta;
+    if(recv(SOCKET_MEMORIA, &respuesta, sizeof(uint32_t), 0) == -1) {
+        log_error(kernelLogger, "Kernel: No se pudo recibir el OK de Memoria. Valor conexión %d", SOCKET_MEMORIA);
+        exit(-1);
+    }
     sem_post(&suspensionConcluida); //creo que este va un poco despues
 }
 

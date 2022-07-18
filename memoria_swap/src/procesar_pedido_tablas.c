@@ -61,8 +61,9 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
     }
 
     if(pagina_fue_suspendida(tablaSegundoNivel->pid,nroPagina)){
-        cargar_pagina_en_memoria(tablaSegundoNivel, nroPagina, nroMarco);
+        log_debug(memoria_swapLogger, "Memoria: Cargando de swap pagina: %i",nroPagina);
         remover_de_lista_paginas_suspendidas(tablaSegundoNivel->pid,nroPagina);
+        cargar_pagina_en_memoria(tablaSegundoNivel, nroPagina, nroMarco);
     }
 
     if(send(socket_cpu,&nroMarco,sizeof(uint32_t),0) == -1){
