@@ -77,8 +77,9 @@ void crear_lista_paginas_suspendidas(uint32_t pid){
 
 void agregar_a_lista_paginas_suspendidas(uint32_t pid, uint32_t nroPagina){
     t_list* listaPaginasSuspendidas = buscar_lista_paginas_suspendidas(pid);
-    uint32_t* nroPaginaAgregar = malloc(sizeof(uint32_t));
-    *nroPaginaAgregar = nroPagina;
+    t_paginaSuspendida* nroPaginaAgregar = malloc(sizeof(t_paginaSuspendida));
+    nroPaginaAgregar->nroPagina = nroPagina;
+    
     list_add(listaPaginasSuspendidas, nroPaginaAgregar);
     log_debug(memoria_swapLogger,"Se agrega pagina susp pid: %i, pagina: %i",pid,nroPagina);
 }

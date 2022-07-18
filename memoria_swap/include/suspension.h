@@ -2,11 +2,17 @@
 #define SUSPENSION_H
 
 #include "memoria_swap_config.h"
+#include <semaphore.h>
 
 typedef struct t_procesoSuspendido{
     uint32_t pid;
     t_list* paginasSuspendidas;
 }t_procesoSuspendido;
+
+typedef struct t_paginaSuspendida{
+    uint32_t nroPagina;
+    sem_t semaforo;
+}t_paginaSuspendida;
 
 t_list* procesosSuspendidos;
 
