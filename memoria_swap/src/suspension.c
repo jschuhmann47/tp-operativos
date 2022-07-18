@@ -79,21 +79,38 @@ void agregar_a_lista_paginas_suspendidas(uint32_t pid, uint32_t nroPagina){
     t_list* listaPaginasSuspendidas = buscar_lista_paginas_suspendidas(pid);
     t_paginaSuspendida* nroPaginaAgregar = malloc(sizeof(t_paginaSuspendida));
     nroPaginaAgregar->nroPagina = nroPagina;
-    
+    sem_init(&(nroPaginaAgregar->semaforo), 0, 0);
+
     list_add(listaPaginasSuspendidas, nroPaginaAgregar);
     log_debug(memoria_swapLogger,"Se agrega pagina susp pid: %i, pagina: %i",pid,nroPagina);
+    sem_post(&(nroPaginaAgregar->semaforo));
 }
 
 void remover_de_lista_paginas_suspendidas(uint32_t pid, uint32_t nroPagina){
     t_list* listaPaginasSuspendidas = buscar_lista_paginas_suspendidas(pid);
-    uint32_t* nroPaginaAQuitar;
+    t_paginaSuspendida* nroPaginaAQuitar;
     for(int i=0; i<list_size(listaPaginasSuspendidas); i++){
         nroPaginaAQuitar = list_get(listaPaginasSuspendidas, i);
-        if(*nroPaginaAQuitar == nroPagina){
+        if(nroPaginaAQuitar->nroPagina == nroPagina){
+            sem_wait(&(nroPaginaAQuitar->semaforo));
             nroPaginaAQuitar = list_remove(listaPaginasSuspendidas, i);
             log_debug(memoria_swapLogger,"Se quita pagina susp pid: %i, pagina: %i",pid,nroPagina);
             break;
         }
     }
     free(nroPaginaAQuitar);
+}
+
+void remover_tabla_suspendidas(uint32_t pid){
+     for (int i = 0; i < list_size(procesosSuspendidos); i++) {
+        t_procesoSuspendido* procesoSusp = list_get(procesosSuspendidos, i);
+        if(procesoSusp->pid == pid){
+            t_paginaSuspendida* p = procesoSusp->paginasSuspendidas;
+            sem_destroy(&(p->semaforo));
+            free(p);
+            list_remove(procesosSuspendidos, i);
+            free(procesoSusp);
+            break;
+        }
+    }
 }
