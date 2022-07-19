@@ -63,7 +63,7 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         marcar_marco_ocupado(nroMarco);
     }
     if(pagina_fue_suspendida(tablaSegundoNivel->pid,pag)){
-        log_debug(memoria_swapLogger, "Memoria: Cargando de swap pagina: %i",pag);
+        log_debug(memoria_swapLogger, "Memoria: Cargando de swap pagina: %i en marco %i",pag,nroMarco);
         remover_de_lista_paginas_suspendidas(tablaSegundoNivel->pid,pag);
         cargar_pagina_en_memoria(tablaSegundoNivel, pag, nroMarco);
     }
@@ -112,14 +112,15 @@ int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPo
     nuevoMarco->marco=-1;
     int paginaVictima;
     if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK")==0){
-        victima = reemplazo_clock(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima); //falta testear
+        victima = reemplazo_clock(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima);
     }
     if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK-M")==0){
-        victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima); //falta testear
+        victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima);
     }
     if(victima->modificado){
-        log_debug(memoria_swapLogger, "Memoria: Pagina victima %i modificada, guardando en SWAP",paginaVictima);
-        escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, paginaVictima); 
+        log_debug(memoria_swapLogger, "Memoria: Pagina victima %i modificada, guardando en SWAP, marco %i",paginaVictima,victima->marco);
+        escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, paginaVictima);
+        agregar_a_lista_paginas_suspendidas(tablaSegundoNivel->pid, paginaVictima);
     }
     nuevoMarco->marco=victima->marco;
     free(victima);

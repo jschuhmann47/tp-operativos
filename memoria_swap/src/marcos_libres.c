@@ -28,6 +28,7 @@ bool marco_esta_libre(uint32_t marco){
 void marcar_marco_ocupado(uint32_t marco){
     t_marco_libre* encontrado = encontrar_marco_en_lista_libre(marco);
     if(encontrado != NULL){
+        log_debug(memoria_swapLogger, "Marcando marco %i ocupado",encontrado->nroMarco);
         encontrado->estaLibre=false;
     }
 }
@@ -35,18 +36,20 @@ void marcar_marco_ocupado(uint32_t marco){
 void marcar_marco_libre(uint32_t marco){
     t_marco_libre* encontrado = encontrar_marco_en_lista_libre(marco);
     if(encontrado != NULL){
+        log_debug(memoria_swapLogger, "Marcando marco %i libre",encontrado->nroMarco);
         encontrado->estaLibre=true;
     }
 }
 
 t_marco_libre* encontrar_marco_en_lista_libre(uint32_t marcoABuscar){
-    int cantMarcos = list_size(marcosLibres);
-    for(int i = 0; i < cantMarcos; i++){
+
+    for(int i = 0; i < list_size(marcosLibres); i++){
         t_marco_libre* marco = list_get(marcosLibres, i);
         if(marcoABuscar == marco->nroMarco){
             return marco;
         }
     }
+    log_error(memoria_swapLogger, "No se encontro el marco en la lista de libres");
     return NULL;
 }
 
