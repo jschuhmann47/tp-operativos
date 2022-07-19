@@ -100,7 +100,7 @@ void liberar_marcos(uint32_t indice){
 void liberar_marco(t_marco* marco){
     if(marco->presencia){
         marco->presencia=false;
-        marco->marco=-1;
         marcar_marco_libre(marco->marco);
+        marco->marco=-1;
     }
 }

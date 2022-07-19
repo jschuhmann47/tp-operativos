@@ -49,19 +49,23 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         log_error(memoria_swapLogger, "Memoria: Error al recibir nroPagina de CPU: %s", strerror(errno));
         exit(-1);
     }
-    log_debug(memoria_swapLogger, "Memoria: Recibi numero de pagina %i",nroPagina);
+    uint32_t pag = (tablaSegundoNivel->indice % memoria_swapCfg->PAGINAS_POR_TABLA)*memoria_swapCfg->PAGINAS_POR_TABLA+nroPagina;
+    log_debug(memoria_swapLogger, "Memoria: Recibi indice de pagina %i, pagina: %i",nroPagina,pag);
 
     t_marco* marcoEncontrado = list_get(tablaSegundoNivel->marcos, nroPagina);
-    log_debug(memoria_swapLogger, "Memoria: Marco encontrado: %i",marcoEncontrado->marco);
+    log_debug(memoria_swapLogger, "Memoria: Marco asignado actualmente a la pagina solicitada: %i",marcoEncontrado->marco);
 
     uint32_t nroMarco = marcoEncontrado->marco;
+
+
     if(!marcoEncontrado->presencia){
         nroMarco = conseguir_marco_libre(tablaSegundoNivel, nroPagina);
         marcar_marco_ocupado(nroMarco);
     }
-
-    if(proceso_fue_suspendido(tablaSegundoNivel->pid)){
-        cargar_pagina_en_memoria(tablaSegundoNivel, nroPagina, nroMarco);
+    if(pagina_fue_suspendida(tablaSegundoNivel->pid,pag)){
+        log_debug(memoria_swapLogger, "Memoria: Cargando de swap pagina: %i en marco %i",pag,nroMarco);
+        remover_de_lista_paginas_suspendidas(tablaSegundoNivel->pid,pag);
+        cargar_pagina_en_memoria(tablaSegundoNivel, pag, nroMarco);
     }
 
     if(send(socket_cpu,&nroMarco,sizeof(uint32_t),0) == -1){
@@ -108,14 +112,15 @@ int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPo
     nuevoMarco->marco=-1;
     int paginaVictima;
     if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK")==0){
-        victima = reemplazo_clock(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima); //falta testear
+        victima = reemplazo_clock(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima);
     }
     if(strcmp(memoria_swapCfg->ALGORITMO_REEMPLAZO,"CLOCK-M")==0){
-        victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima); //falta testear
+        victima = reemplazo_clock_modificado(tablaSegundoNivel,nuevoMarco,marcosAsig,nroPagina,&paginaVictima);
     }
     if(victima->modificado){
-        log_debug(memoria_swapLogger, "Memoria: Pagina victima modificada, guardando en SWAP");
-        escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, nroPagina); 
+        log_debug(memoria_swapLogger, "Memoria: Pagina victima %i modificada, guardando en SWAP, marco %i",paginaVictima,victima->marco);
+        escribir_en_archivo(tablaSegundoNivel->pid, victima->marco, paginaVictima);
+        agregar_a_lista_paginas_suspendidas(tablaSegundoNivel->pid, paginaVictima);
     }
     nuevoMarco->marco=victima->marco;
     free(victima);
@@ -131,24 +136,10 @@ t_marcosAsignadoPorProceso* buscar_marcos_asignados_al_proceso(uint32_t pid){
     }
 }
 
-bool proceso_fue_suspendido(uint32_t pid){
-    for (int i = 0; i < list_size(procesosSuspendidos); i++) {
-        t_procesoSuspendido* procesoSusp = list_get(procesosSuspendidos, i);
-        if(procesoSusp->pid == pid){
-            if(procesoSusp->fueSuspendido){
-                procesoSusp->fueSuspendido = false;
-                return true;
-            }else{
-                return false;
-            }
-        }
-    }
-    return false;
-}
 
 void cargar_pagina_en_memoria(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t nroPagina, uint32_t nroMarco){
     void* lectura = leer_de_archivo(tablaSegundoNivel->pid, nroPagina);
-    escribir_en_memoria(MEMORIA_PRINCIPAL,lectura,nroMarco,nroMarco*memoria_swapCfg->TAM_PAGINA,memoria_swapCfg->TAM_PAGINA);
+    escribir_en_memoria(MEMORIA_PRINCIPAL,lectura,nroMarco,0,memoria_swapCfg->TAM_PAGINA);
     free(lectura);
 }
 

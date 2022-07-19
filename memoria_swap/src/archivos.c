@@ -8,14 +8,24 @@ void generar_archivo(uint32_t pid, uint32_t tamanioArchivo)
     pthread_mutex_lock(&accesoAArchivo);
     char* path = obtener_path_archivo(pid);
     FILE* archivo = fopen(path, "w");
-    if (ftruncate(fileno(archivo),tamanioArchivo+1) != 0){
+    if (archivo == NULL) {
+        log_error(memoria_swapLogger, "Error al crear archivo");
+        exit(-1);
+    }
+    if (ftruncate(fileno(archivo),tamanioArchivo+sizeof(char)) != 0){
         log_error(memoria_swapLogger,"Error al truncar el archivo del proceso %i",pid);
         exit(-1);
     }
-    fseek(archivo, 1, SEEK_END);
-    fwrite("0", 1, 1, archivo);
-    fseek(archivo, 0, SEEK_SET);
-    fclose(archivo);
+    fseek(archivo, -1, SEEK_END);
+    if(fwrite("\0", sizeof(char), 1, archivo)!=sizeof(char)){
+        log_error(memoria_swapLogger, "Error al setear 0 al final del archivo");
+        exit(-1);
+    }
+    rewind(archivo);
+    if(fclose(archivo)!=0){
+        log_error(memoria_swapLogger, "Error al cerrar archivo");
+        exit(-1);
+    }
     pthread_mutex_unlock(&accesoAArchivo);
 }
 
@@ -31,25 +41,50 @@ void escribir_en_archivo(uint32_t pid, int nroMarco, int nroPagina)
 {
     char* path = obtener_path_archivo(pid);
     pthread_mutex_lock(&accesoAArchivo);
-    FILE *archivo = fopen(path, "wb");
+    FILE *archivo = fopen(path, "r+");
+    if (archivo == NULL) {
+        log_error(memoria_swapLogger, "Error al abrir archivo");
+        exit(-1);
+    }
     void* paqueteAEscribir = leer_de_memoria(MEMORIA_PRINCIPAL,nroMarco,0,memoria_swapCfg->TAM_PAGINA);
-    fseek(archivo,nroPagina*memoria_swapCfg->TAM_PAGINA,SEEK_SET);
-    fwrite(paqueteAEscribir,memoria_swapCfg->TAM_PAGINA,1,archivo);
-    fseek(archivo,0,SEEK_SET);
-    fclose(archivo);
+    if(fseek(archivo,nroPagina*memoria_swapCfg->TAM_PAGINA,SEEK_SET)!=0){
+        log_error(memoria_swapLogger, "Error al hacer seek en archivo");
+    }
+    uint32_t bytes;
+    if((bytes=fwrite(paqueteAEscribir,sizeof(char),memoria_swapCfg->TAM_PAGINA,archivo))!=memoria_swapCfg->TAM_PAGINA){
+        log_error(memoria_swapLogger, "Error al escribir archivo. deberia %i, escribe %i",memoria_swapCfg->TAM_PAGINA,bytes);
+        exit(-1);
+    }
+    rewind(archivo);
+    if(fclose(archivo)!=0){
+        log_error(memoria_swapLogger, "Error al cerrar archivo");
+        exit(-1);
+    }
     sleep(memoria_swapCfg->RETARDO_SWAP/1000);
     pthread_mutex_unlock(&accesoAArchivo);
+    free(paqueteAEscribir);
 }
 
 void* leer_de_archivo(uint32_t pid,int nroPagina){
     pthread_mutex_lock(&accesoAArchivo);
     char* path = obtener_path_archivo(pid);
-    FILE *archivo = fopen(path, "rb");
+    FILE *archivo = fopen(path, "r+");
+    if (archivo == NULL) {
+        log_error(memoria_swapLogger, "Error al abrir archivo");
+        exit(-1);
+    }
     void* lectura = malloc(memoria_swapCfg->TAM_PAGINA);
     fseek(archivo,nroPagina*memoria_swapCfg->TAM_PAGINA,SEEK_SET);
-    fread(lectura,memoria_swapCfg->TAM_PAGINA,1,archivo);
-    fseek(archivo,0,SEEK_SET);
-    fclose(archivo);
+    uint32_t bytes;
+    if((bytes=fread(lectura,sizeof(char),memoria_swapCfg->TAM_PAGINA,archivo))!=memoria_swapCfg->TAM_PAGINA){
+        log_error(memoria_swapLogger, "Error al leer archivo. deberia %i, leyo %i",memoria_swapCfg->TAM_PAGINA,bytes);
+        exit(-1);
+    }
+    rewind(archivo);
+    if(fclose(archivo)!=0){
+        log_error(memoria_swapLogger, "Error al cerrar archivo");
+        exit(-1);
+    }
     sleep(memoria_swapCfg->RETARDO_SWAP/1000);
     pthread_mutex_unlock(&accesoAArchivo);
     return lectura;
@@ -62,9 +97,4 @@ char* obtener_path_archivo(uint32_t pid){
     string_append(&path, string_itoa(pid));
     string_append(&path, ".swap");
     return path;
-}
-
-bool existe_archivo(uint32_t pid){
-    char* path = obtener_path_archivo(pid);
-    return access(path, F_OK) != -1;
 }

@@ -13,6 +13,7 @@
 
 #include "procesar_instrucciones.h"
 #include "manejo_memoria.h"
+#include "suspension.h"
 
 extern void* MEMORIA_PRINCIPAL;
 

@@ -93,6 +93,7 @@ void atender_peticiones_kernel(int socket_kernel){
                     t_tablaPrimerNivel* nuevaTablaPrimerNv = crear_tabla_primer_nivel(PID);
                     uint32_t nroTablaPrimerNv = nuevaTablaPrimerNv->nroTabla;
                     crear_lista_marcos_asignados(PID);
+                    crear_lista_paginas_suspendidas(PID);
 
                     if(send(socket_kernel, &nroTablaPrimerNv, sizeof(uint32_t), 0)){
                         log_info(memoria_swapLogger, "Memoria: Envio de numero de tabla correctamente");
@@ -104,13 +105,17 @@ void atender_peticiones_kernel(int socket_kernel){
                     t_mensaje_tamanio *tamanio_mensaje = malloc(sizeof(t_mensaje_tamanio));
                     if (recibir_tamanio_mensaje(tamanio_mensaje, socket_kernel)){
                         buffer = malloc(tamanio_mensaje->tamanio);
-                        log_info(memoria_swapLogger, "MEMORIA: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
+                        log_debug(memoria_swapLogger, "Memoria: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
                         if (recv(socket_kernel, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
                             t_pcb *pcb = recibir_pcb(buffer, tamanio_mensaje->tamanio);
-                            log_info(memoria_swapLogger, "MEMORIA: Recibi el PCB con ID: %i", pcb->id);
+                            log_info(memoria_swapLogger, "Memoria: Recibi el PCB con ID: %i", pcb->id);
                             suspender_proceso(pcb->tablaDePaginas, pcb->id);
                             vaciar_lista_marcos_asignados(pcb->id);
                             free(pcb);
+                            uint32_t ok = 1;
+                            if(send(socket_kernel,&ok,sizeof(uint32_t),0)==-1){
+                                log_error(memoria_swapLogger, "Memoria: No se pudo mandar el OK de suspension a Kernel");
+                            }
                         }
                     }
                 break;
@@ -118,10 +123,10 @@ void atender_peticiones_kernel(int socket_kernel){
                     ;
                     uint32_t pid;
                     if(recv(socket_kernel, &pid, sizeof(uint32_t), MSG_WAITALL)){
-                        log_info(memoria_swapLogger, "MEMORIA: Recibi el PID: %i", pid);
+                        //log_info(memoria_swapLogger, "Memoria: Recibi el PID: %i", pid);
                         //leer_de_archivo(pid,);
                     }else{
-                        log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a liberar");
+                        log_info(memoria_swapLogger, "Memoria: Error al recibir indice a liberar");
                     }
                 break;
                 case FREEPROCESO:
@@ -129,12 +134,13 @@ void atender_peticiones_kernel(int socket_kernel){
                     uint32_t indiceParaFinalizar;
                     if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
                         eliminar_archivo(PID);
+                        remover_tabla_suspendidas(PID);
                     }
                     if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
-                        log_info(memoria_swapLogger, "MEMORIA: Recibi el indice de tabla de primer nivel a finalizar: %i", indiceParaFinalizar);
+                        log_info(memoria_swapLogger, "Memoria: Recibi el indice de tabla de primer nivel a finalizar: %i", indiceParaFinalizar);
                         liberar_marcos(indiceParaFinalizar);
                     }else{
-                        log_info(memoria_swapLogger, "MEMORIA: Error al recibir indice a finalizar");
+                        log_error(memoria_swapLogger, "Memoria: Error al recibir indice a finalizar");
                     }
                 break;
                 default:

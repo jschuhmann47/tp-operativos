@@ -98,7 +98,7 @@ int buscar_nro_pagina(t_tablaSegundoNivel* tablaSegNv, t_marco* marco){
     for(int i = 0; i < list_size(tablaSegNv->marcos); i++){
         t_marco* pagina = list_get(tablaSegNv->marcos, i);
         log_debug(memoria_swapLogger,"Busco pagina, marco asignado: %i",pagina->marco);
-        if(pagina->marco == marco->marco && marco->presencia){
+        if(pagina->marco == marco->marco && pagina->presencia){
             
             return (tablaSegNv->indice % memoria_swapCfg->PAGINAS_POR_TABLA)*memoria_swapCfg->PAGINAS_POR_TABLA+i;
         }

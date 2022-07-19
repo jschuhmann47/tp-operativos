@@ -51,7 +51,10 @@ void procesar_instruccion(void* buffer, int socket_cpu){
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         log_debug(memoria_swapLogger, "Memoria: Recibi READ con direccion fisica: %i", param1);
         leido = procesar_read(param1);
-        send(socket_cpu, &leido, sizeof(uint32_t), 0);
+        if(send(socket_cpu, &leido, sizeof(uint32_t), 0)==-1){
+            log_error(memoria_swapLogger, "Memoria: No se pudo mandar el contenido leido");
+            exit(-1);
+        }
         break;
     case WRITE:
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
@@ -66,17 +69,17 @@ void procesar_instruccion(void* buffer, int socket_cpu){
     }
 }
 
-uint32_t procesar_read(uint32_t direccionFisica){ //READ devuelve el valor leido
+uint32_t procesar_read(uint32_t direccionFisica){ 
     log_debug(memoria_swapLogger, "Memoria: Procesando READ");
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
     uint32_t* leido = leer_de_memoria(MEMORIA_PRINCIPAL, marco, desplazamiento, sizeof(uint32_t));
-    marcar_marco_ocupado(marco);
+    //marcar_marco_ocupado(marco);
     log_info(memoria_swapLogger, "Memoria: READ terminado, se leyo %i", *leido);
     return *leido;
 }
 
-void procesar_write(uint32_t direccionFisica, uint32_t valor){ //write no dice, devolver ok o error?
+void procesar_write(uint32_t direccionFisica, uint32_t valor){
     log_debug(memoria_swapLogger, "Memoria: Procesando WRITE");
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
@@ -110,24 +113,5 @@ void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
     
 }
 
-void suspender_proceso(uint32_t indice, uint32_t pid){
-    log_info(memoria_swapLogger,"Memoria: Pasando a SWAP proceso de id %i",pid);
-    t_tablaPrimerNivel* tablaALiberar = list_get(tablasPrimerNivel,indice);
-    t_entradaPrimerNivel* entradaPrimerNivel;
-    for(int i=0; i<list_size(tablaALiberar->entradasPrimerNivel);i++){
-        entradaPrimerNivel=list_get(tablaALiberar->entradasPrimerNivel,i);
-        t_tablaSegundoNivel* tablaSegundoNivel = list_get(tablasSegundoNivel, entradaPrimerNivel->indiceTablaSegundoNivel);
-        for(int j=0; j<list_size(tablaSegundoNivel->marcos); j++){
-            int nroPagina = memoria_swapCfg->PAGINAS_POR_TABLA*i+j;
-            t_marco* m = list_get(tablaSegundoNivel->marcos, j);
-            if(m->presencia){
-                if(m->modificado){
-                    log_info(memoria_swapLogger, "Memoria: Escribiendo pagina %i en SWAP del proceso %i", nroPagina, pid);
-                    escribir_en_archivo(pid, m->marco, nroPagina);
-                }
-                liberar_marco(m);
-            }
-        }
-    }
-    log_info(memoria_swapLogger,"Marcos liberados para el proceso %i",pid);
-}
+
+
