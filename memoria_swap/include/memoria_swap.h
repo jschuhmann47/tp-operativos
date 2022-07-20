@@ -13,10 +13,10 @@
 
 t_log* memoria_swapLogger;
 t_memoria_swap_config* memoria_swapCfg;
-void* MEMORIA_PRINCIPAL;
-static uint32_t nextIndicePrimerNv;
-static uint32_t nextIndiceSegundoNv;
-static int marcosPorProceso;
+void* MEMORIA_PRINCIPAL; //Tamaño de memoria, especificado en config.
+static uint32_t nextIndicePrimerNv; //Auto incremental, para identificar tabla 1er nivel
+static uint32_t nextIndiceSegundoNv; //Auto incremental, para identificar tabla 2do nivel
+static int marcosPorProceso; //Especificado en config para la asignacion fija de marcos por proceso.
 
 int aceptar_conexion_memoria(conexion* con);
 void atender_peticiones_kernel(int socket_kernel);
