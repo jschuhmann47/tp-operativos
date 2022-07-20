@@ -6,7 +6,7 @@ t_marco* reemplazo_clock(t_tablaSegundoNivel* tablaSegNv, t_marco* paginaAAgrega
     int limite = list_size(marcosAsig->marcosAsignados);
     
     while (1){
-        t_marco* victima = malloc(sizeof(t_marco));
+        t_marco* victima = NULL;
         t_marcoAsignado* pagina = list_get(marcosAsig->marcosAsignados, marcosAsig->puntero);
         log_debug(memoria_swapLogger,"Puntero actual: (Clock): %i",marcosAsig->puntero);
 

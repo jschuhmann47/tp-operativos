@@ -204,20 +204,18 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
         uint32_t* param2=malloc(sizeof(uint32_t));
         switch (instruccion->indicador){
             case NO_OP:
-                free(param1);
-                free(param2);
                 continue;
             case I_O:
                 param1=list_get(instruccion->parametros,0);
                 memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
-                free(param2);
+                
                 continue;
             case READ:
                 param1=list_get(instruccion->parametros,0);
                 memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
-                free(param2);
+                
                 continue;
             case WRITE:
                 param1=list_get(instruccion->parametros,0);
@@ -236,11 +234,12 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
                 offset += tmp_size;
                 continue;
             case EXIT_I:
-                free(param1);
-                free(param2);
                 continue;
         }
+        free(param1);
+        free(param2);
     }
+    
     
     tmp_size = sizeof(pcb->programCounter);
     memcpy(empaquetado + offset, &(pcb->programCounter), tmp_size);

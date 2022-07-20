@@ -119,22 +119,13 @@ void atender_peticiones_kernel(int socket_kernel){
                         }
                     }
                 break;
-                // case FREEPCB: //sacar
-                //     ;
-                //     uint32_t pid;
-                //     if(recv(socket_kernel, &pid, sizeof(uint32_t), MSG_WAITALL)){
-                //         //log_info(memoria_swapLogger, "Memoria: Recibi el PID: %i", pid);
-                //         //leer_de_archivo(pid,);
-                //     }else{
-                //         log_info(memoria_swapLogger, "Memoria: Error al recibir indice a liberar");
-                //     }
-                // break;
                 case FREEPROCESO:
                     ;
                     uint32_t indiceParaFinalizar;
                     if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
                         eliminar_archivo(PID);
                         remover_tabla_suspendidas(PID);
+                        vaciar_lista_marcos_asignados(PID);
                     }
                     if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){
                         log_info(memoria_swapLogger, "Memoria: Recibi el indice de tabla de primer nivel a finalizar: %i", indiceParaFinalizar);

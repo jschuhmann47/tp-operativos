@@ -100,7 +100,7 @@ t_list* convertir_instruccion(char* buffer)
         if(string_length(buffer))
         {
             t_instruccion* instruccion = crear_instruccion();
-
+            //free's aca
             char *instruccionConPipe = string_substring(descript[i], 1, (string_length(descript[i]) - 2));
             char** pseudoInstruccion = string_split(instruccionConPipe, "|");
             char* instruccionSinPipe = pseudoInstruccion[0];
@@ -182,9 +182,12 @@ void enviar_finalizacion_consola(char *mensaje, int socket_cliente)
 
 	void *a_enviar = serializar_mensaje(buffer, bytes);
 
-	send(socket_cliente, a_enviar, bytes, 0);
+	if(send(socket_cliente, a_enviar, bytes, 0)<0){
+        log_error(kernelLogger, "Kernel: no se pudo enviar el mensaje de finalizacion a consola");
+    }
 
 	free(a_enviar);
+    free(buffer);
 }
 
 void *serializar_mensaje(t_buffer *mensaje, uint32_t bytes)

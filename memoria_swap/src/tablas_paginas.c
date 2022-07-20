@@ -79,6 +79,7 @@ uint32_t obtener_indice_tabla_primer_nivel(t_tablaPrimerNivel* tabla){
             return i;
         }
     }
+    log_error(memoria_swapLogger, "Memoria: no se pudo obtener el indice de la tabla de primer nivel");
     exit(-1);
 }
 
@@ -91,8 +92,9 @@ void liberar_marcos(uint32_t indice){
         t_entradaPrimerNivel* entradaPrimerNv = list_get(primerNivel->entradasPrimerNivel,i);
         t_tablaSegundoNivel* tablaSegNvALiberar = list_get(tablasSegundoNivel,entradaPrimerNv->indiceTablaSegundoNivel);
         for(int j = 0; j < list_size(tablaSegNvALiberar->marcos);j++){
-            t_marco* m = list_get(tablaSegNvALiberar->marcos,j);
+            t_marco* m = list_remove(tablaSegNvALiberar->marcos,j);
             liberar_marco(m);
+            free(m);
         }
     }
 }

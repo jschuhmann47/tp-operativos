@@ -98,7 +98,7 @@ void* iniciar_corto_plazo(void* _) {
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
         
-        log_debug(kernelLogger, "Corto Plazo: Mando con rafaga %f",pcbQuePasaAExec->est_rafaga_actual);
+        log_debug(kernelLogger, "Corto Plazo: Mando el proceso %i con rafaga %f",pcbQuePasaAExec->id,pcbQuePasaAExec->est_rafaga_actual);
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
         log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
@@ -131,7 +131,8 @@ void* traer_pcb_de_cpu(){
             log_debug(kernelLogger, "Kernel: Recibi el tamanio: %i", tamanio_mensaje->tamanio);
             if (recv(SOCKET_DISPATCH, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
                 pcb = recibir_pcb(buffer,tamanio_mensaje->tamanio);
-                log_info(kernelLogger, "Kernel: Recibi el PCB con ID: %i", pcb->id);
+                log_info(kernelLogger, "Kernel: Recibi el PCB de CPU con ID: %i", pcb->id);
+                log_transition("Corto Plazo", "EXEC", "Determinando", pcbQuePasaAExec->id);
             }
         }
         

@@ -27,6 +27,7 @@ void generar_archivo(uint32_t pid, uint32_t tamanioArchivo)
         exit(-1);
     }
     pthread_mutex_unlock(&accesoAArchivo);
+    free(path);
 }
 
 void eliminar_archivo(uint32_t pid)
@@ -35,6 +36,7 @@ void eliminar_archivo(uint32_t pid)
     char* path = obtener_path_archivo(pid);
     remove(path);
     pthread_mutex_unlock(&accesoAArchivo);
+    free(path);
 }
 
 void escribir_en_archivo(uint32_t pid, int nroMarco, int nroPagina)
@@ -63,6 +65,7 @@ void escribir_en_archivo(uint32_t pid, int nroMarco, int nroPagina)
     sleep(memoria_swapCfg->RETARDO_SWAP/1000);
     pthread_mutex_unlock(&accesoAArchivo);
     free(paqueteAEscribir);
+    free(path);
 }
 
 void* leer_de_archivo(uint32_t pid,int nroPagina){
@@ -87,6 +90,7 @@ void* leer_de_archivo(uint32_t pid,int nroPagina){
     }
     sleep(memoria_swapCfg->RETARDO_SWAP/1000);
     pthread_mutex_unlock(&accesoAArchivo);
+    free(path);
     return lectura;
 }
 
