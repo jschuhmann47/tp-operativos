@@ -17,7 +17,6 @@ typedef enum
     TABLADOS,
     NEWTABLE,
     SUSPENSION,
-    FREEPCB,
     FREEPROCESO
 } op_code;
 
