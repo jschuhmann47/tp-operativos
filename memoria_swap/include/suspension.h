@@ -6,7 +6,7 @@
 
 typedef struct t_procesoSuspendido{
     uint32_t pid;
-    t_list* paginasSuspendidas;
+    t_list* paginasSuspendidas; //t_list de t_paginaSuspendida, guarda las paginas asignadas al procesos suspendido.
 }t_procesoSuspendido;
 
 typedef struct t_paginaSuspendida{
@@ -14,7 +14,9 @@ typedef struct t_paginaSuspendida{
     sem_t semaforo;
 }t_paginaSuspendida;
 
-t_list* procesosSuspendidos;
+t_list* procesosSuspendidos; //t_list de t_procesoSuspendido, se encarga de guardar 
+                            //el PID y las paginas suspendidas de aquellos procesos 
+                            //suspendidos.
 
 void suspender_proceso(uint32_t indice, uint32_t pid);
 bool pagina_fue_suspendida(uint32_t pid, uint32_t nroPagina);
