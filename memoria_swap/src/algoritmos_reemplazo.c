@@ -7,11 +7,11 @@ t_marco* reemplazo_clock(t_tablaSegundoNivel* tablaSegNv, t_marco* paginaAAgrega
     
     while (1){
         t_marco* victima = NULL;
-        t_marco* pagina = list_get(marcosAsig->marcosAsignados, marcosAsig->puntero);
+        t_marcoAsignado* pagina = list_get(marcosAsig->marcosAsignados, marcosAsig->puntero);
         log_debug(memoria_swapLogger,"Puntero actual: (Clock): %i",marcosAsig->puntero);
 
-        if(!pagina->uso){
-           actualizar_paginas(&victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
+        if(!pagina->marco->uso){
+            actualizar_paginas(&victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
             log_info(memoria_swapLogger,"Victima A(Clock), marco: %i",victima->marco);
             log_info(memoria_swapLogger,"Se reemplazo una pagina (Clock), marco: %i",paginaAAgregar->marco);
             
@@ -22,7 +22,7 @@ t_marco* reemplazo_clock(t_tablaSegundoNivel* tablaSegNv, t_marco* paginaAAgrega
                
             return victima;
         }else{
-            pagina->uso = false;
+            pagina->marco->uso = false;
             marcosAsig->puntero++;
         }
 
@@ -38,11 +38,11 @@ t_marco* reemplazo_clock_modificado(t_tablaSegundoNivel* tablaSegNv, t_marco* pa
     int nroVuelta = 0;
     while (1){
         t_marco* victima = NULL;
-        t_marco* pagina = list_get(marcosAsig->marcosAsignados, marcosAsig->puntero);
+        t_marcoAsignado* pagina = list_get(marcosAsig->marcosAsignados, marcosAsig->puntero);
         log_debug(memoria_swapLogger,"Puntero actual: (Clock-M): %i",marcosAsig->puntero);
 
         if(nroVuelta==1){
-            if(!pagina->uso && pagina->modificado){
+            if(!pagina->marco->uso && pagina->marco->modificado){
 
                 actualizar_paginas(&victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
                 log_info(memoria_swapLogger,"Victima A(Clock-M), marco: %i",victima->marco);
@@ -54,7 +54,7 @@ t_marco* reemplazo_clock_modificado(t_tablaSegundoNivel* tablaSegNv, t_marco* pa
                 return victima;
             }
             else{
-                pagina->uso = false;
+                pagina->marco->uso = false;
                 contadorPasadas++;
                 marcosAsig->puntero++;
             }
@@ -64,7 +64,7 @@ t_marco* reemplazo_clock_modificado(t_tablaSegundoNivel* tablaSegNv, t_marco* pa
             }
         }
         else{
-            if(!pagina->uso && !pagina->modificado){
+            if(!pagina->marco->uso && !pagina->marco->modificado){
 
                 actualizar_paginas(&victima,marcosAsig,tablaSegNv,paginaAAgregar,nroPagina,paginaVictima);
                 log_info(memoria_swapLogger,"Victima A(Clock-M), marco: %i",victima->marco);
