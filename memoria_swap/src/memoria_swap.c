@@ -158,9 +158,13 @@ void recibir_handshake(int socketCPu)
     void* bytes = malloc(sizeof(uint32_t)*2);
     if(recv(socketCPu, &handshake, sizeof(uint32_t), MSG_WAITALL)){
         if(handshake == 1){
+            log_debug(memoria_swapLogger, "Memoria: Recibi Handshake de CPU");
             memcpy(bytes, &(memoria_swapCfg->TAM_PAGINA), sizeof(uint32_t));
             memcpy(bytes + sizeof(uint32_t), &(memoria_swapCfg->PAGINAS_POR_TABLA), sizeof(uint32_t));
-            send(socketCPu, bytes, sizeof(uint32_t)*2, 0);
+            if(send(socketCPu, bytes, sizeof(uint32_t)*2, 0)<0){
+                log_error(memoria_swapLogger, "Memoria: No se pudo enviar Handhsake a CPU");
+                exit(-1);
+            }
         }
     }
     free(bytes);
