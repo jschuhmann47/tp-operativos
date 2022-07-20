@@ -40,24 +40,6 @@ bool pagina_fue_suspendida(uint32_t pid, uint32_t nroPagina){
     return false;
 }
 
-// bool pagina_fue_suspendida(uint32_t pid, uint32_t nroPagina){
-//     for (int i = 0; i < list_size(procesosSuspendidos); i++) {
-//         t_procesoSuspendido* procesoSusp = list_get(procesosSuspendidos, i);
-//         if(procesoSusp->pid == pid){
-//             for (int j = 0; j < list_size(procesoSusp->paginasSuspendidas); j++) {
-//                 uint32_t* paginaSusp = list_get(procesoSusp->paginasSuspendidas, j);
-//                 if(*paginaSusp == nroPagina){
-//                     remover_de_lista_paginas_suspendidas(pid,nroPagina);
-//                     return true;
-//                 }
-//             }
-//             return false;
-//         }
-//     }
-//     return false;
-// }
-
-
 t_list* buscar_lista_paginas_suspendidas(uint32_t pid){
     for (int i = 0; i < list_size(procesosSuspendidos); i++) {
         t_procesoSuspendido* procesoSusp = list_get(procesosSuspendidos, i);

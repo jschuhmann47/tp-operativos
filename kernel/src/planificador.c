@@ -287,7 +287,7 @@ void* pasar_de_susready_a_ready(void* _) {
         sem_wait(&(pcbsSusReady->instanciasDisponibles));
         sem_wait(&gradoMultiprog);
         t_pcb* pcbQuePasaAReady = get_and_remove_primer_pcb_de_cola(pcbsSusReady);
-        liberar_pcb_de_memoria(pcbQuePasaAReady);
+        //liberar_pcb_de_memoria(pcbQuePasaAReady);
         cambiar_estado_pcb(pcbQuePasaAReady, READY);
         agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
 
@@ -345,7 +345,7 @@ void* iniciar_largo_plazo(void* _) {
 
         if(!list_is_empty(pcbsSusReady->lista)) {
             t_pcb* pcbQuePasaAReady = get_and_remove_primer_pcb_de_cola(pcbsSusReady);
-            liberar_pcb_de_memoria(pcbQuePasaAReady);
+            //liberar_pcb_de_memoria(pcbQuePasaAReady);
             cambiar_estado_pcb(pcbQuePasaAReady, READY);
             agregar_pcb_a_cola(pcbQuePasaAReady, pcbsReady);
             log_transition("Largo Plazo", "SUSP/READY", "READY", pcbQuePasaAReady->id);

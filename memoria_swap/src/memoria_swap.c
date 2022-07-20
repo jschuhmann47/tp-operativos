@@ -119,16 +119,16 @@ void atender_peticiones_kernel(int socket_kernel){
                         }
                     }
                 break;
-                case FREEPCB: //sacar
-                    ;
-                    uint32_t pid;
-                    if(recv(socket_kernel, &pid, sizeof(uint32_t), MSG_WAITALL)){
-                        //log_info(memoria_swapLogger, "Memoria: Recibi el PID: %i", pid);
-                        //leer_de_archivo(pid,);
-                    }else{
-                        log_info(memoria_swapLogger, "Memoria: Error al recibir indice a liberar");
-                    }
-                break;
+                // case FREEPCB: //sacar
+                //     ;
+                //     uint32_t pid;
+                //     if(recv(socket_kernel, &pid, sizeof(uint32_t), MSG_WAITALL)){
+                //         //log_info(memoria_swapLogger, "Memoria: Recibi el PID: %i", pid);
+                //         //leer_de_archivo(pid,);
+                //     }else{
+                //         log_info(memoria_swapLogger, "Memoria: Error al recibir indice a liberar");
+                //     }
+                // break;
                 case FREEPROCESO:
                     ;
                     uint32_t indiceParaFinalizar;

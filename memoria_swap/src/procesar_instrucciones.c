@@ -102,10 +102,12 @@ void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
     t_tablaPrimerNivel* tUno = list_get(tablasPrimerNivel, nroTablaPrimerNv);
     t_entradaPrimerNivel* eUno = list_get(tUno->entradasPrimerNivel, entradaTablaPrimerNv);
     t_tablaSegundoNivel* tabla = list_get(tablasSegundoNivel, eUno->indiceTablaSegundoNivel);
+    
     for(int i = 0; i < list_size(tabla->marcos); i++){
         t_marco* entradaMarco = list_get(tabla->marcos, i);
         if(entradaMarco->marco == marco && entradaMarco->presencia){
-            log_info(memoria_swapLogger, "Memoria: Actualizando bit de modificado de marco %i", marco);
+            int nroPagina = (eUno->indiceTablaSegundoNivel % memoria_swapCfg->PAGINAS_POR_TABLA)*memoria_swapCfg->PAGINAS_POR_TABLA+i;
+            log_info(memoria_swapLogger, "Memoria: Actualizando bit de modificado de pagina %i", nroPagina);
             entradaMarco->modificado = true;
             break;
         }
