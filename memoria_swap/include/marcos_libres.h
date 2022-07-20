@@ -11,7 +11,7 @@ typedef struct
 } t_marco_libre;
 
 
-t_list* marcosLibres;
+t_list* marcosLibres; //t_list de t_marco_libre
 
 void inicializar_lista_marcos_libres();
 void crear_marco_libre(uint32_t nroMarco);
