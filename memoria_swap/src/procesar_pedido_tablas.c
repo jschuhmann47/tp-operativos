@@ -134,6 +134,8 @@ t_marcosAsignadoPorProceso* buscar_marcos_asignados_al_proceso(uint32_t pid){
             return marcosAsig;
         }
     }
+    log_error(memoria_swapLogger, "Memoria: Error al encontrar marcos asignados al proceso %i",pid);
+    exit(-1);
 }
 
 
@@ -158,5 +160,10 @@ void agregar_a_marcos_asignados(t_marcosAsignadoPorProceso* marcosAsig,int nroMa
 
 void vaciar_lista_marcos_asignados(uint32_t pid){
     t_marcosAsignadoPorProceso* marcosAsig = buscar_marcos_asignados_al_proceso(pid);
-    list_clean(marcosAsig->marcosAsignados);
+    list_clean_and_destroy_elements(marcosAsig->marcosAsignados,free_marco_asignado);
+}
+
+void free_marco_asignado(t_marcoAsignado* mA){
+    free(mA->marco);
+    free(mA);
 }

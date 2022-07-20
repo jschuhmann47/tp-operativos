@@ -22,5 +22,6 @@ t_list* buscar_lista_paginas_suspendidas(uint32_t pid);
 void crear_lista_paginas_suspendidas(uint32_t pid);
 void agregar_a_lista_paginas_suspendidas(uint32_t pid, uint32_t nroPagina);
 void remover_de_lista_paginas_suspendidas(uint32_t pid, uint32_t nroPagina);
+void remover_tabla_suspendidas(uint32_t pid);
 
 #endif
