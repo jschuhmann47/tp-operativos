@@ -418,20 +418,20 @@ void solicitar_nueva_tabla_memoria(t_pcb* pcb)
     }
 }
 
-void liberar_pcb_de_memoria(t_pcb* pcb){
-    op_code opCode = FREEPCB;
+// void liberar_pcb_de_memoria(t_pcb* pcb){
+//     op_code opCode = FREEPCB;
 
-    if(send(SOCKET_MEMORIA, &opCode, sizeof(op_code), 0)<0){
-        log_error(kernelLogger, "Largo Plazo: Error al enviar el codigo de operacion");
-    }
+//     if(send(SOCKET_MEMORIA, &opCode, sizeof(op_code), 0)<0){
+//         log_error(kernelLogger, "Largo Plazo: Error al enviar el codigo de operacion");
+//     }
 
-    uint32_t pid = pcb->id;
-    if(send(SOCKET_MEMORIA, &pid, sizeof(uint32_t), 0)<0){
-        log_error(kernelLogger, "Largo Plazo: Error al enviar el PID");
-    }
-    //log_info(kernelLogger, "Largo Plazo: Enviado el proceso de ID %i para su liberacion de Memoria ",pcb->id);
+//     uint32_t pid = pcb->id;
+//     if(send(SOCKET_MEMORIA, &pid, sizeof(uint32_t), 0)<0){
+//         log_error(kernelLogger, "Largo Plazo: Error al enviar el PID");
+//     }
+//     //log_info(kernelLogger, "Largo Plazo: Enviado el proceso de ID %i para su liberacion de Memoria ",pcb->id);
 
-}
+// }
 
 void finalizar_proceso_en_memoria(t_pcb* pcb)
 {
