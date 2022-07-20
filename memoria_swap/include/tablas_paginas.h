@@ -11,7 +11,7 @@
 #include "archivos.h"
 
 t_list* tablasPrimerNivel; //lista de t_tablaPrimerNivel
-t_list* tablasSegundoNivel; 
+t_list* tablasSegundoNivel; //lista de t_tablaSegundoNivel
 
 t_list* marcosAsignadosPorProceso; //lista de t_marcosAsignadosPorProceso
 
@@ -26,7 +26,6 @@ typedef struct t_tablaSegundoNivel t_tablaSegundoNivel;
 struct t_tablaSegundoNivel{
     int indice;
     t_list* marcos; //lista de t_marco
-    //uint32_t puntero;
     uint32_t pid;
 };
 
@@ -42,10 +41,10 @@ struct t_entradaPrimerNivel{
     int indiceTablaSegundoNivel;
 };
 
-typedef struct t_marcosAsignadoPorProceso{
+typedef struct t_marcosAsignadoPorProceso{ //Especifica que marcos estan asignados al proceso en cuestion
     uint32_t pid;
     t_list* marcosAsignados; //lista de t_marcoAsignado
-    int puntero;
+    int puntero; //puntero para realizar reemplazo por clock y clock-m
 }t_marcosAsignadoPorProceso;
 
 typedef struct t_marcoAsignado{
