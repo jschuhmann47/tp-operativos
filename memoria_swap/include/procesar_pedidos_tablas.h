@@ -11,6 +11,7 @@ void cargar_pagina_en_memoria(t_tablaSegundoNivel* tablaSegundoNivel, uint32_t n
 int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPorProceso* marcosAsig, int nroPagina);
 void agregar_a_marcos_asignados(t_marcosAsignadoPorProceso* marcosAsig,int nroMarco, int indiceTablaSegNv);
 void vaciar_lista_marcos_asignados(uint32_t pid);
+void free_marco_asignado(t_marcoAsignado* mA);
 
 
 
