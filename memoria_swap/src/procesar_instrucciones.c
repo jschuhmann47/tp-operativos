@@ -55,13 +55,14 @@ void procesar_instruccion(void* buffer, int socket_cpu){
             log_error(memoria_swapLogger, "Memoria: No se pudo mandar el contenido leido");
             exit(-1);
         }
+        actualizar_bit_de_marco(socket_cpu, param1,READ); //CPU
         break;
     case WRITE:
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         memcpy(&param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
         log_debug(memoria_swapLogger, "Memoria: Recibi WRITE con direccion fisica: %i, valor a escribir:%i", param1, param2);
         procesar_write(param1, param2);
-        actualizar_bit_de_marco(socket_cpu, param1);
+        actualizar_bit_de_marco(socket_cpu, param1,WRITE);
         break;
     default:
         log_error(memoria_swapLogger, "Memoria: Error al leer el codigo de operacion");
@@ -90,7 +91,7 @@ void procesar_write(uint32_t direccionFisica, uint32_t valor){
     log_info(memoria_swapLogger, "Memoria: WRITE terminado");
 }
 
-void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
+void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica, op_code codOp){
     uint32_t desplazamiento = direccionFisica % memoria_swapCfg->TAM_PAGINA;
     uint32_t marco = (direccionFisica - desplazamiento) / memoria_swapCfg->TAM_PAGINA;
     uint32_t nroTablaPrimerNv, entradaTablaPrimerNv;
@@ -108,8 +109,12 @@ void actualizar_bit_de_marco(int socket_cpu, uint32_t direccionFisica){
         t_marco* entradaMarco = list_get(tabla->marcos, i);
         if(entradaMarco->marco == marco && entradaMarco->presencia){
             int nroPagina = (eUno->indiceTablaSegundoNivel % memoria_swapCfg->PAGINAS_POR_TABLA)*memoria_swapCfg->PAGINAS_POR_TABLA+i;
-            log_info(memoria_swapLogger, "Memoria: Actualizando bit de modificado de pagina %i", nroPagina);
-            entradaMarco->modificado = true;
+            log_info(memoria_swapLogger, "Memoria: Actualizando bit de uso de pagina %i", nroPagina);
+            entradaMarco->uso = true;
+            if(codOp == WRITE){
+                log_info(memoria_swapLogger, "Memoria: Actualizando bit de modificado de pagina %i", nroPagina);
+                entradaMarco->modificado = true;
+            }
             break;
         }
     }

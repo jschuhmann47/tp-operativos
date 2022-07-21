@@ -91,12 +91,14 @@ void liberar_marcos(uint32_t indice){
     for(int i = 0; i < list_size(primerNivel->entradasPrimerNivel); i++){
         t_entradaPrimerNivel* entradaPrimerNv = list_get(primerNivel->entradasPrimerNivel,i);
         t_tablaSegundoNivel* tablaSegNvALiberar = list_get(tablasSegundoNivel,entradaPrimerNv->indiceTablaSegundoNivel);
-        for(int j = 0; j < list_size(tablaSegNvALiberar->marcos);j++){
-            t_marco* m = list_remove(tablaSegNvALiberar->marcos,j);
-            liberar_marco(m);
-            free(m);
-        }
+        list_destroy_and_destroy_elements(tablaSegNvALiberar->marcos,free_lista_marco);
     }
+}
+
+void free_lista_marco(t_marco* m){
+    
+    liberar_marco(m);
+    free(m);
 }
 
 void liberar_marco(t_marco* marco){

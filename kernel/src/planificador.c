@@ -99,6 +99,9 @@ void* iniciar_corto_plazo(void* _) {
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
         
         log_debug(kernelLogger, "Corto Plazo: Mando el proceso %i con rafaga %f",pcbQuePasaAExec->id,pcbQuePasaAExec->rafaga_instante_actual);
+        log_debug(kernelLogger, "est rafaga %f",pcbQuePasaAExec->id,pcbQuePasaAExec->est_rafaga_actual);
+        log_debug(kernelLogger, "dur ultima rafaga %f",pcbQuePasaAExec->id,pcbQuePasaAExec->dur_ultima_rafaga);
+        log_debug(kernelLogger, "acum rafaga %f",pcbQuePasaAExec->id,pcbQuePasaAExec->acum_rafaga);
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
         log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
@@ -466,6 +469,7 @@ t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel
     self->est_rafaga_actual = kernelCfg->ESTIMACION_INICIAL;
     self->dur_ultima_rafaga = kernelCfg->ESTIMACION_INICIAL;
     self->rafaga_instante_actual = kernelCfg->ESTIMACION_INICIAL;
+    self->acum_rafaga = 0;
     return self;
 }
 

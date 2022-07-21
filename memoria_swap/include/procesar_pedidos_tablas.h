@@ -12,6 +12,7 @@ int reemplazar_pagina(t_tablaSegundoNivel* tablaSegundoNivel, t_marcosAsignadoPo
 void agregar_a_marcos_asignados(t_marcosAsignadoPorProceso* marcosAsig,int nroMarco, int indiceTablaSegNv);
 void vaciar_lista_marcos_asignados(uint32_t pid);
 void free_marco_asignado(t_marcoAsignado* mA);
+void liberar_marcos_asignados(uint32_t pid);
 
 
 

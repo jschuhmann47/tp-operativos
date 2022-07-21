@@ -167,3 +167,11 @@ void free_marco_asignado(t_marcoAsignado* mA){
     free(mA->marco);
     free(mA);
 }
+
+void liberar_marcos_asignados(uint32_t pid){
+    t_marcosAsignadoPorProceso* marcosAsig = buscar_marcos_asignados_al_proceso(pid);
+    for(int i=0;i<list_size(marcosAsig->marcosAsignados);i++){
+        t_marco* m = list_get(marcosAsig->marcosAsignados,i);
+        liberar_marco(m);
+    }
+}

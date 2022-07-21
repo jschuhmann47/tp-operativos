@@ -49,7 +49,7 @@ t_marco_libre* encontrar_marco_en_lista_libre(uint32_t marcoABuscar){
             return marco;
         }
     }
-    log_error(memoria_swapLogger, "No se encontro el marco en la lista de libres");
+    log_error(memoria_swapLogger, "No se encontro el marco %i en la lista de libres",marcoABuscar);
     return NULL;
 }
 

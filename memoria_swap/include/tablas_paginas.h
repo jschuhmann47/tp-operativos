@@ -63,6 +63,8 @@ bool lugar_libre(t_entradaPrimerNivel* filaPrimerNivel);
 t_marco* crear_marco();
 void liberar_marco(t_marco* marco);
 void liberar_marcos(uint32_t indice);
+void free_lista_marco(t_marco* m);
+
 uint32_t get_siguiente_indice_segundo_nivel();
 uint32_t get_siguiente_indice_primer_nivel();
 
