@@ -98,7 +98,7 @@ void* iniciar_corto_plazo(void* _) {
         cambiar_estado_pcb(pcbQuePasaAExec, EXEC);
         agregar_pcb_a_cola(pcbQuePasaAExec, pcbsExec);
         
-        log_debug(kernelLogger, "Corto Plazo: Mando el proceso %i con rafaga %f",pcbQuePasaAExec->id,pcbQuePasaAExec->est_rafaga_actual);
+        log_debug(kernelLogger, "Corto Plazo: Mando el proceso %i con rafaga %f",pcbQuePasaAExec->id,pcbQuePasaAExec->rafaga_instante_actual);
 
         mandar_pcb_a_cpu(pcbQuePasaAExec);
         log_transition("Corto Plazo", "READY", "EXEC", pcbQuePasaAExec->id);
@@ -650,8 +650,9 @@ void calcular_nueva_estimacion_actual(t_pcb* pcb, op_code codOp){
             pcb->rafaga_instante_actual -= pcb->dur_ultima_rafaga;
         }
         else{
-            pcb->est_rafaga_actual = media_exponencial(pcb->dur_ultima_rafaga, pcb->est_rafaga_actual);
+            pcb->est_rafaga_actual = media_exponencial(pcb->acum_rafaga, pcb->est_rafaga_actual);
             pcb->rafaga_instante_actual = pcb->est_rafaga_actual;
+            pcb->acum_rafaga = 0;
         }
     }
     

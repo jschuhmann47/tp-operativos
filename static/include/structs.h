@@ -61,6 +61,7 @@ struct t_pcb
     double est_rafaga_actual; // Esta en Milisegundos
     double dur_ultima_rafaga;
     double rafaga_instante_actual;
+    double acum_rafaga;
     //void (*algoritmo_siguiente_estim)(t_pcb *self, time_t tiempoFinal, time_t tiempoInicial);
 };
 
