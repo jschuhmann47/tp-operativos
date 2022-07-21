@@ -4,12 +4,14 @@ pthread_mutex_t mutexIndice,mutexIndice2doNivel;
 
 int main(int argc, char **argv){
 
-    //char* log_level = "debug";
-
+    if(argc<2){
+        return EXIT_FAILURE;
+    }
     pthread_mutex_init(&mutexIndice, NULL);
     pthread_mutex_init(&mutexIndice2doNivel, NULL);
 
     memoria_swapLogger = log_create(MEMORIA_SWAP_LOG_DEST, MEMORIA_SWAP_MODULE_NAME, true, determinar_nivel_de_log(argv[1]));
+    log_debug(memoria_swapLogger,"Log level: %s",argv[1]);
     memoria_swapCfg = memoria_swap_cfg_create();
     cargar_configuracion(MEMORIA_SWAP_MODULE_NAME, memoria_swapCfg, MEMORIA_SWAP_CFG_PATH, memoria_swapLogger, memoria_swap_config_initialize);
 
