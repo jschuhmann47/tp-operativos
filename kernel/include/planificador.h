@@ -75,7 +75,7 @@ t_pcb* elegir_en_base_a_fifo(t_cola_planificacion* colaPlanificacion);
 t_pcb* srt_pcb_menor_estimacion_entre(t_pcb* unPcb, t_pcb* otroPcb);
 t_pcb* elegir_en_base_a_srt(t_cola_planificacion* colaPlanificacion);
 double media_exponencial(double realAnterior, double estAnterior);
-void calcular_nueva_estimacion_actual(t_pcb* pcb);
+void calcular_nueva_estimacion_actual(t_pcb* pcb, op_code codOp);
 
 //Conexiones
 void agregar_lista_sockets(uint32_t id, int socket);

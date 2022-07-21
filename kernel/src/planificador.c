@@ -132,7 +132,7 @@ void* traer_pcb_de_cpu(){
             if (recv(SOCKET_DISPATCH, buffer, tamanio_mensaje->tamanio, MSG_WAITALL)) {
                 pcb = recibir_pcb(buffer,tamanio_mensaje->tamanio);
                 log_info(kernelLogger, "Kernel: Recibi el PCB de CPU con ID: %i", pcb->id);
-                log_transition("Corto Plazo", "EXEC", "Determinando", pcbQuePasaAExec->id);
+                log_transition("Corto Plazo", "EXEC", "Determinando...", pcb->id);
             }
         }
         
@@ -153,7 +153,7 @@ void* traer_pcb_de_cpu(){
         pthread_mutex_unlock(&recibirPCB);    
         remover_pcb_de_cola(pcb, pcbsExec);
         
-        calcular_nueva_estimacion_actual(pcb);
+        calcular_nueva_estimacion_actual(pcb,ultimaInstruccion->indicador);
 
         pthread_t determinarCola;
         pthread_create(&determinarCola, NULL, determinar_cola, tiempoIo);
@@ -465,6 +465,7 @@ t_pcb* pcb_create(uint32_t id, uint32_t tamanio, t_list* instrucciones, t_kernel
     self->tablaDePaginas = 0;
     self->est_rafaga_actual = kernelCfg->ESTIMACION_INICIAL;
     self->dur_ultima_rafaga = kernelCfg->ESTIMACION_INICIAL;
+    self->rafaga_instante_actual = kernelCfg->ESTIMACION_INICIAL;
     return self;
 }
 
@@ -620,7 +621,7 @@ t_pcb* elegir_en_base_a_fifo(t_cola_planificacion* colaPlanificacion) {
 /*---------------------------------------------- SRT ----------------------------------------------*/
 
 t_pcb* srt_pcb_menor_estimacion_entre(t_pcb* unPcb, t_pcb* otroPcb) {
-    return unPcb->est_rafaga_actual <= otroPcb->est_rafaga_actual ? unPcb : otroPcb;
+    return unPcb->rafaga_instante_actual <= otroPcb->rafaga_instante_actual ? unPcb : otroPcb;
 }
 
 t_pcb* elegir_en_base_a_srt(t_cola_planificacion* colaPlanificacion) {
@@ -643,8 +644,17 @@ double media_exponencial(double realAnterior, double estAnterior) {
 }
 
 
-void calcular_nueva_estimacion_actual(t_pcb* pcb){
-    pcb->est_rafaga_actual = media_exponencial(pcb->dur_ultima_rafaga, pcb->est_rafaga_actual);
+void calcular_nueva_estimacion_actual(t_pcb* pcb, op_code codOp){
+    if(codOp != EXIT){
+        if(codOp != I_O){
+            pcb->rafaga_instante_actual -= pcb->dur_ultima_rafaga;
+        }
+        else{
+            pcb->est_rafaga_actual = media_exponencial(pcb->dur_ultima_rafaga, pcb->est_rafaga_actual);
+            pcb->rafaga_instante_actual = pcb->est_rafaga_actual;
+        }
+    }
+    
 }
 
 

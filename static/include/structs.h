@@ -57,9 +57,10 @@ struct t_pcb
     t_list *instrucciones;
     uint32_t programCounter;
     uint32_t tablaDePaginas;
-    // Estos dos ultimos solo se usan cuando es SRT
+    // Estos tres ultimos solo se usan cuando es SRT
     double est_rafaga_actual; // Esta en Milisegundos
     double dur_ultima_rafaga;
+    double rafaga_instante_actual;
     //void (*algoritmo_siguiente_estim)(t_pcb *self, time_t tiempoFinal, time_t tiempoInicial);
 };
 
