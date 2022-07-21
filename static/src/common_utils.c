@@ -170,6 +170,8 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
                                 sizeof(typeof(pcb->programCounter)) +//PC
                                 sizeof(typeof(pcb->est_rafaga_actual))+
                                 sizeof(typeof(pcb->dur_ultima_rafaga))+ //rafaga
+                                sizeof(typeof(pcb->rafaga_instante_actual))+
+                                sizeof(typeof(pcb->acum_rafaga))+
                                 sizeof(typeof(pcb->tablaDePaginas)));//cantidadPaginas
 
     uint32_t offset = 0, tmp_size = 0;
@@ -251,6 +253,14 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
 
     tmp_size = sizeof(pcb->dur_ultima_rafaga);
     memcpy(empaquetado + offset, &(pcb->dur_ultima_rafaga), tmp_size);
+    offset += tmp_size;
+
+    tmp_size = sizeof(pcb->rafaga_instante_actual);
+    memcpy(empaquetado + offset, &(pcb->rafaga_instante_actual), tmp_size);
+    offset += tmp_size;
+
+    tmp_size = sizeof(pcb->acum_rafaga);
+    memcpy(empaquetado + offset, &(pcb->acum_rafaga), tmp_size);
     offset += tmp_size;
 
     tmp_size = sizeof(pcb->tablaDePaginas);
@@ -370,6 +380,12 @@ t_pcb* recibir_pcb(void* buffer,uint32_t bytes)
     offset += tmp_len;
 
     memcpy(&pcb->dur_ultima_rafaga, buffer + offset, tmp_len = sizeof(typeof(pcb->dur_ultima_rafaga)));
+    offset += tmp_len;
+
+    memcpy(&pcb->rafaga_instante_actual, buffer + offset, tmp_len = sizeof(typeof(pcb->rafaga_instante_actual)));
+    offset += tmp_len;
+
+    memcpy(&pcb->acum_rafaga, buffer + offset, tmp_len = sizeof(typeof(pcb->acum_rafaga)));
     offset += tmp_len;
 
     memcpy(&pcb->tablaDePaginas, buffer + offset, tmp_len = sizeof(typeof(pcb->tablaDePaginas)));
