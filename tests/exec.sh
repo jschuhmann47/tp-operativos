@@ -1,4 +1,8 @@
 #!/bin/bash
-path="$1"
-tamanio="$2"
-../consola/bin/consola.out $path $tamanio
+PATH="$1"
+TAMANIO="$2"
+TESTSDIR=$PWD
+cd ..
+cd consola
+./bin/consola.out $TESTSDIR/$PATH $TAMANIO
+cd $PWD
