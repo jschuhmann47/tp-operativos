@@ -51,6 +51,9 @@ void procesar_instruccion(void* buffer, int socket_cpu){
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         log_debug(memoria_swapLogger, "Memoria: Recibi READ con direccion fisica: %i", param1);
         leido = procesar_read(param1);
+
+        sleep(memoria_swapCfg->RETARDO_MEMORIA/1000);
+
         if(send(socket_cpu, &leido, sizeof(uint32_t), 0)==-1){
             log_error(memoria_swapLogger, "Memoria: No se pudo mandar el contenido leido");
             exit(-1);
@@ -61,6 +64,9 @@ void procesar_instruccion(void* buffer, int socket_cpu){
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         memcpy(&param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
         log_debug(memoria_swapLogger, "Memoria: Recibi WRITE con direccion fisica: %i, valor a escribir:%i", param1, param2);
+        
+        sleep(memoria_swapCfg->RETARDO_MEMORIA/1000);
+        
         procesar_write(param1, param2);
         actualizar_bit_de_marco(socket_cpu, param1,WRITE);
         break;

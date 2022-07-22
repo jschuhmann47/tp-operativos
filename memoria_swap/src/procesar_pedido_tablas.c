@@ -24,6 +24,8 @@ void procesar_entrada_tabla_primer_nv(int socket_cpu){
     t_entradaPrimerNivel* entrada = list_get(tablaPrimerNv->entradasPrimerNivel, requestPrimerTabla);
     uint32_t indiceSegundoNivel = entrada->indiceTablaSegundoNivel;
 
+    sleep(memoria_swapCfg->RETARDO_MEMORIA/1000);
+
     if(send(socket_cpu,&indiceSegundoNivel,sizeof(uint32_t),0) == -1){ 
         log_error(memoria_swapLogger, "Memoria: Error al enviar indiceSegundoNivel a CPU: %s", strerror(errno));
         exit(-1);
@@ -68,6 +70,8 @@ void procesar_entrada_tabla_segundo_nv(int socket_cpu){
         cargar_pagina_en_memoria(tablaSegundoNivel, pag, nroMarco);
     }
 
+    sleep(memoria_swapCfg->RETARDO_MEMORIA/1000);
+    
     if(send(socket_cpu,&nroMarco,sizeof(uint32_t),0) == -1){
         log_error(memoria_swapLogger, "Memoria: Error al enviar marco a CPU: %s", strerror(errno));
         exit(-1);
