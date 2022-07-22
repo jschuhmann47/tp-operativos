@@ -114,7 +114,7 @@ void atender_peticiones_kernel(int socket_kernel){
                             log_info(memoria_swapLogger, "Memoria: Recibi el PCB con ID: %i", pcb->id);
                             suspender_proceso(pcb->tablaDePaginas, pcb->id);
                             vaciar_lista_marcos_asignados(pcb->id);
-                            free(pcb);
+                            pcb_destroy(pcb);
                             uint32_t ok = 1;
                             if(send(socket_kernel,&ok,sizeof(uint32_t),0)==-1){
                                 log_error(memoria_swapLogger, "Memoria: No se pudo mandar el OK de suspension a Kernel");
@@ -128,7 +128,7 @@ void atender_peticiones_kernel(int socket_kernel){
                     if(recv(socket_kernel, &PID, sizeof(uint32_t), MSG_WAITALL)){
                         eliminar_archivo(PID);
                         //liberar_marcos_asignados(PID);
-                        vaciar_lista_marcos_asignados(PID);
+                        destruir_lista_marcos_asignados(PID);
                         remover_tabla_suspendidas(PID);
                     }
                     if(recv(socket_kernel, &indiceParaFinalizar, sizeof(uint32_t), MSG_WAITALL)){

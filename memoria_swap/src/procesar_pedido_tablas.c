@@ -162,6 +162,11 @@ void agregar_a_marcos_asignados(t_marcosAsignadoPorProceso* marcosAsig,int nroMa
     list_add(marcosAsig->marcosAsignados,mA);
 }
 
+void destruir_lista_marcos_asignados(uint32_t pid){
+    t_marcosAsignadoPorProceso* marcosAsig = buscar_marcos_asignados_al_proceso(pid);
+    list_destroy_and_destroy_elements(marcosAsig->marcosAsignados,free_marco_asignado);
+} 
+
 void vaciar_lista_marcos_asignados(uint32_t pid){
     t_marcosAsignadoPorProceso* marcosAsig = buscar_marcos_asignados_al_proceso(pid);
     list_clean_and_destroy_elements(marcosAsig->marcosAsignados,free_marco_asignado);

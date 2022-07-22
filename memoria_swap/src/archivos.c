@@ -107,9 +107,11 @@ void* leer_de_archivo(uint32_t pid,int nroPagina){
 
 char* obtener_path_archivo(uint32_t pid){
     char *path = string_new();
+    char *stringPid = string_itoa(pid);
     string_append(&path, memoria_swapCfg->PATH_SWAP);
     string_append(&path, "/");
-    string_append(&path, string_itoa(pid));
+    string_append(&path, stringPid);
     string_append(&path, ".swap");
+    free(stringPid);
     return path;
 }
