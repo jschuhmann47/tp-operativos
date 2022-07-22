@@ -64,10 +64,10 @@ void procesar_instruccion(void* buffer, int socket_cpu){
         memcpy(&param1, buffer+sizeof(code_instruccion), sizeof(uint32_t));
         memcpy(&param2, buffer+sizeof(code_instruccion)+sizeof(uint32_t), sizeof(uint32_t));
         log_debug(memoria_swapLogger, "Memoria: Recibi WRITE con direccion fisica: %i, valor a escribir:%i", param1, param2);
-        
-        sleep(memoria_swapCfg->RETARDO_MEMORIA/1000);
-        
         procesar_write(param1, param2);
+
+        sleep(memoria_swapCfg->RETARDO_MEMORIA/1000);
+
         actualizar_bit_de_marco(socket_cpu, param1,WRITE);
         break;
     default:
