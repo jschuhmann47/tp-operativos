@@ -163,8 +163,17 @@ t_list* convertir_instruccion(char* buffer)
                 default:
                     break;
             }
+            for(int i=0; i<string_array_size(pseudoInstruccion); i++){
+                free(pseudoInstruccion[i]);
+            }
+            free(pseudoInstruccion);
+            free(instruccionConPipe);
         }
     }
+    for(int i=0; i<string_array_size(descript); i++){
+        free(descript[i]);
+    }
+    free(descript);
     return instrucciones;
 }
 
@@ -187,6 +196,7 @@ void enviar_finalizacion_consola(char *mensaje, int socket_cliente)
     }
 
 	free(a_enviar);
+    free(buffer->stream);
     free(buffer);
 }
 

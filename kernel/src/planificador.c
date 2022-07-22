@@ -138,6 +138,7 @@ void* traer_pcb_de_cpu(){
                 log_transition("Corto Plazo", "EXEC", "Determinando...", pcb->id);
             }
         }
+        free(tamanio_mensaje);
         
         uint32_t tiempoABloquearsePorIO; 
         t_instruccion* ultimaInstruccion = list_get(pcb->instrucciones, (pcb->programCounter)-1);
@@ -504,6 +505,7 @@ void agregar_pcb_en_cola_new(int socket)
             case MENSAJE:
                 mensaje = recibir_mensaje(socket);
                 tamanio = atoi(mensaje);
+                free(mensaje);
                 log_debug(kernelLogger, "Me llego el mensaje %i", tamanio);
             continue;
             case INSTRUCCION:
@@ -529,7 +531,6 @@ void agregar_pcb_en_cola_new(int socket)
 
         sem_post(&hayPCBsParaAgregarAlSistema); 
     }
-    free(mensaje);
 }
 
 uint32_t get_siguiente_id() 
@@ -585,7 +586,8 @@ void remover_pcb_de_cola(t_pcb* pcb, t_cola_planificacion* cola) {
     pthread_mutex_lock(&(cola->mutex));
     int posicion = pcb_get_posicion(pcb, cola->lista);
     if(posicion != -1) {
-        list_remove(cola->lista, posicion);
+        t_pcb* pcb_vieja = list_remove(cola->lista, posicion);
+        pcb_destroy(pcb_vieja);
     } else {
         log_error(kernelLogger, "Kernel: No existe tal elemento en la cola");
     }
