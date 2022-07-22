@@ -22,9 +22,14 @@ int iniciar_servidor(char* ip, char* port) {
         return EXIT_FAILURE;
     }
 
+    if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEPORT, &optVal, sizeof(int)) < 0){
+        error("setsockopt(SO_REUSEPORT) failed%s\n",strerror(errno));
+        return EXIT_FAILURE;
+    }
+
     int sockOpt = setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal));
     if (sockOpt == -1) {
-        printf("Sockopt error\n%s", strerror(errno));
+        printf("Sockopt error (SO_REUSEADDR)\n%s", strerror(errno));
         return EXIT_FAILURE;
     }
 
