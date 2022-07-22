@@ -116,6 +116,7 @@ void mandar_pcb_a_kernel(t_pcb* pcb, t_mensaje_tamanio* bytes, int socketKernelD
         if (send(socketKernelDispatch, buffer, bytes->tamanio, 0)) {
             log_info(cpuLogger, "CPU: Devolucion de PCB completada!");
             free(buffer);
+            free(bytes);
             pcb_destroy(pcb);
         }
     }
@@ -138,6 +139,7 @@ void mandar_pcb_a_kernel_con_io(t_pcb* pcb, t_mensaje_tamanio* bytes, int socket
                 log_info(cpuLogger, "CPU: Mande el tiempo de IO a Kernel. Tiempo mandado IO %i",tiempoABloquearse);
                 free(buffer);
                 free(bytes);
+                pcb_destroy(pcb);
             }
             else{
                 log_error(cpuLogger, "CPU: Error al enviar tiempo de bloqueo a Kernel");
