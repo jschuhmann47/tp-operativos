@@ -3,13 +3,15 @@
 int SOCKET_MEMORIA;
 
 int main(int argc, char* argv[]) {
-    if(argc<2){
+    if(argc<3){
+        printf("Error. Faltan argumentos.\n");
         return EXIT_FAILURE;
     }
     
     cpuCfg = cpu_cfg_create();
     cpuLogger = log_create(CPU_LOG_DEST, CPU_MODULE_NAME, true, determinar_nivel_de_log(argv[1]));
-    cargar_configuracion(CPU_MODULE_NAME, cpuCfg, CPU_CFG_PATH, cpuLogger, cpu_config_initialize);
+    cargar_configuracion(CPU_MODULE_NAME, cpuCfg, argv[2], cpuLogger, cpu_config_initialize);
+    
     generar_tlb(cpuCfg->ENTRADAS_TLB, cpuCfg->REEMPLAZO_TLB);
     log_info(cpuLogger, "CPU: TLB inicializada");
 

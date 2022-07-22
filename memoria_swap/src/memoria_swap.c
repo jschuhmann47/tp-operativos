@@ -5,7 +5,7 @@ pthread_mutex_t mutexIndice,mutexIndice2doNivel;
 int main(int argc, char **argv){
 
     if(argc<3){
-        printf("Faltan argumentos.\n");
+        printf("Error: Faltan argumentos.\n");
         return EXIT_FAILURE;
     }
     pthread_mutex_init(&mutexIndice, NULL);

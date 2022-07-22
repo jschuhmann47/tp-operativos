@@ -1,13 +1,14 @@
 #include "kernel.h"
 
 int main(int argc, char* argv[]) {
-    if(argc<2){
+    if(argc<3){
+        printf("Error. Faltan argumentos.\n");
         return EXIT_FAILURE;
     }
     
     kernelCfg = kernel_cfg_create();
     kernelLogger = log_create(KERNEL_LOG_DEST, KERNEL_MODULE_NAME, true, determinar_nivel_de_log(argv[1]));
-    cargar_configuracion(KERNEL_MODULE_NAME, kernelCfg, KERNEL_CFG_PATH, kernelLogger, kernel_config_initialize);
+    cargar_configuracion(KERNEL_MODULE_NAME, kernelCfg, argv[2], kernelLogger, kernel_config_initialize);
 
     int socketEscucha = iniciar_servidor(kernelCfg->IP_KERNEL, kernelCfg->PUERTO_ESCUCHA);
     
