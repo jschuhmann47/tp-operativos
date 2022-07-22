@@ -202,44 +202,34 @@ void* serializar_pcb(t_pcb *pcb, uint32_t *bytes)
         memcpy(empaquetado + offset, &(instruccion->indicador), tmp_size = sizeof(code_instruccion));
         offset += tmp_size;
        
-        uint32_t* param1=malloc(sizeof(uint32_t));
-        uint32_t* param2=malloc(sizeof(uint32_t));
         switch (instruccion->indicador){
             case NO_OP:
                 continue;
             case I_O:
-                param1=list_get(instruccion->parametros,0);
-                memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, list_get(instruccion->parametros,0), tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 
                 continue;
             case READ:
-                param1=list_get(instruccion->parametros,0);
-                memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, list_get(instruccion->parametros,0), tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 
                 continue;
             case WRITE:
-                param1=list_get(instruccion->parametros,0);
-                memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, list_get(instruccion->parametros,0), tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
-                param2=list_get(instruccion->parametros,1);
-                memcpy(empaquetado + offset, param2 , tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, list_get(instruccion->parametros,1) , tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 continue;
             case COPY:
-                param1=list_get(instruccion->parametros,0);
-                memcpy(empaquetado + offset, param1, tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, list_get(instruccion->parametros,0), tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
-                param2=list_get(instruccion->parametros,1);
-                memcpy(empaquetado + offset, param2 , tmp_size = sizeof(uint32_t));
+                memcpy(empaquetado + offset, list_get(instruccion->parametros,1) , tmp_size = sizeof(uint32_t));
                 offset += tmp_size;
                 continue;
             case EXIT_I:
                 continue;
         }
-        free(param1);
-        free(param2);
     }
     
     
