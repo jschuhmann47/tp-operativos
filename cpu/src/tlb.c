@@ -95,6 +95,7 @@ void reemplazar_tlb_lru(uint32_t pagina, uint32_t marco){
     log_info(cpuLogger, "CPU: LRU");
     int indiceVictimaLru = obtener_indice_victima_lru();
     t_direccion* victima = list_remove(tlb->direcciones, indiceVictimaLru);
+    log_debug(cpuLogger,"Se quita de la tlb indice %i",indiceVictimaLru);
     agregar_a_tlb_en_indice(pagina, marco, indiceVictimaLru);
     free(victima);
 }
@@ -102,6 +103,7 @@ void reemplazar_tlb_lru(uint32_t pagina, uint32_t marco){
 void reemplazar_tlb_fifo(uint32_t pagina, uint32_t marco){
     log_info(cpuLogger, "CPU: FIFO");
     t_direccion* victima = list_remove(tlb->direcciones, indiceReemplazoFifo);
+    log_debug(cpuLogger,"Se quita de la tlb indice %i",indiceReemplazoFifo);
     agregar_a_tlb_en_indice(pagina, marco, indiceReemplazoFifo);
     indiceReemplazoFifo++;
     if(indiceReemplazoFifo==cpuCfg->ENTRADAS_TLB){
