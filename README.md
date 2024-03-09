@@ -3,6 +3,7 @@
 Group assignment made by [@jschuhmann47](https://github.com/jschuhmann47 "@jschuhmann47") and [@JuaaannCruuuzz](https://github.com/JuaaannCruuuzz "@JuaaannCruuuzz") which consisted in making a simulation of a kernel interacting with several hardware components (which were also simulated) via the C language. Made for the subject "Operating Systems".
 
 Architecture of the system is below (spanish):
+
 ![image](https://github.com/jschuhmann47/tp-operativos/assets/76596375/8b8043b4-0001-4517-822f-e7b616f17baf)
 
 The four modules were:
