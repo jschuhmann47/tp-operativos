@@ -1,6 +1,6 @@
 # TP SO 1C 2022
 
-Group assignment made by [@jschuhmann47](https://github.com/jschuhmann47 "@jschuhmann47") and [@JuaaannCruuuzz](https://github.com/JuaaannCruuuzz "@JuaaannCruuuzz") which consisted in making a simulation of a kernel interacting with several hardware components (which were also simulated) via the C language. Made for the subject "Operating Systems".
+Group assignment made by [@jschuhmann47](https://github.com/jschuhmann47 "@jschuhmann47") and [@JuaaannCruuuzz](https://github.com/JuaaannCruuuzz "@JuaaannCruuuzz") which consisted in making a simulation of a kernel interacting with several hardware components (which were also simulated) via the C language. Made for the subject "Operating Systems" (Sistemas operativos).
 
 Architecture of the system is below (spanish):
 
